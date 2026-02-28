@@ -102,8 +102,10 @@ export default function StudentRegistrationPage() {
   async function handleRegister(subjectId: string) {
     setSaving(subjectId)
     try {
-      const reg = await addRegistration(me.user!.id, subjectId)
-      setRegistrations(prev => [...prev, reg])
+      await addRegistration(me.user!.id, subjectId)
+      // Reload full list to get joined data
+      const regs = await getRegistrationsByStudent(me.user!.id)
+      setRegistrations(regs)
     } catch (e: any) {
       setError(e.message)
     } finally {

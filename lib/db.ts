@@ -650,9 +650,8 @@ export async function addRegistration(studentId: string, subjectId: string) {
     .from("registrations")
     .insert([{ student_id: studentId, subject_id: subjectId }])
     .select()
-    .single()
   if (error) throw error
-  return data as Registration
+  return (data?.[0] ?? { student_id: studentId, subject_id: subjectId, status: "pending" }) as Registration
 }
 
 export async function deleteRegistration(id: string) {
