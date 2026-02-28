@@ -209,7 +209,7 @@ export default function NoticesPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Target */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Target Audience</Label>
@@ -630,7 +630,7 @@ export default function NoticesPage() {
                 </div>
 
                 {/* Meta */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     { label: "Target",   value:
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold"

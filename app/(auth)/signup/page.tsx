@@ -142,7 +142,7 @@ export default function SignupPage() {
         {/* Top gradient bar */}
         <div style={{ height:3, background:"linear-gradient(to right,#1D4ED8,#3B82F6,#D946EF,#84CC16,#FBBF24)" }} />
 
-        <div style={{ padding:"40px 44px" }}>
+        <div style={{ padding:"clamp(24px, 6vw, 40px) clamp(18px, 5vw, 44px)" }}>
 
           {/* Logo */}
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:32 }}>

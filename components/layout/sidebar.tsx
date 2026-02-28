@@ -5,9 +5,9 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard, Users, Building2, Wallet, Bell,
-  BarChart3, Settings, GraduationCap, BookOpen,
+  Settings, GraduationCap, BookOpen,
   ClipboardCheck, FileText, Award, Megaphone,
-  LogOut, Shield, Menu, ChevronLeft,
+  LogOut, Shield, Menu, ChevronLeft, X,
   CreditCard, UserCircle, HelpCircle
 } from "lucide-react"
 import { logout } from "@/lib/auth"
@@ -18,47 +18,44 @@ type NavSection = { section: string; items: NavItem[] }
 
 const navConfig: Record<Role, NavSection[]> = {
   admin: [
-    { section: "Main",          items: [{ label: "Overview",  href: "/dashboard/admin",             icon: LayoutDashboard }] },
+    { section: "Main", items: [{ label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard }] },
     { section: "Management", items: [
-  { label: "Users",       href: "/dashboard/admin/users",       icon: Users     },
-  { label: "Departments", href: "/dashboard/admin/departments", icon: Building2 },
-  { label: "Subjects",    href: "/dashboard/admin/subjects",    icon: BookOpen  },
-  { label: "Registrations",  href: "/dashboard/admin/registrations", icon: ClipboardCheck }, // ← add
-  { label: "Fee Control", href: "/dashboard/admin/fees",        icon: Wallet    },
-]},
+      { label: "Users",          href: "/dashboard/admin/users",          icon: Users          },
+      { label: "Departments",    href: "/dashboard/admin/departments",    icon: Building2      },
+      { label: "Subjects",       href: "/dashboard/admin/subjects",       icon: BookOpen       },
+      { label: "Registrations",  href: "/dashboard/admin/registrations",  icon: ClipboardCheck },
+      { label: "Fee Control",    href: "/dashboard/admin/fees",           icon: Wallet         },
+    ]},
   ],
   faculty: [
-    { section: "Main",          items: [{ label: "Overview",  href: "/dashboard/faculty",             icon: LayoutDashboard }] },
-    { section: "Academics",     items: [
-      { label: "Attendance",    href: "/dashboard/faculty/attendance",  icon: ClipboardCheck },
-
-      { label: "Assignments",   href: "/dashboard/faculty/assignments", icon: FileText       },
-      { label: "Results",       href: "/dashboard/faculty/results",     icon: Award          },
-      { label: "My Students",   href: "/dashboard/faculty/students",    icon: GraduationCap  },
+    { section: "Main", items: [{ label: "Overview", href: "/dashboard/faculty", icon: LayoutDashboard }] },
+    { section: "Academics", items: [
+      { label: "Attendance",  href: "/dashboard/faculty/attendance",  icon: ClipboardCheck },
+      { label: "Assignments", href: "/dashboard/faculty/assignments", icon: FileText       },
+      { label: "Results",     href: "/dashboard/faculty/results",     icon: Award          },
+      { label: "My Students", href: "/dashboard/faculty/students",    icon: GraduationCap  },
     ]},
     { section: "Communication", items: [{ label: "Notices", href: "/dashboard/faculty/notices", icon: Megaphone }] },
-    { section: "Account",       items: [
-      { label: "Profile",       href: "/dashboard/faculty/profile",  icon: UserCircle },
-      { label: "Settings",      href: "/dashboard/faculty/settings", icon: Settings   },
+    { section: "Account", items: [
+      { label: "Profile",  href: "/dashboard/faculty/profile",  icon: UserCircle },
+      { label: "Settings", href: "/dashboard/faculty/settings", icon: Settings   },
     ]},
   ],
   student: [
-    { section: "Main",          items: [{ label: "Overview",  href: "/dashboard/student",             icon: LayoutDashboard }] },
-    { section: "Academics",     items: [
-      { label: "Attendance",    href: "/dashboard/student/attendance",  icon: ClipboardCheck },
-      { label: "Registration",  href: "/dashboard/student/registration", icon: ClipboardCheck }, // ← add
-      { label: "Assignments",   href: "/dashboard/student/assignments", icon: FileText       },
-      { label: "Results",       href: "/dashboard/student/results",     icon: Award          },
+    { section: "Main", items: [{ label: "Overview", href: "/dashboard/student", icon: LayoutDashboard }] },
+    { section: "Academics", items: [
+      { label: "Attendance",    href: "/dashboard/student/attendance",    icon: ClipboardCheck },
+      { label: "Registration",  href: "/dashboard/student/registration", icon: ClipboardCheck },
+      { label: "Assignments",   href: "/dashboard/student/assignments",  icon: FileText       },
+      { label: "Results",       href: "/dashboard/student/results",      icon: Award          },
     ]},
-    { section: "Finance",       items: [{ label: "Fee Payment", href: "/dashboard/student/fees",    icon: CreditCard }] },
-    { section: "Communication", items: [{ label: "Notices",    href: "/dashboard/student/notices",  icon: Bell       }] },
-    { section: "Account",       items: [
-      { label: "Profile",       href: "/dashboard/student/profile",  icon: UserCircle },
-      { label: "Settings",      href: "/dashboard/student/settings", icon: Settings   },
+    { section: "Finance",       items: [{ label: "Fee Payment", href: "/dashboard/student/fees",   icon: CreditCard }] },
+    { section: "Communication", items: [{ label: "Notices",     href: "/dashboard/student/notices", icon: Bell       }] },
+    { section: "Account", items: [
+      { label: "Profile",  href: "/dashboard/student/profile",  icon: UserCircle },
+      { label: "Settings", href: "/dashboard/student/settings", icon: Settings   },
     ]},
   ],
-
-  
 }
 
 const roleConfig = {
@@ -67,64 +64,97 @@ const roleConfig = {
   student: { label: "Student",       color: "#16A34A", bg: "rgba(22,163,74,0.08)",  border: "rgba(22,163,74,0.18)",  icon: GraduationCap },
 }
 
-interface SidebarProps {
+export interface SidebarProps {
   role:      Role
   userName?: string
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
 const EW   = 240
 const CW   = 68
 const EASE = "cubic-bezier(0.4, 0, 0.2, 1)"
 const DUR  = "0.3s"
+const MOBILE_BP = 768
 
-export function Sidebar({ role, userName = "User" }: SidebarProps) {
+export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [mounted,   setMounted]   = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  const [isMobile,  setIsMobile]  = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BP)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    if (isMobile && mobileOpen && onMobileClose) onMobileClose()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (isMobile && mobileOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => { document.body.style.overflow = "" }
+  }, [isMobile, mobileOpen])
 
   const nav = navConfig[role]
   const rc  = roleConfig[role]
-  const c   = mounted && collapsed
+  const c   = mounted && collapsed && !isMobile
 
-  const T     = mounted ? `all ${DUR} ${EASE}`                              : "none"
+  const T     = mounted ? `all ${DUR} ${EASE}` : "none"
   const TFADE = mounted ? `opacity 0.22s ${EASE}, max-width ${DUR} ${EASE}` : "none"
 
   async function handleLogout() {
+    if (isMobile && onMobileClose) onMobileClose()
     await logout()
     router.replace("/login")
   }
 
-  return (
+  function handleNavClick() {
+    if (isMobile && onMobileClose) onMobileClose()
+  }
+
+  const sidebarContent = (
     <>
       <style>{`
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-10px); }
-          to   { opacity: 1; transform: translateY(0);     }
-        }
+        @keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
         .sb-menu-btn { animation: slideDown 0.28s ${EASE} forwards; }
         .sb-nav::-webkit-scrollbar { display: none; }
-        .sb-nav { scrollbar-width: none; }
+        .sb-nav { scrollbar-width: none; -ms-overflow-style: none; }
+        @keyframes sb-slide-in { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+        @keyframes sb-fade-in  { from{opacity:0} to{opacity:1} }
       `}</style>
 
       <aside style={{
-        width:               c ? CW  : EW,
-        minWidth:            c ? CW  : EW,
-        minHeight:           "100vh",
-        background:          "rgba(255,255,255,0.75)",
+        width:               isMobile ? 280 : (c ? CW : EW),
+        minWidth:            isMobile ? 280 : (c ? CW : EW),
+        height:              isMobile ? "100%" : "auto",
+        minHeight:           isMobile ? "100%" : "100vh",
+        background:          "rgba(255,255,255,0.92)",
         backdropFilter:      "blur(24px)",
         WebkitBackdropFilter:"blur(24px)",
         borderRight:         "1px solid rgba(226,232,240,0.7)",
         display:             "flex",
         flexDirection:       "column",
-        transition:          T,
+        transition:          isMobile ? "none" : T,
         flexShrink:          0,
-        position:            "sticky",
+        position:            isMobile ? "relative" : "sticky",
         top:                 0,
-        zIndex:              40,
+        zIndex:              isMobile ? 51 : 40,
         overflowX:           "hidden",
         overflowY:           "hidden",
+        animation:           isMobile ? `sb-slide-in 0.25s ${EASE}` : "none",
       }}>
 
         {/* ── HEADER ── */}
@@ -150,73 +180,65 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
             <p style={{ fontSize: 10, color: "#94A3B8", margin: 0, fontWeight: 500 }}>ERP Portal</p>
           </div>
 
-          <button
-            onClick={() => setCollapsed(true)}
-            title="Collapse"
-            style={{
-              width: 28, height: 28, borderRadius: 8,
+          {isMobile ? (
+            <button onClick={onMobileClose} title="Close menu" style={{
+              width: 32, height: 32, borderRadius: 10,
               border: "1px solid rgba(226,232,240,0.9)",
               background: "rgba(248,250,252,0.9)", color: "#64748B",
-              cursor: c ? "default" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, opacity: c ? 0 : 1, maxWidth: c ? 0 : 28,
-              overflow: "hidden", pointerEvents: c ? "none" : "auto", padding: 0,
-              transition: `opacity 0.22s ${EASE}, max-width ${DUR} ${EASE}`,
-            }}
-            onMouseEnter={e => {
-              if (!c) {
-                const b = e.currentTarget as HTMLButtonElement
-                b.style.background  = "rgba(59,130,246,0.10)"
-                b.style.borderColor = "rgba(59,130,246,0.28)"
-                b.style.color       = "#2563EB"
-              }
-            }}
-            onMouseLeave={e => {
-              const b = e.currentTarget as HTMLButtonElement
-              b.style.background  = "rgba(248,250,252,0.9)"
-              b.style.borderColor = "rgba(226,232,240,0.9)"
-              b.style.color       = "#64748B"
-            }}
-          >
-            <ChevronLeft size={14} strokeWidth={2.5} />
-          </button>
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0, padding: 0, marginLeft: "auto",
+            }}>
+              <X size={16} strokeWidth={2.5} />
+            </button>
+          ) : (
+            <button
+              onClick={() => setCollapsed(true)} title="Collapse"
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                border: "1px solid rgba(226,232,240,0.9)",
+                background: "rgba(248,250,252,0.9)", color: "#64748B",
+                cursor: c ? "default" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, opacity: c ? 0 : 1, maxWidth: c ? 0 : 28,
+                overflow: "hidden", pointerEvents: c ? "none" : "auto", padding: 0,
+                transition: `opacity 0.22s ${EASE}, max-width ${DUR} ${EASE}`,
+              }}
+              onMouseEnter={e => {
+                if (!c) { const b = e.currentTarget; b.style.background="rgba(59,130,246,0.10)"; b.style.borderColor="rgba(59,130,246,0.28)"; b.style.color="#2563EB" }
+              }}
+              onMouseLeave={e => {
+                const b = e.currentTarget; b.style.background="rgba(248,250,252,0.9)"; b.style.borderColor="rgba(226,232,240,0.9)"; b.style.color="#64748B"
+              }}
+            >
+              <ChevronLeft size={14} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
 
-        {/* ── EXPAND BUTTON (collapsed only) ── */}
-        <div style={{
-          overflow: "hidden", maxHeight: c ? 60 : 0, opacity: c ? 1 : 0,
-          transition: mounted ? `max-height ${DUR} ${EASE}, opacity 0.22s ${EASE}` : "none",
-          display: "flex", justifyContent: "center", flexShrink: 0,
-        }}>
-          <button
-            key={String(collapsed)}
-            className="sb-menu-btn"
-            onClick={() => setCollapsed(false)}
-            title="Expand"
-            style={{
-              width: 34, height: 34, margin: "10px 0 6px", borderRadius: 10,
-              border: "1px solid rgba(226,232,240,0.9)",
-              background: "rgba(248,250,252,0.9)", color: "#64748B",
-              cursor: "pointer", display: "flex", alignItems: "center",
-              justifyContent: "center", flexShrink: 0,
-              transition: "background 0.15s ease, border-color 0.15s ease, color 0.15s ease",
-            }}
-            onMouseEnter={e => {
-              const b = e.currentTarget as HTMLButtonElement
-              b.style.background  = "rgba(59,130,246,0.10)"
-              b.style.borderColor = "rgba(59,130,246,0.28)"
-              b.style.color       = "#2563EB"
-            }}
-            onMouseLeave={e => {
-              const b = e.currentTarget as HTMLButtonElement
-              b.style.background  = "rgba(248,250,252,0.9)"
-              b.style.borderColor = "rgba(226,232,240,0.9)"
-              b.style.color       = "#64748B"
-            }}
-          >
-            <Menu size={15} strokeWidth={2.5} />
-          </button>
-        </div>
+        {/* ── EXPAND BTN (collapsed, desktop only) ── */}
+        {!isMobile && (
+          <div style={{
+            overflow: "hidden", maxHeight: c ? 60 : 0, opacity: c ? 1 : 0,
+            transition: mounted ? `max-height ${DUR} ${EASE}, opacity 0.22s ${EASE}` : "none",
+            display: "flex", justifyContent: "center", flexShrink: 0,
+          }}>
+            <button
+              key={String(collapsed)} className="sb-menu-btn"
+              onClick={() => setCollapsed(false)} title="Expand"
+              style={{
+                width: 34, height: 34, margin: "10px 0 6px", borderRadius: 10,
+                border: "1px solid rgba(226,232,240,0.9)",
+                background: "rgba(248,250,252,0.9)", color: "#64748B",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, transition: "background 0.15s, border-color 0.15s, color 0.15s",
+              }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.background="rgba(59,130,246,0.10)"; b.style.borderColor="rgba(59,130,246,0.28)"; b.style.color="#2563EB" }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.background="rgba(248,250,252,0.9)"; b.style.borderColor="rgba(226,232,240,0.9)"; b.style.color="#64748B" }}
+            >
+              <Menu size={15} strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
 
         {/* ── ROLE BADGE ── */}
         <div style={{
@@ -244,15 +266,13 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
               overflow: "hidden", maxWidth: c ? 0 : 150, opacity: c ? 0 : 1,
               transition: TFADE, whiteSpace: "nowrap", minWidth: 0,
             }}>
-              <p style={{ fontSize: 12, fontWeight: 800, color: "#1E293B", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
-                {userName}
-              </p>
+              <p style={{ fontSize: 12, fontWeight: 800, color: "#1E293B", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</p>
               <p style={{ fontSize: 10, color: rc.color, margin: 0, fontWeight: 700 }}>{rc.label}</p>
             </div>
           </div>
         </div>
 
-        {/* ── NAV SECTIONS ── */}
+        {/* ── NAV ── */}
         <nav className="sb-nav" style={{
           flex: 1, padding: "10px 8px", overflowY: "auto",
           overflowX: "hidden", display: "flex", flexDirection: "column", gap: 2,
@@ -283,67 +303,40 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
               )}
 
               {section.items.map((item, ii) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== `/dashboard/${role}` && pathname.startsWith(item.href))
-
+                const isActive = pathname === item.href || (item.href !== `/dashboard/${role}` && pathname.startsWith(item.href))
                 return (
-                  <Link
-                    key={ii}
-                    href={item.href}
+                  <Link key={ii} href={item.href} onClick={handleNavClick}
                     title={c ? item.label : undefined}
                     style={{
                       display: "flex", alignItems: "center",
                       justifyContent: c ? "center" : "flex-start",
-                      gap: 10, padding: c ? "9px 0" : "8px 11px",
+                      gap: 10, padding: c ? "9px 0" : (isMobile ? "11px 11px" : "8px 11px"),
                       borderRadius: 12, textDecoration: "none", transition: T,
-                      background: isActive
-                        ? "linear-gradient(135deg,rgba(37,99,235,0.12),rgba(59,130,246,0.06))"
-                        : "transparent",
+                      background: isActive ? "linear-gradient(135deg,rgba(37,99,235,0.12),rgba(59,130,246,0.06))" : "transparent",
                       border: isActive ? "1px solid rgba(37,99,235,0.18)" : "1px solid transparent",
                       boxShadow: isActive ? "0 2px 8px rgba(37,99,235,0.08)" : "none",
                       position: "relative", marginBottom: 2,
                     }}
-                    onMouseEnter={e => {
-                      if (!isActive) {
-                        const el = e.currentTarget as HTMLAnchorElement
-                        el.style.background = "rgba(59,130,246,0.06)"
-                        el.style.border     = "1px solid rgba(59,130,246,0.14)"
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!isActive) {
-                        const el = e.currentTarget as HTMLAnchorElement
-                        el.style.background = "transparent"
-                        el.style.border     = "1px solid transparent"
-                      }
-                    }}
+                    onMouseEnter={e => { if (!isActive) { const el = e.currentTarget; el.style.background="rgba(59,130,246,0.06)"; el.style.border="1px solid rgba(59,130,246,0.14)" } }}
+                    onMouseLeave={e => { if (!isActive) { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent" } }}
                   >
                     <div style={{
                       position: "absolute", left: 0, top: "18%", bottom: "18%",
                       width: 3, borderRadius: "0 3px 3px 0",
                       background: "linear-gradient(to bottom, #1D4ED8, #3B82F6)",
-                      opacity: isActive && !c ? 1 : 0,
-                      transition: `opacity 0.2s ${EASE}`,
+                      opacity: isActive && !c ? 1 : 0, transition: `opacity 0.2s ${EASE}`,
                     }} />
                     <div style={{
                       width: c ? 36 : 30, height: c ? 36 : 30,
                       borderRadius: c ? 11 : 8, flexShrink: 0,
-                      background: isActive
-                        ? "linear-gradient(135deg,rgba(37,99,235,0.18),rgba(59,130,246,0.10))"
-                        : c ? "rgba(100,116,139,0.07)" : "transparent",
+                      background: isActive ? "linear-gradient(135deg,rgba(37,99,235,0.18),rgba(59,130,246,0.10))" : c ? "rgba(100,116,139,0.07)" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: T,
-                      border: isActive && c ? "1px solid rgba(37,99,235,0.20)" : "1px solid transparent",
+                      transition: T, border: isActive && c ? "1px solid rgba(37,99,235,0.20)" : "1px solid transparent",
                     }}>
-                      <item.icon
-                        size={c ? 17 : 15}
-                        color={isActive ? "#2563EB" : "#64748B"}
-                        strokeWidth={isActive ? 2.5 : 2}
-                      />
+                      <item.icon size={c ? 17 : 15} color={isActive ? "#2563EB" : "#64748B"} strokeWidth={isActive ? 2.5 : 2} />
                     </div>
                     <span style={{
-                      fontSize: 13, fontWeight: isActive ? 700 : 500,
+                      fontSize: isMobile ? 14 : 13, fontWeight: isActive ? 700 : 500,
                       color: isActive ? "#1D4ED8" : "#334155",
                       whiteSpace: "nowrap", overflow: "hidden",
                       maxWidth: c ? 0 : 160, opacity: c ? 0 : 1, transition: TFADE,
@@ -357,33 +350,22 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
           ))}
         </nav>
 
-        {/* ── BOTTOM — Help + Logout ── */}
+        {/* ── BOTTOM ── */}
         <div style={{
           padding: "10px 8px", borderTop: "1px solid rgba(226,232,240,0.6)",
           display: "flex", flexDirection: "column", gap: 3, flexShrink: 0,
+          paddingBottom: isMobile ? "calc(10px + env(safe-area-inset-bottom, 0px))" : 10,
         }}>
-
-          {/* Help — still a Link */}
-          <Link
-            href="/help"
-            title={c ? "Help & Support" : undefined}
+          <Link href="/help" onClick={handleNavClick} title={c ? "Help & Support" : undefined}
             style={{
               display: "flex", alignItems: "center",
               justifyContent: c ? "center" : "flex-start",
-              gap: 10, padding: c ? "9px 0" : "8px 11px",
+              gap: 10, padding: c ? "9px 0" : (isMobile ? "11px 11px" : "8px 11px"),
               borderRadius: 12, textDecoration: "none",
               border: "1px solid transparent", transition: T,
             }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLAnchorElement
-              el.style.background = "rgba(148,163,184,0.09)"
-              el.style.border     = "1px solid rgba(148,163,184,0.18)"
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLAnchorElement
-              el.style.background = "transparent"
-              el.style.border     = "1px solid transparent"
-            }}
+            onMouseEnter={e => { const el = e.currentTarget; el.style.background="rgba(148,163,184,0.09)"; el.style.border="1px solid rgba(148,163,184,0.18)" }}
+            onMouseLeave={e => { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent" }}
           >
             <div style={{
               width: c ? 36 : 30, height: c ? 36 : 30, borderRadius: c ? 11 : 8,
@@ -393,7 +375,7 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
               <HelpCircle size={c ? 17 : 15} color="#64748B" strokeWidth={2} />
             </div>
             <span style={{
-              fontSize: 13, fontWeight: 500, color: "#64748B",
+              fontSize: isMobile ? 14 : 13, fontWeight: 500, color: "#64748B",
               whiteSpace: "nowrap", overflow: "hidden",
               maxWidth: c ? 0 : 160, opacity: c ? 0 : 1, transition: TFADE,
             }}>
@@ -401,28 +383,16 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
             </span>
           </Link>
 
-          {/* Logout — button that clears session properly */}
-          <button
-            onClick={handleLogout}
-            title={c ? "Logout" : undefined}
+          <button onClick={handleLogout} title={c ? "Logout" : undefined}
             style={{
               display: "flex", alignItems: "center",
               justifyContent: c ? "center" : "flex-start",
-              gap: 10, padding: c ? "9px 0" : "8px 11px",
+              gap: 10, padding: c ? "9px 0" : (isMobile ? "11px 11px" : "8px 11px"),
               borderRadius: 12, border: "1px solid transparent",
-              background: "transparent", cursor: "pointer",
-              width: "100%", transition: T,
+              background: "transparent", cursor: "pointer", width: "100%", transition: T,
             }}
-            onMouseEnter={e => {
-              const b = e.currentTarget as HTMLButtonElement
-              b.style.background = "rgba(244,63,94,0.07)"
-              b.style.border     = "1px solid rgba(244,63,94,0.18)"
-            }}
-            onMouseLeave={e => {
-              const b = e.currentTarget as HTMLButtonElement
-              b.style.background = "transparent"
-              b.style.border     = "1px solid transparent"
-            }}
+            onMouseEnter={e => { const b = e.currentTarget; b.style.background="rgba(244,63,94,0.07)"; b.style.border="1px solid rgba(244,63,94,0.18)" }}
+            onMouseLeave={e => { const b = e.currentTarget; b.style.background="transparent"; b.style.border="1px solid transparent" }}
           >
             <div style={{
               width: c ? 36 : 30, height: c ? 36 : 30, borderRadius: c ? 11 : 8,
@@ -432,16 +402,36 @@ export function Sidebar({ role, userName = "User" }: SidebarProps) {
               <LogOut size={c ? 17 : 15} color="#F43F5E" strokeWidth={2} />
             </div>
             <span style={{
-              fontSize: 13, fontWeight: 500, color: "#F43F5E",
+              fontSize: isMobile ? 14 : 13, fontWeight: 500, color: "#F43F5E",
               whiteSpace: "nowrap", overflow: "hidden",
               maxWidth: c ? 0 : 160, opacity: c ? 0 : 1, transition: TFADE,
             }}>
               Logout
             </span>
           </button>
-
         </div>
       </aside>
     </>
   )
+
+  // Mobile: overlay drawer
+  if (isMobile) {
+    if (!mobileOpen) return null
+    return (
+      <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", animation: `sb-fade-in 0.2s ${EASE}` }}>
+        <div onClick={onMobileClose} style={{
+          position: "absolute", inset: 0,
+          background: "rgba(15,23,42,0.4)",
+          backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
+        }} />
+        <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
+          {sidebarContent}
+        </div>
+      </div>
+    )
+  }
+
+  // Desktop: inline
+  return sidebarContent
 }
+

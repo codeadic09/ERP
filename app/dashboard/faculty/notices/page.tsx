@@ -535,7 +535,7 @@ export default function FacultyNoticesPage() {
             </div>
 
             {/* Target + Priority */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold">Audience</Label>
                 <Select value={form.target} onValueChange={v => setForm(f => ({ ...f, target: v as Target }))}>
@@ -652,7 +652,7 @@ export default function FacultyNoticesPage() {
                 </div>
 
                 {/* Meta */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     { label: "Published by", value: authorName(viewNotice.created_by) },
                     { label: "Date",          value: new Date(viewNotice.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) },

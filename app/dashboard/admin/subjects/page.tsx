@@ -220,7 +220,7 @@ export default function SubjectsPage() {
 
   function SubjectForm() {
     return (
-      <div className="grid grid-cols-2 gap-4 py-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
 
         {/* Name */}
         <div className="col-span-2 space-y-1.5">

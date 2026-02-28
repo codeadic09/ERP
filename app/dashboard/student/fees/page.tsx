@@ -248,7 +248,7 @@ export default function StudentFeesPage() {
                       </div>
 
                       {/* Amount breakdown row */}
-                      <div className="grid grid-cols-3 gap-3 mb-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                         {[
                           { label: "Total",  value: total,  color: "text-gray-800", bg: "bg-gray-50",    border: "border-gray-100" },
                           { label: "Paid",   value: paid,   color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-100" },

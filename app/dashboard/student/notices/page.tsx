@@ -461,7 +461,7 @@ export default function StudentNoticesPage() {
                 </div>
 
                 {/* Meta */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     { label: "Published by", value: authorName(viewing.created_by) },
                     { label: "Published on",  value: new Date(viewing.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) },

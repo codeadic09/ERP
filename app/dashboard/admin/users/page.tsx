@@ -101,7 +101,7 @@ function UserForm({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 py-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
 
       {/* Name */}
       <div className="col-span-2 space-y-1.5">
@@ -932,7 +932,7 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 {[
                   { label: "Role",       value: selectedUser.role },
                   { label: "Status",     value: selectedUser.status },

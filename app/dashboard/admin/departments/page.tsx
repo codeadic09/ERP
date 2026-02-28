@@ -74,7 +74,7 @@ interface DeptFormProps {
 
 function DeptForm({ form, setForm }: DeptFormProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 py-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
       {/* Name */}
       <div className="col-span-2 space-y-1.5">
         <Label className="text-xs font-semibold">Department Name *</Label>
@@ -780,7 +780,7 @@ export default function DepartmentsPage() {
                 </div>
 
                 {/* Details grid */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   {[
                     { label: "Head",        value: selected.head        ?? "—" },
                     { label: "Status",      value: selected.status            },

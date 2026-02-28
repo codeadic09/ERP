@@ -299,7 +299,7 @@ export default function FeesPage() {
   // ── Shared form ───────────────────────────────────────────────
   function FeeForm() {
     return (
-      <div className="grid grid-cols-2 gap-4 py-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
         <div className="col-span-2 space-y-1.5">
           <Label className="text-xs font-semibold">Student *</Label>
           <Select value={form.student_id} onValueChange={v => setForm(f => ({ ...f, student_id: v }))}>
@@ -809,7 +809,7 @@ export default function FeesPage() {
                     <p className="text-xs text-gray-400">{usr?.departments?.name ?? "—"}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     { label: "Amount",      value: `₹${Number(selected.amount).toLocaleString("en-IN")}` },
                     { label: "Status",      value: <span style={{ color: ss.color }} className="font-black capitalize">{selected.status}</span> },

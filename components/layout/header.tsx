@@ -1,12 +1,12 @@
 // components/layout/header.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Bell, Search, Sun, Moon, Settings,
   ChevronDown, GraduationCap, Shield,
   BookOpen, User, LogOut, HelpCircle,
-  Sparkles, X
+  Sparkles, X, Menu
 } from "lucide-react"
 
 interface HeaderProps {
@@ -14,6 +14,7 @@ interface HeaderProps {
   userName?: string
   pageTitle?: string
   pageSubtitle?: string
+  onMenuClick?: () => void
 }
 
 const roleConfig = {
@@ -30,24 +31,45 @@ const notifications = [
   { title: "Exam schedule released",   sub: "End-sem May 2026",           time: "1d ago",  color: "#F43F5E", dot: false },
 ]
 
+const MOBILE_BP = 768
+
 export function Header({
   role = "student",
   userName = "Aryan Sharma",
   pageTitle = "Dashboard",
   pageSubtitle,
+  onMenuClick,
 }: HeaderProps) {
   const [dark, setDark]               = useState(false)
   const [showNotifs, setShowNotifs]   = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [search, setSearch]           = useState("")
   const [searchFocus, setSearchFocus] = useState(false)
+  const [isMobile, setIsMobile]       = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BP)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
 
   const rc = roleConfig[role]
   const unread = notifications.filter(n => n.dot).length
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClick() { setShowNotifs(false); setShowProfile(false) }
+    if (showNotifs || showProfile) {
+      const timer = setTimeout(() => document.addEventListener("click", handleClick), 0)
+      return () => { clearTimeout(timer); document.removeEventListener("click", handleClick) }
+    }
+  }, [showNotifs, showProfile])
+
   return (
     <header style={{
-      height: 64,
+      height: isMobile ? 56 : 64,
       background: "rgba(255,255,255,0.72)",
       backdropFilter: "blur(24px)",
       WebkitBackdropFilter: "blur(24px)",
@@ -56,23 +78,38 @@ export function Header({
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: "0 28px",
+      padding: isMobile ? "0 12px" : "0 28px",
       position: "sticky",
       top: 0,
-      zIndex: 50,
-      gap: 16,
+      zIndex: 45,
+      gap: isMobile ? 8 : 16,
     }}>
 
-      {/* ── LEFT: Page Title ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-        <div>
+      {/* ── LEFT: Menu + Title ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, minWidth: 0, flex: isMobile ? 1 : "unset" }}>
+        {/* Hamburger on mobile */}
+        {isMobile && (
+          <button
+            onClick={onMenuClick}
+            style={{
+              width: 36, height: 36, borderRadius: 10, border: "none",
+              background: "rgba(59,130,246,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", flexShrink: 0, color: "#3B82F6",
+            }}
+          >
+            <Menu size={18} strokeWidth={2.5} />
+          </button>
+        )}
+        <div style={{ minWidth: 0 }}>
           <h2 style={{
-            fontSize: 17, fontWeight: 900, color: "#1E293B",
-            lineHeight: 1, whiteSpace: "nowrap",
+            fontSize: isMobile ? 15 : 17, fontWeight: 900, color: "#1E293B",
+            lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden",
+            textOverflow: "ellipsis",
           }}>
             {pageTitle}
           </h2>
-          {pageSubtitle && (
+          {pageSubtitle && !isMobile && (
             <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>
               {pageSubtitle}
             </p>
@@ -80,94 +117,142 @@ export function Header({
         </div>
       </div>
 
-      {/* ── CENTER: Search ── */}
-      <div style={{
-        flex: 1, maxWidth: 400,
-        position: "relative",
-      }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "9px 16px",
-          background: searchFocus ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.72)",
-          border: searchFocus
-            ? "1px solid #3B82F6"
-            : "1px solid rgba(255,255,255,0.62)",
-          borderRadius: 14,
-          boxShadow: searchFocus ? "0 0 0 4px rgba(59,130,246,0.12)" : "none",
-          transition: "all 0.2s",
-        }}>
-          <Search size={15} color={searchFocus ? "#3B82F6" : "#94A3B8"} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onFocus={() => setSearchFocus(true)}
-            onBlur={() => setSearchFocus(false)}
-            placeholder="Search students, subjects, results…"
-            style={{
-              flex: 1, border: "none", background: "transparent",
-              fontSize: 13, color: "#1E293B", outline: "none",
-            }}
-          />
-          {search && (
-            <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex" }}>
-              <X size={13} strokeWidth={2.5} />
-            </button>
+      {/* ── CENTER: Search (desktop only) ── */}
+      {!isMobile && (
+        <div style={{ flex: 1, maxWidth: 400, position: "relative" }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "9px 16px",
+            background: searchFocus ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.72)",
+            border: searchFocus ? "1px solid #3B82F6" : "1px solid rgba(255,255,255,0.62)",
+            borderRadius: 14,
+            boxShadow: searchFocus ? "0 0 0 4px rgba(59,130,246,0.12)" : "none",
+            transition: "all 0.2s",
+          }}>
+            <Search size={15} color={searchFocus ? "#3B82F6" : "#94A3B8"} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onFocus={() => setSearchFocus(true)}
+              onBlur={() => setSearchFocus(false)}
+              placeholder="Search students, subjects, results…"
+              style={{
+                flex: 1, border: "none", background: "transparent",
+                fontSize: 13, color: "#1E293B", outline: "none",
+              }}
+            />
+            {search && (
+              <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex" }}>
+                <X size={13} strokeWidth={2.5} />
+              </button>
+            )}
+          </div>
+
+          {search.length > 1 && searchFocus && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0,
+              background: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.65)",
+              borderRadius: 16, padding: 8,
+              boxShadow: "0 8px 32px rgba(59,130,246,0.16)", zIndex: 100,
+            }}>
+              {["Aryan Sharma — EN2024101", "DSA Results — Sem 4", "Attendance Report — Feb 2026"].map((item, i) => (
+                <div key={i} style={{
+                  padding: "9px 12px", borderRadius: 10, cursor: "pointer",
+                  fontSize: 13, color: "#1E293B", fontWeight: 500,
+                  display: "flex", alignItems: "center", gap: 10,
+                  transition: "background 0.15s",
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.07)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Sparkles size={13} color="#3B82F6" strokeWidth={2} />
+                  {item}
+                </div>
+              ))}
+            </div>
           )}
         </div>
+      )}
 
-        {/* Search dropdown */}
-        {search.length > 1 && searchFocus && (
-          <div style={{
-            position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0,
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.65)",
-            borderRadius: 16, padding: 8,
-            boxShadow: "0 8px 32px rgba(59,130,246,0.16)",
-            zIndex: 100,
-          }}>
-            {["Aryan Sharma — EN2024101", "DSA Results — Sem 4", "Attendance Report — Feb 2026"].map((item, i) => (
-              <div key={i} style={{
-                padding: "9px 12px", borderRadius: 10, cursor: "pointer",
-                fontSize: 13, color: "#1E293B", fontWeight: 500,
-                display: "flex", alignItems: "center", gap: 10,
-                transition: "background 0.15s",
-              }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.07)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-              >
-                <Sparkles size={13} color="#3B82F6" strokeWidth={2} />
-                {item}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* ── Mobile search overlay ── */}
+      {isMobile && showMobileSearch && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0,
+          height: 56, zIndex: 60,
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "0 12px",
+          boxShadow: "0 2px 16px rgba(59,130,246,0.10)",
+        }}>
+          <Search size={16} color="#3B82F6" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+          <input
+            autoFocus
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search…"
+            style={{
+              flex: 1, border: "none", background: "transparent",
+              fontSize: 15, color: "#1E293B", outline: "none",
+            }}
+          />
+          <button
+            onClick={() => { setSearch(""); setShowMobileSearch(false) }}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "rgba(100,116,139,0.10)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#64748B",
+            }}
+          >
+            <X size={16} strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
 
       {/* ── RIGHT: Actions ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, flexShrink: 0 }}>
 
-        {/* Dark mode toggle */}
-        <button
-          onClick={() => setDark(p => !p)}
-          style={{
-            width: 36, height: 36, borderRadius: 11, border: "none",
-            background: dark ? "rgba(30,27,75,0.12)" : "rgba(59,130,246,0.08)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", transition: "all 0.2s",
-            color: dark ? "#A78BFA" : "#3B82F6",
-          }}
-          title="Toggle theme"
-        >
-          {dark ? <Moon size={15} strokeWidth={2.5} /> : <Sun size={15} strokeWidth={2.5} />}
-        </button>
+        {/* Search button (mobile only) */}
+        {isMobile && (
+          <button
+            onClick={() => setShowMobileSearch(true)}
+            style={{
+              width: 34, height: 34, borderRadius: 10, border: "none",
+              background: "rgba(59,130,246,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#3B82F6",
+            }}
+          >
+            <Search size={15} strokeWidth={2.5} />
+          </button>
+        )}
+
+        {/* Dark mode toggle (hide on very small screens) */}
+        {!isMobile && (
+          <button
+            onClick={() => setDark(p => !p)}
+            style={{
+              width: 36, height: 36, borderRadius: 11, border: "none",
+              background: dark ? "rgba(30,27,75,0.12)" : "rgba(59,130,246,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all 0.2s",
+              color: dark ? "#A78BFA" : "#3B82F6",
+            }}
+            title="Toggle theme"
+          >
+            {dark ? <Moon size={15} strokeWidth={2.5} /> : <Sun size={15} strokeWidth={2.5} />}
+          </button>
+        )}
 
         {/* Notifications */}
         <div style={{ position: "relative" }}>
           <button
-            onClick={() => { setShowNotifs(p => !p); setShowProfile(false) }}
+            onClick={(e) => { e.stopPropagation(); setShowNotifs(p => !p); setShowProfile(false) }}
             style={{
-              width: 36, height: 36, borderRadius: 11, border: "none",
+              width: isMobile ? 34 : 36, height: isMobile ? 34 : 36, borderRadius: 11, border: "none",
               background: showNotifs ? "rgba(59,130,246,0.14)" : "rgba(59,130,246,0.08)",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s", position: "relative",
@@ -184,19 +269,18 @@ export function Header({
             )}
           </button>
 
-          {/* Notif dropdown */}
           {showNotifs && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 10px)", right: 0,
-              width: 340,
+            <div onClick={e => e.stopPropagation()} style={{
+              position: "absolute", top: "calc(100% + 10px)",
+              right: isMobile ? -60 : 0,
+              width: isMobile ? "calc(100vw - 24px)" : 340,
+              maxWidth: 360,
               background: "rgba(255,255,255,0.95)",
               backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
               border: "1px solid rgba(255,255,255,0.65)",
               borderRadius: 20, overflow: "hidden",
-              boxShadow: "0 16px 48px rgba(59,130,246,0.18)",
-              zIndex: 100,
+              boxShadow: "0 16px 48px rgba(59,130,246,0.18)", zIndex: 100,
             }}>
-              {/* Header */}
               <div style={{
                 padding: "16px 18px 12px",
                 borderBottom: "1px solid rgba(255,255,255,0.55)",
@@ -214,51 +298,33 @@ export function Header({
                   Mark all read
                 </button>
               </div>
-
-              {/* List */}
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 {notifications.map((n, i) => (
                   <div key={i} style={{
                     display: "flex", alignItems: "flex-start", gap: 12,
                     padding: "12px 18px",
-                    borderBottom: i < notifications.length - 1
-                      ? "1px solid rgba(255,255,255,0.50)"
-                      : "none",
+                    borderBottom: i < notifications.length - 1 ? "1px solid rgba(255,255,255,0.50)" : "none",
                     background: n.dot ? "rgba(59,130,246,0.03)" : "transparent",
                     cursor: "pointer", transition: "background 0.15s",
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.06)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = n.dot ? "rgba(59,130,246,0.03)" : "transparent")}
-                  >
-                    {/* Icon */}
+                  }}>
                     <div style={{
                       width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                      background: `${n.color}14`,
-                      border: `1px solid ${n.color}28`,
+                      background: `${n.color}14`, border: `1px solid ${n.color}28`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <Bell size={14} color={n.color} strokeWidth={2} />
                     </div>
-                    {/* Text */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1E293B", lineHeight: 1.2 }}>
-                          {n.title}
-                        </p>
-                        {n.dot && (
-                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />
-                        )}
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1E293B", lineHeight: 1.2 }}>{n.title}</p>
+                        {n.dot && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />}
                       </div>
                       <p style={{ fontSize: 11, color: "#64748B", marginTop: 3 }}>{n.sub}</p>
                     </div>
-                    <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600, flexShrink: 0, paddingTop: 2 }}>
-                      {n.time}
-                    </span>
+                    <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600, flexShrink: 0, paddingTop: 2 }}>{n.time}</span>
                   </div>
                 ))}
               </div>
-
-              {/* Footer */}
               <div style={{
                 padding: "10px 18px",
                 borderTop: "1px solid rgba(255,255,255,0.55)",
@@ -275,38 +341,39 @@ export function Header({
           )}
         </div>
 
-        {/* Settings */}
-        <button style={{
-          width: 36, height: 36, borderRadius: 11, border: "none",
-          background: "rgba(59,130,246,0.08)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", transition: "all 0.2s", color: "#3B82F6",
-        }}>
-          <Settings size={15} strokeWidth={2.5} />
-        </button>
+        {/* Settings (desktop only) */}
+        {!isMobile && (
+          <button style={{
+            width: 36, height: 36, borderRadius: 11, border: "none",
+            background: "rgba(59,130,246,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", transition: "all 0.2s", color: "#3B82F6",
+          }}>
+            <Settings size={15} strokeWidth={2.5} />
+          </button>
+        )}
 
-        {/* Divider */}
-        <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.60)", margin: "0 4px" }} />
+        {/* Divider (desktop only) */}
+        {!isMobile && (
+          <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.60)", margin: "0 4px" }} />
+        )}
 
         {/* Profile pill */}
         <div style={{ position: "relative" }}>
           <button
-            onClick={() => { setShowProfile(p => !p); setShowNotifs(false) }}
+            onClick={(e) => { e.stopPropagation(); setShowProfile(p => !p); setShowNotifs(false) }}
             style={{
-              display: "flex", alignItems: "center", gap: 9,
-              padding: "6px 12px 6px 6px",
+              display: "flex", alignItems: "center", gap: isMobile ? 0 : 9,
+              padding: isMobile ? "4px" : "6px 12px 6px 6px",
               background: showProfile ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.72)",
-              border: showProfile
-                ? "1px solid rgba(59,130,246,0.28)"
-                : "1px solid rgba(255,255,255,0.62)",
+              border: showProfile ? "1px solid rgba(59,130,246,0.28)" : "1px solid rgba(255,255,255,0.62)",
               borderRadius: 12, cursor: "pointer",
               transition: "all 0.2s",
               boxShadow: showProfile ? "0 4px 12px rgba(59,130,246,0.12)" : "none",
             }}
           >
-            {/* Avatar */}
             <div style={{
-              width: 30, height: 30, borderRadius: 9,
+              width: isMobile ? 32 : 30, height: isMobile ? 32 : 30, borderRadius: 9,
               background: rc.bg,
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "white", fontSize: 11, fontWeight: 800,
@@ -314,33 +381,31 @@ export function Header({
             }}>
               {userName.split(" ").map(n => n[0]).join("").slice(0, 2)}
             </div>
-            <div style={{ textAlign: "left" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#1E293B", lineHeight: 1 }}>
-                {userName.split(" ")[0]}
-              </p>
-              <p style={{ fontSize: 10, color: "#64748B", marginTop: 1 }}>
-                {rc.label}
-              </p>
-            </div>
-            <ChevronDown
-              size={12} color="#94A3B8" strokeWidth={2.5}
-              style={{ transition: "transform 0.2s", transform: showProfile ? "rotate(180deg)" : "rotate(0deg)" }}
-            />
+            {!isMobile && (
+              <>
+                <div style={{ textAlign: "left" }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: "#1E293B", lineHeight: 1 }}>{userName.split(" ")[0]}</p>
+                  <p style={{ fontSize: 10, color: "#64748B", marginTop: 1 }}>{rc.label}</p>
+                </div>
+                <ChevronDown
+                  size={12} color="#94A3B8" strokeWidth={2.5}
+                  style={{ transition: "transform 0.2s", transform: showProfile ? "rotate(180deg)" : "rotate(0deg)" }}
+                />
+              </>
+            )}
           </button>
 
-          {/* Profile dropdown */}
           {showProfile && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 10px)", right: 0,
-              width: 240,
+            <div onClick={e => e.stopPropagation()} style={{
+              position: "absolute", top: "calc(100% + 10px)",
+              right: 0,
+              width: isMobile ? 220 : 240,
               background: "rgba(255,255,255,0.95)",
               backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
               border: "1px solid rgba(255,255,255,0.65)",
               borderRadius: 18, overflow: "hidden",
-              boxShadow: "0 16px 48px rgba(59,130,246,0.18)",
-              zIndex: 100,
+              boxShadow: "0 16px 48px rgba(59,130,246,0.18)", zIndex: 100,
             }}>
-              {/* Top */}
               <div style={{
                 padding: "16px 16px 12px",
                 background: "linear-gradient(135deg,rgba(29,78,216,0.06),rgba(59,130,246,0.04))",
@@ -361,20 +426,18 @@ export function Header({
                     <span style={{
                       fontSize: 10, fontWeight: 700,
                       padding: "2px 8px", borderRadius: 99,
-                      background: `${rc.color}18`,
-                      color: rc.color,
+                      background: `${rc.color}18`, color: rc.color,
                       border: `1px solid ${rc.color}30`,
                     }}>{rc.label}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Menu items */}
               <div style={{ padding: "8px" }}>
                 {[
-                  { label: "My Profile",  icon: User,        color: "#3B82F6"  },
-                  { label: "Settings",    icon: Settings,    color: "#D946EF"  },
-                  { label: "Help",        icon: HelpCircle,  color: "#84CC16"  },
+                  { label: "My Profile", icon: User,       color: "#3B82F6" },
+                  { label: "Settings",   icon: Settings,   color: "#D946EF" },
+                  { label: "Help",       icon: HelpCircle, color: "#84CC16" },
                 ].map((item, i) => (
                   <button key={i} style={{
                     width: "100%", display: "flex", alignItems: "center", gap: 10,
@@ -383,14 +446,8 @@ export function Header({
                     fontSize: 13, fontWeight: 500, color: "#334155",
                     transition: "all 0.15s", textAlign: "left",
                   }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLButtonElement).style.background = `${item.color}0d`
-                      ;(e.currentTarget as HTMLButtonElement).style.color = item.color
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "transparent"
-                      ;(e.currentTarget as HTMLButtonElement).style.color = "#334155"
-                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${item.color}0d`; e.currentTarget.style.color = item.color }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#334155" }}
                   >
                     <item.icon size={15} strokeWidth={2} />
                     {item.label}
@@ -406,8 +463,8 @@ export function Header({
                   fontSize: 13, fontWeight: 600, color: "#F43F5E",
                   transition: "all 0.15s", textAlign: "left",
                 }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,63,94,0.08)" }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(244,63,94,0.08)" }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent" }}
                 >
                   <LogOut size={15} strokeWidth={2} />
                   Log Out
@@ -420,3 +477,4 @@ export function Header({
     </header>
   )
 }
+

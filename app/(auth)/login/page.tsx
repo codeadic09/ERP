@@ -99,7 +99,7 @@ export default function LoginPage() {
         display:        "flex",
         alignItems:     "center",
         justifyContent: "center",
-        padding:        "24px",
+        padding:        "16px",
       }}
     >
       {/* Blobs */}
@@ -118,7 +118,7 @@ export default function LoginPage() {
           maxWidth:       420,
           background:     "rgba(255,255,255,0.85)",
           backdropFilter: "blur(24px)",
-          borderRadius:   28,
+          borderRadius:   24,
           border:         "1px solid rgba(255,255,255,0.70)",
           boxShadow:      "0 24px 64px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06)",
           overflow:       "hidden",
@@ -127,7 +127,7 @@ export default function LoginPage() {
         {/* Gradient bar */}
         <div style={{ height: 4, background: "linear-gradient(90deg,#1D4ED8,#6366F1,#A855F7)" }} />
 
-        <div style={{ padding: "40px 40px 44px" }}>
+        <div style={{ padding: "clamp(24px, 6vw, 40px) clamp(20px, 5vw, 40px) clamp(28px, 6vw, 44px)" }}>
 
           {/* Back to Home */}
           <Link

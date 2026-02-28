@@ -552,7 +552,7 @@ export default function FacultyStudentsPage() {
                 </div>
 
                 {/* Meta grid */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     { label: "Phone",      value: selected.phone ?? "—",  icon: Phone    },
                     { label: "Status",     value: selected.status,         icon: CheckCircle2 },

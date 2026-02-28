@@ -25,7 +25,7 @@ const timetable: Record<string, Record<string, ClassEntry | null>> = {
     "10:00":null,
     "11:00":{ subject:"Operating Systems",   code:"CSE302", faculty:"Prof. Anil Rao",   room:"CS-203", type:"lecture",  color:"#D946EF" },
     "12:00":null,
-    "13:00":null, // Break
+    "13:00":null,
     "14:00":{ subject:"DBMS Lab",            code:"CSE303", faculty:"Dr. Priya Sharma", room:"Lab-02", type:"lab",      color:"#84CC16", span:2 },
     "15:00":null,
     "16:00":{ subject:"AI Tutorial",         code:"CSE306", faculty:"Prof. A. Singh",   room:"CS-105", type:"tutorial", color:"#60A5FA" },
@@ -109,72 +109,76 @@ export default function StudentTimetablePage() {
 
   return (
     <DashboardLayout role="student" userName="Aryan Sharma" pageTitle="My Timetable" pageSubtitle="Semester 4 · CSE Section A">
-      <div style={{ padding:"28px 32px", display:"flex", flexDirection:"column", gap:24 }}>
+      <div className="p-4 sm:p-6 md:p-8 flex flex-col gap-5 sm:gap-6 w-full min-w-0">
 
         {/* ── Header controls ── */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <div style={{
-            padding:"6px 18px", borderRadius:14,
-            background:"rgba(59,130,246,0.10)", border:"1px solid rgba(59,130,246,0.22)",
-            display:"flex", alignItems:"center", gap:8,
-          }}>
+        <div className="flex flex-wrap justify-between items-center gap-3">
+          <div className="px-4 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-2">
             <Sparkles size={13} color="#3B82F6" strokeWidth={2.5} />
-            <span style={{ fontSize:12, fontWeight:700, color:"#1D4ED8" }}>
+            <span className="text-xs font-bold text-blue-800">
               Sem 4 · Feb – Jun 2026 · Section A
             </span>
           </div>
-          <div style={{ display:"flex", gap:8 }}>
+          <div className="flex gap-2">
             {(["week","day"] as const).map(v => (
-              <button key={v} onClick={() => setView(v)} style={{
-                padding:"7px 18px", borderRadius:12, border:"none",
-                fontSize:12, fontWeight:700, cursor:"pointer", transition:"all 0.2s",
-                background: view===v ? "linear-gradient(135deg,#1D4ED8,#3B82F6)" : "rgba(241,245,249,0.80)",
-                color: view===v ? "white" : "#64748B",
-                boxShadow: view===v ? "0 4px 10px rgba(59,130,246,0.30)" : "none",
-              }}>{v.charAt(0).toUpperCase()+v.slice(1)} View</button>
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-200 ${
+                  view === v
+                    ? "text-white shadow-md"
+                    : "bg-gray-100/80 text-gray-500"
+                }`}
+                style={view === v ? {
+                  background: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
+                  boxShadow: "0 4px 10px rgba(59,130,246,0.30)",
+                } : {}}
+              >
+                {v.charAt(0).toUpperCase()+v.slice(1)} View
+              </button>
             ))}
           </div>
         </div>
 
         {/* ── Today's classes strip ── */}
         <div>
-          <h3 style={{ fontSize:14, fontWeight:800, color:"#1E293B", marginBottom:12 }}>
-            Today's Classes <span style={{ fontWeight:500, color:"#64748B", fontSize:12 }}>— Monday, Feb 27</span>
+          <h3 className="text-sm font-extrabold text-gray-800 mb-3">
+            Today&apos;s Classes <span className="font-medium text-gray-500 text-xs">— Monday, Feb 27</span>
           </h3>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
             {todayClasses.map((c,i) => (
-              <div key={i} style={{
-                padding:"16px 18px", borderRadius:18,
-                background:"rgba(255,255,255,0.72)",
-                border:"1px solid rgba(255,255,255,0.65)",
-                borderTop:`3px solid ${c.color}`,
-                backdropFilter:"blur(12px)",
-                transition:"all 0.2s",
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background="rgba(255,255,255,0.92)"; (e.currentTarget as HTMLDivElement).style.transform="translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow=`0 8px 24px ${c.color}20` }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background="rgba(255,255,255,0.72)"; (e.currentTarget as HTMLDivElement).style.transform="translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow="none" }}
+              <div
+                key={i}
+                className="p-4 rounded-2xl bg-white/72 border border-white/65 backdrop-blur-xl transition-all duration-200 hover:bg-white/92 hover:-translate-y-0.5"
+                style={{ borderTop:`3px solid ${c.color}` }}
               >
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-                  <div style={{ width:36, height:36, borderRadius:10, background:`${c.color}14`, border:`1px solid ${c.color}28`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div className="flex justify-between items-start mb-2.5">
+                  <div
+                    className="w-9 h-9 rounded-[10px] flex items-center justify-center"
+                    style={{ background:`${c.color}14`, border:`1px solid ${c.color}28` }}
+                  >
                     <BookOpen size={16} color={c.color} strokeWidth={2} />
                   </div>
-                  <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:99, background:typeColors[c.type].bg, color:typeColors[c.type].text }}>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background:typeColors[c.type].bg, color:typeColors[c.type].text }}
+                  >
                     {c.type}
                   </span>
                 </div>
-                <p style={{ fontSize:13, fontWeight:800, color:"#1E293B", marginBottom:6, lineHeight:1.3 }}>{c.subject}</p>
-                <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                <p className="text-[13px] font-extrabold text-gray-800 mb-1.5 leading-tight">{c.subject}</p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
                     <Clock size={10} color="#94A3B8" strokeWidth={2.5} />
-                    <span style={{ fontSize:11, color:"#64748B" }}>{c.time}</span>
+                    <span className="text-[11px] text-gray-500">{c.time}</span>
                   </div>
-                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                  <div className="flex items-center gap-1.5">
                     <MapPin size={10} color="#94A3B8" strokeWidth={2.5} />
-                    <span style={{ fontSize:11, color:"#64748B" }}>{c.room}</span>
+                    <span className="text-[11px] text-gray-500">{c.room}</span>
                   </div>
-                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                  <div className="flex items-center gap-1.5">
                     <User size={10} color="#94A3B8" strokeWidth={2.5} />
-                    <span style={{ fontSize:11, color:"#64748B" }}>{c.faculty}</span>
+                    <span className="text-[11px] text-gray-500">{c.faculty}</span>
                   </div>
                 </div>
               </div>
@@ -183,36 +187,37 @@ export default function StudentTimetablePage() {
         </div>
 
         {/* ── Weekly timetable grid ── */}
-        <div className="glass-card" style={{ borderRadius:24, overflow:"hidden" }}>
-          <div style={{ padding:"20px 28px 16px", borderBottom:"1px solid rgba(255,255,255,0.55)" }}>
-            <h3 style={{ fontSize:15, fontWeight:800, color:"#1E293B", marginBottom:3 }}>Weekly Schedule</h3>
-            <p style={{ fontSize:12, color:"#64748B" }}>Semester 4 — Full week overview</p>
+        <div className="glass-card rounded-3xl overflow-hidden">
+          <div className="px-4 sm:px-7 pt-5 pb-4 border-b border-white/55">
+            <h3 className="text-[15px] font-extrabold text-gray-800 mb-0.5">Weekly Schedule</h3>
+            <p className="text-xs text-gray-500">Semester 4 — Full week overview</p>
           </div>
 
-          <div style={{ overflowX:"auto", padding:"0 0 8px" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", minWidth:900 }}>
+          <div className="overflow-x-auto pb-2">
+            <table className="w-full border-collapse" style={{ minWidth: 900 }}>
               <thead>
-                <tr style={{ background:"rgba(241,245,249,0.60)" }}>
-                  <th style={{ padding:"12px 16px", width:80, textAlign:"center", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:"0.06em" }}>Time</th>
+                <tr className="bg-gray-100/60">
+                  <th className="px-3 sm:px-4 py-3 w-20 text-center text-[11px] font-bold text-gray-500 uppercase tracking-wider">Time</th>
                   {days.map(d => (
-                    <th key={d} style={{
-                      padding:"12px 16px", textAlign:"center", fontSize:11, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase",
-                      color: d===today ? "#1D4ED8" : "#64748B",
-                      background: d===today ? "rgba(59,130,246,0.06)" : "transparent",
-                    }}>
+                    <th
+                      key={d}
+                      className={`px-3 sm:px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider ${
+                        d===today ? "text-blue-800 bg-blue-500/5" : "text-gray-500"
+                      }`}
+                    >
                       {d.slice(0,3)}
-                      {d===today && <div style={{ width:5, height:5, borderRadius:"50%", background:"#3B82F6", margin:"4px auto 0", boxShadow:"0 0 6px rgba(59,130,246,0.60)" }} />}
+                      {d===today && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mx-auto mt-1" style={{ boxShadow:"0 0 6px rgba(59,130,246,0.60)" }} />}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {timeSlots.map((slot, si) => (
-                  <tr key={slot} style={{ borderTop:"1px solid rgba(255,255,255,0.40)" }}>
+                {timeSlots.map((slot) => (
+                  <tr key={slot} className="border-t border-white/40">
                     {/* Time label */}
-                    <td style={{ padding:"6px 16px", textAlign:"center", fontSize:11, color:"#94A3B8", fontWeight:600, whiteSpace:"nowrap", verticalAlign:"middle" }}>
+                    <td className="px-3 sm:px-4 py-1.5 text-center text-[11px] text-gray-400 font-semibold whitespace-nowrap align-middle">
                       {slot}
-                      {slot==="13:00" && <div style={{ fontSize:9, color:"#FBBF24", fontWeight:700, marginTop:1 }}>Break</div>}
+                      {slot==="13:00" && <div className="text-[9px] text-amber-500 font-bold mt-0.5">Break</div>}
                     </td>
 
                     {days.map(day => {
@@ -221,55 +226,35 @@ export default function StudentTimetablePage() {
                       const isBreak = slot === "13:00"
 
                       if (isBreak) return (
-                        <td key={day} style={{
-                          padding:"8px 8px",
-                          background: isToday ? "rgba(59,130,246,0.03)" : "transparent",
-                          textAlign:"center",
-                        }}>
-                          <div style={{ fontSize:10, color:"#FBBF24", fontWeight:700, padding:"6px", borderRadius:8, background:"rgba(251,191,36,0.08)" }}>
+                        <td key={day} className={`p-2 text-center ${isToday ? "bg-blue-500/3" : ""}`}>
+                          <div className="text-[10px] text-amber-500 font-bold p-1.5 rounded-lg bg-amber-500/8">
                             Lunch Break
                           </div>
                         </td>
                       )
 
                       if (!entry) return (
-                        <td key={day} style={{
-                          padding:"8px 8px",
-                          background: isToday ? "rgba(59,130,246,0.02)" : "transparent",
-                        }} />
+                        <td key={day} className={`p-2 ${isToday ? "bg-blue-500/2" : ""}`} />
                       )
 
                       return (
-                        <td key={day} style={{
-                          padding:"4px 6px",
-                          background: isToday ? "rgba(59,130,246,0.03)" : "transparent",
-                          verticalAlign:"top",
-                        }}>
-                          <div style={{
-                            padding:"10px 12px",
-                            borderRadius:12,
-                            background:`${entry.color}10`,
-                            border:`1px solid ${entry.color}25`,
-                            borderLeft:`3px solid ${entry.color}`,
-                            cursor:"pointer",
-                            transition:"all 0.2s",
-                          }}
-                            onMouseEnter={e => {
-                              (e.currentTarget as HTMLDivElement).style.background=`${entry.color}18`
-                              ;(e.currentTarget as HTMLDivElement).style.transform="scale(1.02)"
-                            }}
-                            onMouseLeave={e => {
-                              (e.currentTarget as HTMLDivElement).style.background=`${entry.color}10`
-                              ;(e.currentTarget as HTMLDivElement).style.transform="scale(1)"
+                        <td key={day} className={`p-1 sm:p-1.5 align-top ${isToday ? "bg-blue-500/3" : ""}`}>
+                          <div
+                            className="px-2.5 sm:px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                            style={{
+                              background:`${entry.color}10`,
+                              border:`1px solid ${entry.color}25`,
+                              borderLeft:`3px solid ${entry.color}`,
                             }}
                           >
-                            <p style={{ fontSize:11, fontWeight:800, color:"#1E293B", marginBottom:2, lineHeight:1.3 }}>{entry.subject}</p>
-                            <p style={{ fontSize:9,  color:"#64748B", marginBottom:3 }}>{entry.room}</p>
-                            <span style={{
-                              fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:99,
-                              background: typeColors[entry.type].bg,
-                              color: typeColors[entry.type].text,
-                            }}>{entry.type}</span>
+                            <p className="text-[11px] font-extrabold text-gray-800 mb-0.5 leading-tight">{entry.subject}</p>
+                            <p className="text-[9px] text-gray-500 mb-1">{entry.room}</p>
+                            <span
+                              className="text-[9px] font-bold px-1.5 py-px rounded-full"
+                              style={{ background: typeColors[entry.type].bg, color: typeColors[entry.type].text }}
+                            >
+                              {entry.type}
+                            </span>
                           </div>
                         </td>
                       )
@@ -281,17 +266,17 @@ export default function StudentTimetablePage() {
           </div>
 
           {/* Legend */}
-          <div style={{ padding:"14px 28px", borderTop:"1px solid rgba(255,255,255,0.50)", display:"flex", gap:16, alignItems:"center", flexWrap:"wrap" }}>
-            <span style={{ fontSize:11, fontWeight:700, color:"#64748B" }}>Type:</span>
+          <div className="px-4 sm:px-7 py-3.5 border-t border-white/50 flex flex-wrap gap-4 items-center">
+            <span className="text-[11px] font-bold text-gray-500">Type:</span>
             {Object.entries(typeColors).map(([type,style]) => (
-              <div key={type} style={{ display:"flex", alignItems:"center", gap:5 }}>
-                <div style={{ width:10, height:10, borderRadius:3, background:style.bg, border:`1px solid ${style.text}30` }} />
-                <span style={{ fontSize:11, color:"#64748B", fontWeight:600, textTransform:"capitalize" }}>{type}</span>
+              <div key={type} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ background:style.bg, border:`1px solid ${style.text}30` }} />
+                <span className="text-[11px] text-gray-500 font-semibold capitalize">{type}</span>
               </div>
             ))}
-            <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:5 }}>
-              <div style={{ width:5, height:5, borderRadius:"50%", background:"#3B82F6", boxShadow:"0 0 6px rgba(59,130,246,0.60)" }} />
-              <span style={{ fontSize:11, color:"#1D4ED8", fontWeight:700 }}>Today — Monday</span>
+            <div className="sm:ml-auto flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" style={{ boxShadow:"0 0 6px rgba(59,130,246,0.60)" }} />
+              <span className="text-[11px] text-blue-800 font-bold">Today — Monday</span>
             </div>
           </div>
         </div>
