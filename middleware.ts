@@ -40,21 +40,30 @@ export async function middleware(req: NextRequest) {
   // ═══════════════════════════════════════════════════════
   // 2. RATE LIMITING — prevent brute-force & DDoS
   // ═══════════════════════════════════════════════════════
+  const method = req.method
   let rateLimitConfig = RATE_LIMITS.page
   if (pathname.startsWith("/api/")) {
     rateLimitConfig = RATE_LIMITS.api
   }
-  if (pathname === "/login" || pathname.startsWith("/(auth)")) {
+  // Only apply strict auth rate-limits to POST (actual sign-in attempts),
+  // not to GET page loads (which include HMR, prefetches, etc.)
+  if ((pathname === "/login" || pathname.startsWith("/(auth)")) && method === "POST") {
     rateLimitConfig = RATE_LIMITS.auth
   }
-  if (pathname === "/signup") {
+  if (pathname === "/signup" && method === "POST") {
     rateLimitConfig = RATE_LIMITS.signup
   }
 
-  const rateLimitKey = `${ip}:${pathname.split("/").slice(0, 3).join("/")}`
-  const rateResult = checkRateLimit(rateLimitKey, rateLimitConfig)
+  // Skip rate limiting if we can't identify the client (e.g. behind Render proxy)
+  // to avoid all users sharing one bucket
+  let rateResult: { allowed: boolean; remaining: number; retryAfterSec: number } | null = null
 
-  if (!rateResult.allowed) {
+  if (ip !== "unknown") {
+    const rateLimitKey = `${ip}:${pathname.split("/").slice(0, 3).join("/")}`
+    rateResult = checkRateLimit(rateLimitKey, rateLimitConfig)
+  }
+
+  if (rateResult && !rateResult.allowed) {
     console.warn(`[SECURITY] Rate limited: ip=${ip} path=${pathname}`)
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
@@ -129,7 +138,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // Rate limit headers for transparency
-  res.headers.set("X-RateLimit-Remaining", String(rateResult.remaining))
+  if (rateResult) {
+    res.headers.set("X-RateLimit-Remaining", String(rateResult.remaining))
+  }
 
   return res
 }

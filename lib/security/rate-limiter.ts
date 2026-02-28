@@ -29,13 +29,13 @@ export interface RateLimitConfig {
 /** Default tiers for different route types */
 export const RATE_LIMITS = {
   /** Auth endpoints — tight to block brute-force */
-  auth: { maxRequests: 5, windowSec: 60 } as RateLimitConfig,
+  auth: { maxRequests: 20, windowSec: 60 } as RateLimitConfig,
   /** API mutation endpoints */
-  api: { maxRequests: 20, windowSec: 60 } as RateLimitConfig,
+  api: { maxRequests: 60, windowSec: 60 } as RateLimitConfig,
   /** General page loads */
-  page: { maxRequests: 60, windowSec: 60 } as RateLimitConfig,
+  page: { maxRequests: 120, windowSec: 60 } as RateLimitConfig,
   /** Strict limit for signup (prevent mass account creation) */
-  signup: { maxRequests: 3, windowSec: 300 } as RateLimitConfig,
+  signup: { maxRequests: 10, windowSec: 300 } as RateLimitConfig,
 } as const
 
 export interface RateLimitResult {
