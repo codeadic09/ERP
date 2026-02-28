@@ -27,12 +27,21 @@ export function validateCsrf(
     return { valid: false, reason: "missing-origin-and-referer" }
   }
 
-  // Build list of allowed origins
+  // Build list of allowed origins — include the request URL's own origin
+  // AND the forwarded origin (behind reverse proxies like Render, Vercel, etc.)
   const url = new URL(request.url)
   const allowed = new Set<string>([
     url.origin,
     ...(allowedOrigins ?? []),
   ])
+
+  // Behind a reverse proxy, request.url may show the internal host (e.g. localhost:10000)
+  // but the browser sends the public origin. Use X-Forwarded-Host/Proto to match.
+  const fwdHost  = request.headers.get("x-forwarded-host")
+  const fwdProto = request.headers.get("x-forwarded-proto") ?? "https"
+  if (fwdHost) {
+    allowed.add(`${fwdProto}://${fwdHost}`)
+  }
 
   // Check Origin header first (more reliable)
   if (origin) {
