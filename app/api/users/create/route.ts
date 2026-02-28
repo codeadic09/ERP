@@ -10,11 +10,13 @@ const CreateUserSchema = z.object({
   email:       z.string().email().max(320),
   password:    z.string().min(8).max(128),
   role:        z.enum(["student", "faculty", "admin"]),
-  dept_id:     z.string().uuid().nullable().optional(),
-  phone:       z.string().max(20).nullable().optional(),
+  dept_id:     z.string().uuid().nullable().optional()
+                .or(z.literal("").transform(() => null)),   // "" → null
+  phone:       z.string().max(20).nullable().optional()
+                .or(z.literal("").transform(() => null)),   // "" → null
   status:      z.enum(["active", "inactive"]).default("active"),
   enrolled_at: z.string().optional(),
-})
+}).passthrough()
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,8 +32,13 @@ export async function POST(req: NextRequest) {
     const parsed = CreateUserSchema.safeParse(rawBody)
 
     if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors
+      const summary = Object.entries(fieldErrors)
+        .map(([k, v]) => `${k}: ${(v as string[]).join(", ")}`)
+        .join("; ")
+      console.warn(`[API] Create user validation failed:`, summary)
       return NextResponse.json(
-        { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+        { error: summary || "Invalid input", details: fieldErrors },
         { status: 400 }
       )
     }
