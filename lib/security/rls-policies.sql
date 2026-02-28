@@ -233,6 +233,22 @@ CREATE POLICY "student_read_own_registrations" ON public.registrations
     AND student_id = public.get_my_user_id()
   );
 
+-- Students can insert their own registrations
+CREATE POLICY "student_insert_own_registrations" ON public.registrations
+  FOR INSERT
+  WITH CHECK (
+    public.get_my_role() = 'student'
+    AND student_id = public.get_my_user_id()
+  );
+
+-- Students can delete their own pending registrations
+CREATE POLICY "student_delete_own_registrations" ON public.registrations
+  FOR DELETE
+  USING (
+    public.get_my_role() = 'student'
+    AND student_id = public.get_my_user_id()
+  );
+
 -- ┌─────────────────────────────────────────────────────────┐
 -- │  FACULTY_SUBJECTS TABLE POLICIES                        │
 -- └─────────────────────────────────────────────────────────┘
