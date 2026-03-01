@@ -55,7 +55,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 export default function AdminOverviewPage() {
   const me = useAuth("admin")
   if (!me) return null
-  const [time, setTime] = useState(new Date())
+  const [time, setTime] = useState<Date | null>(null)
 
   // data
   const [stats,   setStats]   = useState<Awaited<ReturnType<typeof getAdminStats>> | null>(null)
@@ -65,8 +65,9 @@ export default function AdminOverviewPage() {
   const [depts,   setDepts]   = useState<Department[]>([])
   const [loading, setLoading] = useState(true)
 
-  // live clock
+  // live clock — only starts client-side to avoid hydration mismatch
   useEffect(() => {
+    setTime(new Date())
     const t = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
@@ -196,6 +197,7 @@ export default function AdminOverviewPage() {
     <DashboardLayout
       role="admin"
       userName="Admin"
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Overview"
       pageSubtitle="Welcome back! Here's what's happening today."
       loading={loading}
@@ -212,10 +214,10 @@ export default function AdminOverviewPage() {
             <div>
               <p className="text-blue-100 text-sm font-medium mb-1 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" />
-                {time.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                {time ? time.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "\u00A0"}
               </p>
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-                Good {time.getHours() < 12 ? "Morning" : time.getHours() < 17 ? "Afternoon" : "Evening"}, Admin 👋
+                Good {time ? (time.getHours() < 12 ? "Morning" : time.getHours() < 17 ? "Afternoon" : "Evening") : "Day"}, Admin 👋
               </h2>
               <p className="text-blue-100 text-sm mt-1">
                 UniCore ERP — everything is running smoothly today.
@@ -223,10 +225,10 @@ export default function AdminOverviewPage() {
             </div>
             <div className="text-right shrink-0">
               <p className="text-4xl font-black tabular-nums tracking-tight">
-                {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                {time ? time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "\u00A0"}
               </p>
               <p className="text-blue-200 text-xs mt-1 uppercase tracking-widest font-semibold">
-                {time.toLocaleTimeString("en-IN", { second: "2-digit" })} sec
+                {time ? `${time.toLocaleTimeString("en-IN", { second: "2-digit" })} sec` : "\u00A0"}
               </p>
             </div>
           </div>

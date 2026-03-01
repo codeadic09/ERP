@@ -39,16 +39,124 @@ function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-lg bg-gray-100 ${className}`} />
 }
 
-interface FormData {
-  name:        string
-  code:        string
-  dept_id:     string
-  faculty_ids: string[]   // many-to-many
-  semester:    string
+// ─── Form state type & default ──────────────────────────────────────────
+type SubjectFormData = { name: string; code: string; semester: string; dept_id: string; faculty_ids: string[] }
+const emptyForm: SubjectFormData = { name: "", code: "", semester: "", dept_id: "", faculty_ids: [] }
+
+// ─── SubjectForm — defined OUTSIDE SubjectsPage to prevent focus loss ──
+interface SubjectFormProps {
+  form:            SubjectFormData
+  setForm:         React.Dispatch<React.SetStateAction<SubjectFormData>>
+  filteredFaculty: User[]
+  toggleFaculty:   (fid: string) => void
+  depts:           Department[]
 }
 
-const emptyForm: FormData = {
-  name: "", code: "", dept_id: "", faculty_ids: [], semester: "",
+function SubjectForm({ form, setForm, filteredFaculty, toggleFaculty, depts }: SubjectFormProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+
+      {/* Name */}
+      <div className="col-span-2 space-y-1.5">
+        <Label className="text-xs font-semibold">Subject Name *</Label>
+        <Input
+          placeholder="e.g. Data Structures & Algorithms"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          className="h-9 text-sm"
+        />
+      </div>
+
+      {/* Code */}
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Subject Code *</Label>
+        <Input
+          placeholder="e.g. CS301"
+          value={form.code}
+          onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+          className="h-9 text-sm font-mono"
+          maxLength={10}
+        />
+      </div>
+
+      {/* Semester */}
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Semester</Label>
+        <Select
+          value={form.semester}
+          onValueChange={v => setForm(f => ({ ...f, semester: v }))}
+        >
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            {[1,2,3,4,5,6,7,8].map(n => (
+              <SelectItem key={n} value={String(n)}>Semester {n}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Department */}
+      <div className="col-span-2 space-y-1.5">
+        <Label className="text-xs font-semibold">Department *</Label>
+        <Select
+          value={form.dept_id}
+          onValueChange={v => setForm(f => ({ ...f, dept_id: v, faculty_id: "" }))}
+        >
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue placeholder="Select department" />
+          </SelectTrigger>
+          <SelectContent>
+            {depts.map(d => (
+              <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Faculty (multi-select checkboxes) */}
+      <div className="col-span-2 space-y-1.5">
+        <Label className="text-xs font-semibold">
+          Assign Faculty {form.faculty_ids.length > 0 && <span className="text-blue-600">({form.faculty_ids.length})</span>}
+        </Label>
+        {!form.dept_id ? (
+          <p className="text-xs text-gray-400 italic py-2">Select a department first</p>
+        ) : filteredFaculty.length === 0 ? (
+          <p className="text-xs text-gray-400 italic py-2">No faculty in this department</p>
+        ) : (
+          <div className="border rounded-lg max-h-36 overflow-y-auto divide-y divide-gray-50">
+            {filteredFaculty.map(f => {
+              const checked = form.faculty_ids.includes(f.id)
+              return (
+                <label
+                  key={f.id}
+                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    checked ? "bg-blue-50/60" : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleFaculty(f.id)}
+                    className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[9px] font-black text-purple-700 shrink-0">
+                    {f.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("")}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-700 truncate">{f.name}</p>
+                    <p className="text-[10px] text-gray-400 truncate">{f.email}</p>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+    </div>
+  )
 }
 
 export default function SubjectsPage() {
@@ -70,7 +178,7 @@ export default function SubjectsPage() {
   const [editOpen,   setEditOpen]   = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [selected,   setSelected]   = useState<Subject | null>(null)
-  const [form,       setForm]       = useState<FormData>(emptyForm)
+  const [form,       setForm]       = useState<SubjectFormData>(emptyForm)
 
   async function load() {
     setLoading(true)
@@ -218,117 +326,12 @@ export default function SubjectsPage() {
     }
   }
 
-  function SubjectForm() {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
-
-        {/* Name */}
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs font-semibold">Subject Name *</Label>
-          <Input
-            placeholder="e.g. Data Structures & Algorithms"
-            value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            className="h-9 text-sm"
-          />
-        </div>
-
-        {/* Code */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Subject Code *</Label>
-          <Input
-            placeholder="e.g. CS301"
-            value={form.code}
-            onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-            className="h-9 text-sm font-mono"
-            maxLength={10}
-          />
-        </div>
-
-        {/* Semester */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Semester</Label>
-          <Select
-            value={form.semester}
-            onValueChange={v => setForm(f => ({ ...f, semester: v }))}
-          >
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              {[1,2,3,4,5,6,7,8].map(n => (
-                <SelectItem key={n} value={String(n)}>Semester {n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Department */}
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs font-semibold">Department *</Label>
-          <Select
-            value={form.dept_id}
-            onValueChange={v => setForm(f => ({ ...f, dept_id: v, faculty_id: "" }))}
-          >
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue placeholder="Select department" />
-            </SelectTrigger>
-            <SelectContent>
-              {depts.map(d => (
-                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Faculty (multi-select checkboxes) */}
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs font-semibold">
-            Assign Faculty {form.faculty_ids.length > 0 && <span className="text-blue-600">({form.faculty_ids.length})</span>}
-          </Label>
-          {!form.dept_id ? (
-            <p className="text-xs text-gray-400 italic py-2">Select a department first</p>
-          ) : filteredFaculty.length === 0 ? (
-            <p className="text-xs text-gray-400 italic py-2">No faculty in this department</p>
-          ) : (
-            <div className="border rounded-lg max-h-36 overflow-y-auto divide-y divide-gray-50">
-              {filteredFaculty.map(f => {
-                const checked = form.faculty_ids.includes(f.id)
-                return (
-                  <label
-                    key={f.id}
-                    className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      checked ? "bg-blue-50/60" : ""
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleFaculty(f.id)}
-                      className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[9px] font-black text-purple-700 shrink-0">
-                      {f.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("")}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-700 truncate">{f.name}</p>
-                      <p className="text-[10px] text-gray-400 truncate">{f.email}</p>
-                    </div>
-                  </label>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-      </div>
-    )
-  }
-
+  // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
       role="admin"
       userName="Admin"
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Subjects"
       pageSubtitle="Manage subjects and faculty assignments"
       loading={loading}
@@ -554,7 +557,7 @@ export default function SubjectsPage() {
               Faculty dropdown filters by selected department.
             </DialogDescription>
           </DialogHeader>
-          <SubjectForm />
+          <SubjectForm form={form} setForm={setForm} filteredFaculty={filteredFaculty} toggleFaculty={toggleFaculty} depts={depts} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setAddOpen(false)} disabled={saving}>Cancel</Button>
             <Button
@@ -577,7 +580,7 @@ export default function SubjectsPage() {
               <Edit3 className="h-4 w-4 text-blue-600" /> Edit Subject
             </DialogTitle>
           </DialogHeader>
-          <SubjectForm />
+          <SubjectForm form={form} setForm={setForm} filteredFaculty={filteredFaculty} toggleFaculty={toggleFaculty} depts={depts} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
             <Button

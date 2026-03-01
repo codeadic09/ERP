@@ -35,8 +35,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   getUsers, getDepartments, getAttendance, getFees,
+  getSubjectsByFacultyId, getStudentsEnrolledInSubject,
 } from "@/lib/db"
-import type { User, Department, Attendance, Fee } from "@/lib/types"
+import type { User, Department, Attendance, Fee, Subject } from "@/lib/types"
 
 // ─── Helpers ─────────────────────────────────────────────────────
 const PAGE_SIZE = 10
@@ -67,6 +68,8 @@ export default function FacultyStudentsPage() {
   const [depts,      setDepts]      = useState<Department[]>([])
   const [attendance, setAttendance] = useState<Attendance[]>([])
   const [fees,       setFees]       = useState<Fee[]>([])
+  const [mySubjects, setMySubjects] = useState<Subject[]>([])
+  const [enrolledMap, setEnrolledMap] = useState<Record<string, User[]>>({})
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
 
@@ -77,6 +80,7 @@ export default function FacultyStudentsPage() {
   const [search,       setSearch]       = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [filterAtt,    setFilterAtt]    = useState("all")
+  const [filterSubject,setFilterSubject]= useState("all")
   const [page,         setPage]         = useState(1)
 
   // ── View dialog ───────────────────────────────────────────────
@@ -88,11 +92,24 @@ export default function FacultyStudentsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [u, d, a, f] = await Promise.all([
+      const facId = authUser.user?.id
+      const [u, d, a, f, ms] = await Promise.all([
         getUsers(), getDepartments(), getAttendance(), getFees(),
+        facId ? getSubjectsByFacultyId(facId) : Promise.resolve([]),
       ])
-      setAllUsers(u); setDepts(d); setAttendance(a); setFees(f)
+      setAllUsers(u); setDepts(d); setAttendance(a); setFees(f); setMySubjects(ms)
       setMe(authUser.user)
+
+      // Load enrolled students for each subject
+      if (ms.length > 0) {
+        const enrolledEntries = await Promise.all(
+          ms.map(async subj => {
+            const students = await getStudentsEnrolledInSubject(subj.id)
+            return [subj.id, students] as [string, User[]]
+          })
+        )
+        setEnrolledMap(Object.fromEntries(enrolledEntries))
+      }
     } catch (e: any) {
       setError(e.message ?? "Failed to load")
     } finally {
@@ -101,13 +118,33 @@ export default function FacultyStudentsPage() {
   }
 
   useEffect(() => { if (authUser.user) load() }, [authUser.user])
-  useEffect(() => { setPage(1) }, [search, filterStatus, filterAtt])
+  useEffect(() => { setPage(1) }, [search, filterStatus, filterAtt, filterSubject])
 
-  // ── My dept students ──────────────────────────────────────────
-  const myStudents = useMemo(
-    () => allUsers.filter(u => u.role === "student" && u.dept_id === me?.dept_id),
-    [allUsers, me]
-  )
+  // ── My students: enrolled in any of my subjects ───────────────
+  const myStudents = useMemo(() => {
+    // Build unique set of students across all enrolled subjects
+    const seen = new Set<string>()
+    const result: User[] = []
+    if (filterSubject !== "all") {
+      // Filter to a specific subject
+      const students = enrolledMap[filterSubject] ?? []
+      return students
+    }
+    // All subjects
+    Object.values(enrolledMap).forEach(students => {
+      students.forEach(s => {
+        if (!seen.has(s.id)) {
+          seen.add(s.id)
+          result.push(s)
+        }
+      })
+    })
+    // If no subjects assigned, fallback to dept students
+    if (result.length === 0 && mySubjects.length === 0) {
+      return allUsers.filter(u => u.role === "student" && u.dept_id === me?.dept_id)
+    }
+    return result
+  }, [enrolledMap, filterSubject, mySubjects, allUsers, me])
 
   // ── Per-student helpers ───────────────────────────────────────
   function attPct(studentId: string): number | null {
@@ -200,8 +237,9 @@ export default function FacultyStudentsPage() {
     <DashboardLayout
       role="faculty"
       userName={me?.name ?? "Faculty"}
+      avatarUrl={me?.avatar_url}
       pageTitle="My Students"
-      pageSubtitle={`${depts.find(d => d.id === me?.dept_id)?.name ?? "—"} department`}
+      pageSubtitle={`Students enrolled in your subjects`}
       loading={loading}
     >
       <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0">
@@ -346,6 +384,19 @@ export default function FacultyStudentsPage() {
                     <SelectItem value="na">No Data</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Subject filter */}
+                {mySubjects.length > 0 && (
+                  <Select value={filterSubject} onValueChange={setFilterSubject}>
+                    <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subjects</SelectItem>
+                      {mySubjects.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <Button variant="outline" size="sm" onClick={load} className="h-8 w-8 p-0 shrink-0">

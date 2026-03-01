@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/hooks/useAuth"
 import { useState, useEffect, useMemo } from "react"
 import {
-  Megaphone, Plus, Search, Bell, Pin,
+  Megaphone, Plus, Search, Bell,
   Calendar, Users, GraduationCap, BookOpen,
   AlertTriangle, RefreshCw, Eye, Trash2,
   ChevronLeft, ChevronRight, Loader2,
@@ -32,9 +32,8 @@ import { getNotices, addNotice, deleteNotice, getUsers } from "@/lib/db"
 import type { Notice, User } from "@/lib/types"
 
 // ─── Types ────────────────────────────────────────────────────────
-type Priority = "low" | "medium" | "high" | "urgent"
 type Target   = "All" | "Students" | "Faculty"
-type Filter_  = "all" | Target | Priority
+type Filter_  = "all" | Target
 
 const PAGE_SIZE = 6
 
@@ -53,15 +52,6 @@ function timeAgo(dateStr: string) {
   if (h < 24) return `${h}h ago`
   if (d < 7)  return `${d}d ago`
   return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-}
-
-const priorityConfig: Record<Priority, {
-  label: string; color: string; bg: string; border: string; dot: string
-}> = {
-  low:    { label: "Low",    color: "#64748B", bg: "rgba(100,116,139,0.08)", border: "rgba(100,116,139,0.18)", dot: "#94A3B8" },
-  medium: { label: "Medium", color: "#2563EB", bg: "rgba(37,99,235,0.08)",  border: "rgba(37,99,235,0.18)",  dot: "#3B82F6" },
-  high:   { label: "High",   color: "#D97706", bg: "rgba(217,119,6,0.08)",  border: "rgba(217,119,6,0.18)",  dot: "#F59E0B" },
-  urgent: { label: "Urgent", color: "#DC2626", bg: "rgba(220,38,38,0.08)",  border: "rgba(220,38,38,0.18)",  dot: "#EF4444" },
 }
 
 const targetConfig: Record<Target, { label: string; color: string; bg: string; icon: any }> = {
@@ -100,10 +90,8 @@ export default function FacultyNoticesPage() {
   // ── Form state ────────────────────────────────────────────────
   const blankForm = {
     title:    "",
-    content:  "",
+    body:     "",
     target:   "Students" as Target,
-    priority: "medium"   as Priority,
-    pinned:   false,
   }
   const [form, setForm] = useState(blankForm)
 
@@ -132,8 +120,7 @@ export default function FacultyNoticesPage() {
 
   const stats = useMemo(() => ({
     total:   myNotices.length,
-    pinned:  myNotices.filter(n => n.pinned).length,
-    urgent:  myNotices.filter(n => (n as any).priority === "urgent").length,
+    urgent:  myNotices.filter(n => n.urgent).length,
     recent:  myNotices.filter(n => {
       const d = Date.now() - new Date(n.created_at).getTime()
       return d < 86400000 * 7
@@ -144,18 +131,17 @@ export default function FacultyNoticesPage() {
   const filtered = useMemo(() => {
     return notices.filter(n => {
       if (search && !n.title.toLowerCase().includes(search.toLowerCase()) &&
-                    !n.content.toLowerCase().includes(search.toLowerCase())) return false
+                    !(n.body ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (filter === "all")                 return true
       if (filter === "All"      )           return n.target === "All"
       if (filter === "Students" )           return n.target === "Students"
       if (filter === "Faculty"  )           return n.target === "Faculty"
-      if (["low","medium","high","urgent"].includes(filter))
-        return (n as any).priority === filter
+      if (filter === "urgent")              return n.urgent
       return true
     })
       .sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1
-        if (!a.pinned && b.pinned) return 1
+        if (a.urgent && !b.urgent) return -1
+        if (!a.urgent && b.urgent) return 1
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
   }, [notices, search, filter])
@@ -171,15 +157,14 @@ export default function FacultyNoticesPage() {
 
   // ── Compose ───────────────────────────────────────────────────
   async function handleCompose() {
-    if (!form.title.trim() || !form.content.trim()) return
+    if (!form.title.trim() || !form.body.trim()) return
     setSaving(true)
     try {
       const newNotice = await addNotice({
         title:      form.title.trim(),
-        content:    form.content.trim(),
+        body:       form.body.trim(),
         target:     form.target,
-        priority:   form.priority,
-        pinned:     form.pinned,
+        urgent:     false,
         created_by: me?.id ?? "",
       } as any)
       setNotices(prev => [newNotice, ...prev])
@@ -216,6 +201,7 @@ export default function FacultyNoticesPage() {
     <DashboardLayout
       role="faculty"
       userName={me?.name ?? "Faculty"}
+      avatarUrl={me?.avatar_url}
       pageTitle="Notices"
       pageSubtitle="Publish and manage announcements"
       loading={loading}
@@ -241,7 +227,6 @@ export default function FacultyNoticesPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: "My Notices",   value: stats.total,  icon: Megaphone,   color: "text-blue-600",    bg: "bg-blue-50",    border: "border-blue-100"    },
-            { label: "Pinned",       value: stats.pinned, icon: Pin,         color: "text-indigo-600",  bg: "bg-indigo-50",  border: "border-indigo-100"  },
             { label: "Urgent",       value: stats.urgent, icon: AlertCircle, color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100"     },
             { label: "This Week",    value: stats.recent, icon: Calendar,    color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
           ].map(s => (
@@ -338,8 +323,6 @@ export default function FacultyNoticesPage() {
             : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {paginated.map(notice => {
-                  const prio   = ((notice as any).priority ?? "medium") as Priority
-                  const pc     = priorityConfig[prio]
                   const tc     = targetConfig[notice.target as Target] ?? targetConfig["All"]
                   const isMine = notice.created_by === me?.id
                   const TIcon  = tc.icon
@@ -349,9 +332,9 @@ export default function FacultyNoticesPage() {
                       key={notice.id}
                       className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm hover:shadow-md transition-all duration-200 group relative overflow-hidden"
                     >
-                      {/* Priority top bar */}
+                      {/* Urgent top bar */}
                       <div className="absolute top-0 left-0 right-0 h-0.5"
-                        style={{ background: pc.dot }} />
+                        style={{ background: notice.urgent ? "#EF4444" : tc.color }} />
 
                       <CardContent className="p-5">
 
@@ -359,14 +342,12 @@ export default function FacultyNoticesPage() {
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2 flex-wrap">
 
-                            {/* Priority badge */}
-                            <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
-                              style={{ background: pc.bg, color: pc.color, border: `1px solid ${pc.border}` }}
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: pc.dot }} />
-                              {pc.label}
-                            </span>
+                            {/* Urgent badge */}
+                            {notice.urgent && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">
+                                <AlertCircle className="h-2.5 w-2.5" /> Urgent
+                              </span>
+                            )}
 
                             {/* Target badge */}
                             <span
@@ -376,13 +357,6 @@ export default function FacultyNoticesPage() {
                               <TIcon className="h-2.5 w-2.5" />
                               {tc.label}
                             </span>
-
-                            {/* Pinned */}
-                            {notice.pinned && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                                <Pin className="h-2.5 w-2.5" /> Pinned
-                              </span>
-                            )}
                           </div>
 
                           {/* Actions menu — only for own notices */}
@@ -429,9 +403,11 @@ export default function FacultyNoticesPage() {
                         </h3>
 
                         {/* Content preview */}
-                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">
-                          {notice.content}
-                        </p>
+                        {notice.body && (
+                          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">
+                            {notice.body}
+                          </p>
+                        )}
 
                         {/* Footer */}
                         <div className="flex items-center justify-between">
@@ -525,68 +501,26 @@ export default function FacultyNoticesPage() {
               <Label className="text-sm font-semibold">Content <span className="text-red-500">*</span></Label>
               <Textarea
                 placeholder="Write your notice here..."
-                value={form.content}
-                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                value={form.body}
+                onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
                 rows={4}
                 className="resize-none text-sm"
                 maxLength={1000}
               />
-              <p className="text-xs text-gray-400 text-right">{form.content.length}/1000</p>
+              <p className="text-xs text-gray-400 text-right">{form.body.length}/1000</p>
             </div>
 
-            {/* Target + Priority */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Audience</Label>
-                <Select value={form.target} onValueChange={v => setForm(f => ({ ...f, target: v as Target }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Everyone</SelectItem>
-                    <SelectItem value="Students">Students Only</SelectItem>
-                    <SelectItem value="Faculty">Faculty Only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Priority</Label>
-                <Select value={form.priority} onValueChange={v => setForm(f => ({ ...f, priority: v as Priority }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">⚪ Low</SelectItem>
-                    <SelectItem value="medium">🔵 Medium</SelectItem>
-                    <SelectItem value="high">🟠 High</SelectItem>
-                    <SelectItem value="urgent">🔴 Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Pin toggle */}
-            <div
-              onClick={() => setForm(f => ({ ...f, pinned: !f.pinned }))}
-              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none ${
-                form.pinned
-                  ? "bg-amber-50 border-amber-200"
-                  : "bg-gray-50 border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                form.pinned ? "bg-amber-100" : "bg-gray-100"
-              }`}>
-                <Pin className={`h-4 w-4 ${form.pinned ? "text-amber-600" : "text-gray-400"}`} />
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-semibold ${form.pinned ? "text-amber-700" : "text-gray-700"}`}>
-                  Pin this notice
-                </p>
-                <p className="text-xs text-gray-400">Pinned notices appear at the top</p>
-              </div>
-              {/* Toggle pill */}
-              <div className={`w-9 h-5 rounded-full transition-colors ${form.pinned ? "bg-amber-400" : "bg-gray-200"}`}>
-                <div className={`w-4 h-4 rounded-full bg-white shadow m-0.5 transition-transform ${
-                  form.pinned ? "translate-x-4" : "translate-x-0"
-                }`} />
-              </div>
+            {/* Target */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Audience</Label>
+              <Select value={form.target} onValueChange={v => setForm(f => ({ ...f, target: v as Target }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">Everyone</SelectItem>
+                  <SelectItem value="Students">Students Only</SelectItem>
+                  <SelectItem value="Faculty">Faculty Only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
           </div>
@@ -595,7 +529,7 @@ export default function FacultyNoticesPage() {
             <Button variant="outline" onClick={() => setComposeOpen(false)}>Cancel</Button>
             <Button
               onClick={handleCompose}
-              disabled={saving || !form.title.trim() || !form.content.trim()}
+              disabled={saving || !form.title.trim() || !form.body.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
             >
               {saving
@@ -614,8 +548,6 @@ export default function FacultyNoticesPage() {
             <DialogTitle>Notice</DialogTitle>
           </DialogHeader>
           {viewNotice && (() => {
-            const prio = ((viewNotice as any).priority ?? "medium") as Priority
-            const pc   = priorityConfig[prio]
             const tc   = targetConfig[viewNotice.target as Target] ?? targetConfig["All"]
             const TI   = tc.icon
             return (
@@ -623,20 +555,15 @@ export default function FacultyNoticesPage() {
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                    style={{ background: pc.bg, color: pc.color, border: `1px solid ${pc.border}` }}>
-                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: pc.dot }} />
-                    {pc.label}
-                  </span>
+                  {viewNotice.urgent && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">
+                      <AlertCircle className="h-3 w-3" /> Urgent
+                    </span>
+                  )}
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
                     style={{ background: tc.bg, color: tc.color }}>
                     <TI className="h-3 w-3" /> {tc.label}
                   </span>
-                  {viewNotice.pinned && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                      <Pin className="h-3 w-3" /> Pinned
-                    </span>
-                  )}
                 </div>
 
                 {/* Title */}
@@ -645,11 +572,13 @@ export default function FacultyNoticesPage() {
                 </h2>
 
                 {/* Content */}
-                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {viewNotice.content}
-                  </p>
-                </div>
+                {viewNotice.body && (
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {viewNotice.body}
+                    </p>
+                  </div>
+                )}
 
                 {/* Meta */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

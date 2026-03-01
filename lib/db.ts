@@ -287,7 +287,7 @@ export async function upsertAttendance(
   records: {
     student_id: string
     faculty_id: string | null
-    subject:    string | null
+    subject:    string
     date:       string
     status:     "present" | "absent" | "late"
   }[]
@@ -295,7 +295,7 @@ export async function upsertAttendance(
   const supabase = createClient()
   const { data, error } = await supabase
     .from("attendance")
-    .upsert(records, { onConflict: "student_id,date" })
+    .upsert(records, { onConflict: "student_id,date,subject" })
     .select()
   if (error) throw new Error(error.message)
   return data ?? []
@@ -308,6 +308,53 @@ export async function deleteAttendance(id: string) {
     .delete()
     .eq("id", id)
   if (error) throw new Error(error.message)
+}
+
+/** Get all students with approved registrations for a specific subject */
+export async function getStudentsEnrolledInSubject(subjectId: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("registrations")
+    .select(`*, users:student_id(id, name, email, dept_id, semester, avatar_url, status, created_at, departments(name, code))`)
+    .eq("subject_id", subjectId)
+    .eq("status", "approved")
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((r: any) => r.users).filter(Boolean) as User[]
+}
+
+/** Get student's approved registrations with full subject + faculty info */
+export async function getStudentSubjectsWithFaculty(studentId: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("registrations")
+    .select(`
+      *,
+      subjects:subject_id(
+        id, name, code, semester, dept_id,
+        departments(name, code)
+      )
+    `)
+    .eq("student_id", studentId)
+    .eq("status", "approved")
+  if (error) throw new Error(error.message)
+
+  // For each subject, also fetch assigned faculty via faculty_subjects
+  const subjectsWithFaculty = await Promise.all(
+    (data ?? []).map(async (reg: any) => {
+      const subj = reg.subjects
+      if (!subj) return null
+      const { data: fsData } = await supabase
+        .from("faculty_subjects")
+        .select(`users:faculty_id(id, name, email)`)
+        .eq("subject_id", subj.id)
+      const faculty = (fsData ?? []).map((fs: any) => fs.users).filter(Boolean)
+      return {
+        ...subj,
+        faculty,
+      }
+    })
+  )
+  return subjectsWithFaculty.filter(Boolean) as (Subject & { faculty: User[] })[]
 }
 
 // ════════════════════════════════════════════════════════
@@ -663,6 +710,30 @@ export async function deleteRegistration(id: string) {
   if (error) throw error
 }
 
+/** Unenroll student: delete registration + clean up attendance records for that subject */
+export async function unenrollFromSubject(
+  registrationId: string,
+  studentId: string,
+  subjectName: string
+) {
+  const supabase = createClient()
+
+  // 1. Delete the registration
+  const { error: regErr } = await supabase
+    .from("registrations")
+    .delete()
+    .eq("id", registrationId)
+  if (regErr) throw regErr
+
+  // 2. Remove attendance records for this student + subject
+  const { error: attErr } = await supabase
+    .from("attendance")
+    .delete()
+    .eq("student_id", studentId)
+    .eq("subject", subjectName)
+  if (attErr) throw new Error(attErr.message)
+}
+
 export async function updateRegistrationStatus(
   id: string,
   status: "approved" | "rejected"
@@ -698,5 +769,39 @@ export async function getUserByEmail(email: string) {
     .eq("email", email)
     .single()
   if (error) return null
+  return data as User
+}
+
+// ════════════════════════════════════════════════════════
+// AVATAR / PROFILE
+// ════════════════════════════════════════════════════════
+
+/** Upload avatar via API route (handles Supabase Storage server-side) */
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("userId", userId)
+  const res = await fetch("/api/users/avatar", {
+    method: "POST",
+    body: formData,
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? "Upload failed")
+  return json.url as string
+}
+
+/** Update user profile fields (name, phone, bio, avatar_url) */
+export async function updateUserProfile(
+  id: string,
+  updates: { name?: string; phone?: string | null; bio?: string | null; avatar_url?: string | null }
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("id", id)
+    .select("*, departments(id, name, code, color)")
+    .single()
+  if (error) throw error
   return data as User
 }

@@ -41,7 +41,7 @@ export function Sidebar() {
   const handleLogout = async () => {
     setLoggingOut(true);
     const supabase = createClient();
-    await supabase.auth.signOut({ scope: "global" });
+    await supabase.auth.signOut({ scope: "local" });
     clearSession();
     router.push('/login');
     router.refresh();

@@ -8,7 +8,7 @@ export default function FacultySettingsPage() {
   const me = useAuth("faculty")
   if (!me) return null
   return (
-    <DashboardLayout role="faculty" userName="Faculty"
+    <DashboardLayout role="faculty" userName="Faculty" avatarUrl={me.user?.avatar_url}
       pageTitle="Settings" pageSubtitle="Manage your preferences and account settings">
       <SettingsPage role="faculty" userName="Faculty" />
     </DashboardLayout>

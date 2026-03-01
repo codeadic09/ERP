@@ -25,6 +25,7 @@ import {
   getUsers, getDepartments,
   getAttendance, getResultsByStudent,
   getAssignmentsByDept, getFees, updateUser,
+  uploadAvatar, updateUserProfile,
 } from "@/lib/db"
 import type {
   User, Department, Attendance,
@@ -84,6 +85,7 @@ export default function StudentProfilePage() {
 
   // ── Avatar ────────────────────────────────────────────────────
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ── Load ─────────────────────────────────────────────────────
@@ -97,6 +99,7 @@ export default function StudentProfilePage() {
       setMe(student)
       if (student) {
         setForm({ name: student.name, phone: student.phone ?? "", bio: (student as any).bio ?? "" })
+        if (student.avatar_url) setAvatarPreview(student.avatar_url)
         const d = depts.find(d => d.id === student.dept_id) ?? null
         setDept(d)
         setAttendance(att.filter(a => a.student_id === student.id))
@@ -120,10 +123,22 @@ export default function StudentProfilePage() {
   // ── Avatar ────────────────────────────────────────────────────
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !me) return
+    // Instant local preview
     const reader = new FileReader()
     reader.onload = ev => setAvatarPreview(ev.target?.result as string)
     reader.readAsDataURL(file)
+    // Upload to Supabase
+    setAvatarUploading(true)
+    uploadAvatar(me.id, file)
+      .then(url => {
+        setAvatarPreview(url)
+        setMe(prev => prev ? { ...prev, avatar_url: url } : prev)
+        setSuccess("Profile photo updated!")
+        setTimeout(() => setSuccess(null), 3000)
+      })
+      .catch(err => setError(err.message ?? "Avatar upload failed"))
+      .finally(() => setAvatarUploading(false))
   }
 
   // ── Save profile ──────────────────────────────────────────────
@@ -131,10 +146,11 @@ export default function StudentProfilePage() {
     if (!me || !form.name.trim()) return
     setSaving(true)
     try {
-      const updated = await updateUser(me.id, {
+      const updated = await updateUserProfile(me.id, {
         name:  form.name.trim(),
         phone: form.phone.trim() || null,
-      } as any)
+        bio:   form.bio.trim() || null,
+      })
       setMe(updated)
       setEditing(false)
       setSuccess("Profile updated successfully!")
@@ -200,6 +216,7 @@ export default function StudentProfilePage() {
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="My Profile"
       pageSubtitle="View and manage your account details"
       loading={loading}
@@ -231,7 +248,7 @@ export default function StudentProfilePage() {
                 {/* Avatar */}
                 <div className="relative group">
                   <div
-                    className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-2xl font-black shadow-lg"
+                    className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-2xl font-black shadow-lg overflow-hidden"
                     style={{ background: avatarPreview ? "none" : avatarGrad }}
                   >
                     {avatarPreview
@@ -241,9 +258,13 @@ export default function StudentProfilePage() {
                   </div>
                   <button
                     onClick={() => fileRef.current?.click()}
+                    disabled={avatarUploading}
                     className="absolute inset-0 rounded-3xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                   >
-                    <Camera className="h-5 w-5 text-white" />
+                    {avatarUploading
+                      ? <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      : <Camera className="h-5 w-5 text-white" />
+                    }
                   </button>
                   <input ref={fileRef} type="file" accept="image/*"
                     className="hidden" onChange={handleAvatarChange} />

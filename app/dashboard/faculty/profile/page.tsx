@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   getUsers, getDepartments,
   getAttendance, getNotices, updateUser,
+  uploadAvatar, updateUserProfile,
 } from "@/lib/db"
 import type { User, Department, Attendance, Notice } from "@/lib/types"
 
@@ -82,6 +83,7 @@ export default function FacultyProfilePage() {
 
   // ── Avatar upload (local preview only) ───────────────────────
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ── Load ─────────────────────────────────────────────────────
@@ -95,6 +97,7 @@ export default function FacultyProfilePage() {
       setMe(faculty)
       if (faculty) {
         setForm({ name: faculty.name, phone: faculty.phone ?? "", bio: (faculty as any).bio ?? "" })
+        if (faculty.avatar_url) setAvatarPreview(faculty.avatar_url)
         setDept(depts.find(d => d.id === faculty.dept_id) ?? null)
         setMyStudents(users.filter(u => u.role === "student" && u.dept_id === faculty.dept_id))
         setAttendance(att)
@@ -112,10 +115,22 @@ export default function FacultyProfilePage() {
   // ── Avatar preview ────────────────────────────────────────────
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !me) return
+    // Instant local preview
     const reader = new FileReader()
     reader.onload = ev => setAvatarPreview(ev.target?.result as string)
     reader.readAsDataURL(file)
+    // Upload to Supabase
+    setAvatarUploading(true)
+    uploadAvatar(me.id, file)
+      .then(url => {
+        setAvatarPreview(url)
+        setMe(prev => prev ? { ...prev, avatar_url: url } : prev)
+        setSuccess("Profile photo updated!")
+        setTimeout(() => setSuccess(null), 3000)
+      })
+      .catch(err => setError(err.message ?? "Avatar upload failed"))
+      .finally(() => setAvatarUploading(false))
   }
 
   // ── Save profile ──────────────────────────────────────────────
@@ -123,10 +138,11 @@ export default function FacultyProfilePage() {
     if (!me || !form.name.trim()) return
     setSaving(true)
     try {
-      const updated = await updateUser(me.id, {
+      const updated = await updateUserProfile(me.id, {
         name:  form.name.trim(),
         phone: form.phone.trim() || null,
-      } as any)
+        bio:   form.bio.trim() || null,
+      })
       setMe(updated)
       setEditing(false)
       setSuccess("Profile updated successfully!")
@@ -174,6 +190,7 @@ export default function FacultyProfilePage() {
     <DashboardLayout
       role="faculty"
       userName={me?.name ?? "Faculty"}
+      avatarUrl={me?.avatar_url}
       pageTitle="My Profile"
       pageSubtitle="View and manage your account details"
       loading={loading}
@@ -207,7 +224,7 @@ export default function FacultyProfilePage() {
                 {/* Avatar */}
                 <div className="relative group">
                   <div
-                    className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-2xl font-black shadow-lg"
+                    className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-2xl font-black shadow-lg overflow-hidden"
                     style={{ background: avatarPreview ? "none" : avatarGrad }}
                   >
                     {avatarPreview
@@ -218,9 +235,13 @@ export default function FacultyProfilePage() {
                   {/* Upload overlay */}
                   <button
                     onClick={() => fileRef.current?.click()}
+                    disabled={avatarUploading}
                     className="absolute inset-0 rounded-3xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                   >
-                    <Camera className="h-5 w-5 text-white" />
+                    {avatarUploading
+                      ? <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      : <Camera className="h-5 w-5 text-white" />
+                    }
                   </button>
                   <input
                     ref={fileRef}

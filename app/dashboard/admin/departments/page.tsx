@@ -337,6 +337,7 @@ export default function DepartmentsPage() {
     <DashboardLayout
       role="admin"
       userName="Admin"
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Departments"
       pageSubtitle="Manage university departments"
       loading={loading}

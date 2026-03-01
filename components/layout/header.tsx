@@ -1,20 +1,26 @@
 // components/layout/header.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import {
   Bell, Search, Sun, Moon, Settings,
   ChevronDown, GraduationCap, Shield,
   BookOpen, User, LogOut, HelpCircle,
-  Sparkles, X, Menu
+  Sparkles, X, Menu, AlertCircle, Megaphone
 } from "lucide-react"
+import { getNoticesByTarget } from "@/lib/db"
+import type { Notice } from "@/lib/types"
 
 interface HeaderProps {
   role: "admin" | "faculty" | "student"
   userName?: string
+  avatarUrl?: string | null
   pageTitle?: string
   pageSubtitle?: string
   onMenuClick?: () => void
+  onLogout?: () => void
 }
 
 const roleConfig = {
@@ -23,30 +29,115 @@ const roleConfig = {
   student: { label: "CSE · Sem 4",          color: "#3F6212", bg: "linear-gradient(135deg,#84CC16,#A3E635)", shadow: "rgba(132,204,22,0.40)",  icon: GraduationCap},
 }
 
-const notifications = [
-  { title: "New result published",     sub: "Semester 4 — CSE",          time: "5m ago",  color: "#3B82F6", dot: true  },
-  { title: "Attendance marked",        sub: "DSA — Feb 27",               time: "1h ago",  color: "#84CC16", dot: true  },
-  { title: "Fee payment reminder",     sub: "Due: March 15",              time: "2h ago",  color: "#FBBF24", dot: true  },
-  { title: "Assignment deadline today",sub: "Software Engg — Unit 4",     time: "3h ago",  color: "#D946EF", dot: false },
-  { title: "Exam schedule released",   sub: "End-sem May 2026",           time: "1d ago",  color: "#F43F5E", dot: false },
-]
+// ── Helpers ──────────────────────────────────────────
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const m = Math.floor(diff / 60000)
+  const h = Math.floor(diff / 3600000)
+  const d = Math.floor(diff / 86400000)
+  if (m < 1)  return "Just now"
+  if (m < 60) return `${m}m ago`
+  if (h < 24) return `${h}h ago`
+  if (d < 7)  return `${d}d ago`
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+}
+
+function noticeColor(n: Notice) {
+  if (n.urgent)                            return "#EF4444"
+  if (n.target === "Students")             return "#3B82F6"
+  if (n.target === "Faculty")              return "#A855F7"
+  return "#64748B"
+}
+
+const READ_KEY = "unicore_read_notices"
+function getReadIds(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]")) }
+  catch { return new Set() }
+}
+function saveReadIds(ids: Set<string>) {
+  localStorage.setItem(READ_KEY, JSON.stringify([...ids]))
+}
 
 const MOBILE_BP = 768
 
 export function Header({
   role = "student",
   userName = "Aryan Sharma",
+  avatarUrl,
   pageTitle = "Dashboard",
   pageSubtitle,
   onMenuClick,
+  onLogout,
 }: HeaderProps) {
-  const [dark, setDark]               = useState(false)
+  const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
+  const dark = resolvedTheme === "dark"
+  const [mounted, setMounted]         = useState(false)
+  const [iconKey, setIconKey]         = useState(0)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const [showNotifs, setShowNotifs]   = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [search, setSearch]           = useState("")
   const [searchFocus, setSearchFocus] = useState(false)
   const [isMobile, setIsMobile]       = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  // Ultra-smooth theme toggle handler
+  const handleThemeToggle = useCallback(() => {
+    const newTheme = dark ? "light" : "dark"
+    setIconKey(k => k + 1) // re-trigger icon enter animation
+
+    // Glow pulse on button
+    btnRef.current?.classList.remove("theme-btn-pulse")
+    void btnRef.current?.offsetWidth // force reflow
+    btnRef.current?.classList.add("theme-btn-pulse")
+
+    // View Transitions API (Chrome 111+, Edge 111+)
+    if (typeof document !== "undefined" && (document as any).startViewTransition) {
+      (document as any).startViewTransition(() => {
+        setTheme(newTheme)
+      })
+    } else {
+      // Fallback: CSS transition class
+      document.documentElement.classList.add("theme-transitioning")
+      setTheme(newTheme)
+      setTimeout(() => {
+        document.documentElement.classList.remove("theme-transitioning")
+      }, 750)
+    }
+  }, [dark, setTheme])
+
+  // ── Real notices from DB ──────────────────────────────
+  const [notices, setNotices]   = useState<Notice[]>([])
+  const [readIds, setReadIds]   = useState<Set<string>>(new Set())
+
+  const targetForRole = role === "student" ? "Students" : role === "faculty" ? "Faculty" : "All"
+
+  const fetchNotices = useCallback(async () => {
+    try {
+      const data = await getNoticesByTarget(targetForRole as any)
+      setNotices(data.slice(0, 20)) // latest 20
+    } catch { /* silent */ }
+  }, [targetForRole])
+
+  useEffect(() => {
+    setReadIds(getReadIds())
+    fetchNotices()
+    // Refresh every 60s
+    const iv = setInterval(fetchNotices, 60_000)
+    return () => clearInterval(iv)
+  }, [fetchNotices])
+
+  const unread = notices.filter(n => !readIds.has(n.id)).length
+
+  function markAllRead() {
+    const next = new Set(readIds)
+    notices.forEach(n => next.add(n.id))
+    setReadIds(next)
+    saveReadIds(next)
+  }
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < MOBILE_BP)
@@ -56,7 +147,6 @@ export function Header({
   }, [])
 
   const rc = roleConfig[role]
-  const unread = notifications.filter(n => n.dot).length
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -70,11 +160,11 @@ export function Header({
   return (
     <header style={{
       height: isMobile ? 56 : 64,
-      background: "rgba(255,255,255,0.72)",
+      background: "var(--hdr-bg)",
       backdropFilter: "blur(24px)",
       WebkitBackdropFilter: "blur(24px)",
-      borderBottom: "1px solid rgba(255,255,255,0.62)",
-      boxShadow: "0 2px 16px rgba(59,130,246,0.08)",
+      borderBottom: "1px solid var(--hdr-border)",
+      boxShadow: "var(--hdr-shadow)",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -103,7 +193,7 @@ export function Header({
         )}
         <div style={{ minWidth: 0 }}>
           <h2 style={{
-            fontSize: isMobile ? 15 : 17, fontWeight: 900, color: "#1E293B",
+            fontSize: isMobile ? 15 : 17, fontWeight: 900, color: "var(--shell-text-dark)",
             lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden",
             textOverflow: "ellipsis",
           }}>
@@ -123,10 +213,10 @@ export function Header({
           <div style={{
             display: "flex", alignItems: "center", gap: 10,
             padding: "9px 16px",
-            background: searchFocus ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.72)",
-            border: searchFocus ? "1px solid #3B82F6" : "1px solid rgba(255,255,255,0.62)",
+            background: searchFocus ? "var(--hdr-search-focus-bg)" : "var(--hdr-search-bg)",
+            border: searchFocus ? "1px solid #3B82F6" : "1px solid var(--hdr-search-border)",
             borderRadius: 14,
-            boxShadow: searchFocus ? "0 0 0 4px rgba(59,130,246,0.12)" : "none",
+            boxShadow: searchFocus ? "var(--hdr-search-ring)" : "none",
             transition: "all 0.2s",
           }}>
             <Search size={15} color={searchFocus ? "#3B82F6" : "#94A3B8"} strokeWidth={2.5} style={{ flexShrink: 0 }} />
@@ -138,11 +228,11 @@ export function Header({
               placeholder="Search students, subjects, results…"
               style={{
                 flex: 1, border: "none", background: "transparent",
-                fontSize: 13, color: "#1E293B", outline: "none",
+                fontSize: 13, color: "var(--shell-text-dark)", outline: "none",
               }}
             />
             {search && (
-              <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex" }}>
+              <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--shell-text-muted)", display: "flex" }}>
                 <X size={13} strokeWidth={2.5} />
               </button>
             )}
@@ -151,16 +241,16 @@ export function Header({
           {search.length > 1 && searchFocus && (
             <div style={{
               position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0,
-              background: "rgba(255,255,255,0.95)",
+              background: "var(--hdr-dropdown-bg)",
               backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.65)",
+              border: "1px solid var(--hdr-dropdown-border)",
               borderRadius: 16, padding: 8,
-              boxShadow: "0 8px 32px rgba(59,130,246,0.16)", zIndex: 100,
+              boxShadow: "var(--hdr-dropdown-shadow)", zIndex: 100,
             }}>
               {["Aryan Sharma — EN2024101", "DSA Results — Sem 4", "Attendance Report — Feb 2026"].map((item, i) => (
                 <div key={i} style={{
                   padding: "9px 12px", borderRadius: 10, cursor: "pointer",
-                  fontSize: 13, color: "#1E293B", fontWeight: 500,
+                  fontSize: 13, color: "var(--shell-text-dark)", fontWeight: 500,
                   display: "flex", alignItems: "center", gap: 10,
                   transition: "background 0.15s",
                 }}
@@ -181,11 +271,11 @@ export function Header({
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0,
           height: 56, zIndex: 60,
-          background: "rgba(255,255,255,0.95)",
+          background: "var(--hdr-mobile-search-bg)",
           backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
           display: "flex", alignItems: "center", gap: 8,
           padding: "0 12px",
-          boxShadow: "0 2px 16px rgba(59,130,246,0.10)",
+          boxShadow: "var(--hdr-scroll-shadow)",
         }}>
           <Search size={16} color="#3B82F6" strokeWidth={2.5} style={{ flexShrink: 0 }} />
           <input
@@ -195,16 +285,16 @@ export function Header({
             placeholder="Search…"
             style={{
               flex: 1, border: "none", background: "transparent",
-              fontSize: 15, color: "#1E293B", outline: "none",
+              fontSize: 15, color: "var(--shell-text-dark)", outline: "none",
             }}
           />
           <button
             onClick={() => { setSearch(""); setShowMobileSearch(false) }}
             style={{
               width: 32, height: 32, borderRadius: 8, border: "none",
-              background: "rgba(100,116,139,0.10)",
+              background: "var(--hdr-mobile-close-bg)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "#64748B",
+              cursor: "pointer", color: "var(--shell-text-secondary)",
             }}
           >
             <X size={16} strokeWidth={2.5} />
@@ -231,19 +321,23 @@ export function Header({
         )}
 
         {/* Dark mode toggle (hide on very small screens) */}
-        {!isMobile && (
+        {!isMobile && mounted && (
           <button
-            onClick={() => setDark(p => !p)}
+            ref={btnRef}
+            onClick={handleThemeToggle}
             style={{
               width: 36, height: 36, borderRadius: 11, border: "none",
-              background: dark ? "rgba(30,27,75,0.12)" : "rgba(59,130,246,0.08)",
+              background: dark ? "rgba(255,255,255,0.06)" : "var(--hdr-btn-bg)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "all 0.2s",
-              color: dark ? "#A78BFA" : "#3B82F6",
+              cursor: "pointer", transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+              color: dark ? "#A78BFA" : "#F59E0B",
+              position: "relative", overflow: "hidden",
             }}
             title="Toggle theme"
           >
-            {dark ? <Moon size={15} strokeWidth={2.5} /> : <Sun size={15} strokeWidth={2.5} />}
+            <span key={iconKey} className="theme-icon-enter" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {dark ? <Moon size={15} strokeWidth={2.5} /> : <Sun size={15} strokeWidth={2.5} />}
+            </span>
           </button>
         )}
 
@@ -253,7 +347,7 @@ export function Header({
             onClick={(e) => { e.stopPropagation(); setShowNotifs(p => !p); setShowProfile(false) }}
             style={{
               width: isMobile ? 34 : 36, height: isMobile ? 34 : 36, borderRadius: 11, border: "none",
-              background: showNotifs ? "rgba(59,130,246,0.14)" : "rgba(59,130,246,0.08)",
+              background: showNotifs ? "var(--hdr-btn-active-bg)" : "var(--hdr-btn-bg)",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s", position: "relative",
             }}
@@ -275,65 +369,91 @@ export function Header({
               right: isMobile ? -60 : 0,
               width: isMobile ? "calc(100vw - 24px)" : 340,
               maxWidth: 360,
-              background: "rgba(255,255,255,0.95)",
+              background: "var(--hdr-dropdown-bg)",
               backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid rgba(255,255,255,0.65)",
+              border: "1px solid var(--hdr-dropdown-border)",
               borderRadius: 20, overflow: "hidden",
-              boxShadow: "0 16px 48px rgba(59,130,246,0.18)", zIndex: 100,
+              boxShadow: "var(--hdr-dropdown-shadow)", zIndex: 100,
             }}>
               <div style={{
                 padding: "16px 18px 12px",
-                borderBottom: "1px solid rgba(255,255,255,0.55)",
+                borderBottom: "1px solid var(--hdr-dropdown-divider)",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: "#1E293B" }}>Notifications</p>
-                  <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>{unread} unread</p>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: "var(--shell-text-dark)" }}>Notifications</p>
+                  <p style={{ fontSize: 11, color: "var(--shell-text-secondary)", marginTop: 2 }}>{unread} unread</p>
                 </div>
-                <button style={{
-                  fontSize: 11, fontWeight: 700, color: "#3B82F6",
-                  background: "rgba(59,130,246,0.10)", border: "none",
-                  borderRadius: 8, padding: "4px 10px", cursor: "pointer",
-                }}>
-                  Mark all read
-                </button>
+                {unread > 0 && (
+                  <button
+                    onClick={markAllRead}
+                    style={{
+                      fontSize: 11, fontWeight: 700, color: "#3B82F6",
+                      background: "rgba(59,130,246,0.10)", border: "none",
+                      borderRadius: 8, padding: "4px 10px", cursor: "pointer",
+                    }}
+                  >
+                    Mark all read
+                  </button>
+                )}
               </div>
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
-                {notifications.map((n, i) => (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "flex-start", gap: 12,
-                    padding: "12px 18px",
-                    borderBottom: i < notifications.length - 1 ? "1px solid rgba(255,255,255,0.50)" : "none",
-                    background: n.dot ? "rgba(59,130,246,0.03)" : "transparent",
-                    cursor: "pointer", transition: "background 0.15s",
-                  }}>
-                    <div style={{
-                      width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                      background: `${n.color}14`, border: `1px solid ${n.color}28`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <Bell size={14} color={n.color} strokeWidth={2} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1E293B", lineHeight: 1.2 }}>{n.title}</p>
-                        {n.dot && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />}
-                      </div>
-                      <p style={{ fontSize: 11, color: "#64748B", marginTop: 3 }}>{n.sub}</p>
-                    </div>
-                    <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600, flexShrink: 0, paddingTop: 2 }}>{n.time}</span>
+                {notices.length === 0 ? (
+                  <div style={{ padding: "32px 18px", textAlign: "center" }}>
+                    <Bell size={24} color="#CBD5E1" style={{ margin: "0 auto 8px" }} />
+                    <p style={{ fontSize: 13, color: "var(--shell-text-muted)", fontWeight: 600 }}>No notifications yet</p>
                   </div>
-                ))}
+                ) : notices.map((n, i) => {
+                  const isUnread = !readIds.has(n.id)
+                  const color = noticeColor(n)
+                  return (
+                    <div key={n.id} style={{
+                      display: "flex", alignItems: "flex-start", gap: 12,
+                      padding: "12px 18px",
+                      borderBottom: i < notices.length - 1 ? "1px solid var(--hdr-dropdown-divider)" : "none",
+                      background: isUnread ? "var(--hdr-notif-unread-bg)" : "transparent",
+                      cursor: "pointer", transition: "background 0.15s",
+                    }} onClick={() => {
+                      const next = new Set(readIds); next.add(n.id); setReadIds(next); saveReadIds(next)
+                      router.push(`/dashboard/${role}/notices`)
+                      setShowNotifs(false)
+                    }}>
+                      <div style={{
+                        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                        background: `${color}14`, border: `1px solid ${color}28`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {n.urgent ? <AlertCircle size={14} color={color} strokeWidth={2} />
+                                  : <Megaphone   size={14} color={color} strokeWidth={2} />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <p style={{ fontSize: 13, fontWeight: isUnread ? 700 : 500, color: "var(--shell-text-dark)", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</p>
+                          {isUnread && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />}
+                        </div>
+                        <p style={{ fontSize: 11, color: "var(--shell-text-secondary)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {n.body ? (n.body.length > 60 ? n.body.slice(0, 60) + "…" : n.body) : n.target}
+                        </p>
+                      </div>
+                      <span style={{ fontSize: 10, color: "var(--shell-text-muted)", fontWeight: 600, flexShrink: 0, paddingTop: 2 }}>
+                        {timeAgo(n.created_at)}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
               <div style={{
                 padding: "10px 18px",
-                borderTop: "1px solid rgba(255,255,255,0.55)",
+                borderTop: "1px solid var(--hdr-dropdown-divider)",
                 textAlign: "center",
               }}>
-                <button style={{
-                  fontSize: 12, fontWeight: 600, color: "#3B82F6",
-                  background: "none", border: "none", cursor: "pointer",
-                }}>
+                <button
+                  onClick={() => { router.push(`/dashboard/${role}/notices`); setShowNotifs(false) }}
+                  style={{
+                    fontSize: 12, fontWeight: 600, color: "#3B82F6",
+                    background: "none", border: "none", cursor: "pointer",
+                  }}
+                >
                   View all notifications →
                 </button>
               </div>
@@ -343,19 +463,21 @@ export function Header({
 
         {/* Settings (desktop only) */}
         {!isMobile && (
-          <button style={{
-            width: 36, height: 36, borderRadius: 11, border: "none",
-            background: "rgba(59,130,246,0.08)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", transition: "all 0.2s", color: "#3B82F6",
-          }}>
+          <button
+            onClick={() => router.push(`/dashboard/${role}/settings`)}
+            style={{
+              width: 36, height: 36, borderRadius: 11, border: "none",
+              background: "var(--hdr-btn-bg)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all 0.2s", color: "#3B82F6",
+            }}>
             <Settings size={15} strokeWidth={2.5} />
           </button>
         )}
 
         {/* Divider (desktop only) */}
         {!isMobile && (
-          <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.60)", margin: "0 4px" }} />
+          <div style={{ width: 1, height: 24, background: "var(--hdr-divider)", margin: "0 4px" }} />
         )}
 
         {/* Profile pill */}
@@ -365,8 +487,8 @@ export function Header({
             style={{
               display: "flex", alignItems: "center", gap: isMobile ? 0 : 9,
               padding: isMobile ? "4px" : "6px 12px 6px 6px",
-              background: showProfile ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.72)",
-              border: showProfile ? "1px solid rgba(59,130,246,0.28)" : "1px solid rgba(255,255,255,0.62)",
+              background: showProfile ? "var(--hdr-pill-active-bg)" : "var(--hdr-pill-bg)",
+              border: showProfile ? "1px solid var(--hdr-pill-active-border)" : "1px solid var(--hdr-pill-border)",
               borderRadius: 12, cursor: "pointer",
               transition: "all 0.2s",
               boxShadow: showProfile ? "0 4px 12px rgba(59,130,246,0.12)" : "none",
@@ -374,18 +496,23 @@ export function Header({
           >
             <div style={{
               width: isMobile ? 32 : 30, height: isMobile ? 32 : 30, borderRadius: 9,
-              background: rc.bg,
+              background: avatarUrl ? "transparent" : rc.bg,
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "white", fontSize: 11, fontWeight: 800,
-              boxShadow: `0 3px 10px ${rc.shadow}`,
+              boxShadow: avatarUrl ? "0 2px 8px rgba(0,0,0,0.10)" : `0 3px 10px ${rc.shadow}`,
+              overflow: "hidden",
             }}>
-              {userName.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                userName.split(" ").map(n => n[0]).join("").slice(0, 2)
+              )}
             </div>
             {!isMobile && (
               <>
                 <div style={{ textAlign: "left" }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: "#1E293B", lineHeight: 1 }}>{userName.split(" ")[0]}</p>
-                  <p style={{ fontSize: 10, color: "#64748B", marginTop: 1 }}>{rc.label}</p>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: "var(--shell-text-dark)", lineHeight: 1 }}>{userName.split(" ")[0]}</p>
+                  <p style={{ fontSize: 10, color: "var(--shell-text-secondary)", marginTop: 1 }}>{rc.label}</p>
                 </div>
                 <ChevronDown
                   size={12} color="#94A3B8" strokeWidth={2.5}
@@ -400,29 +527,34 @@ export function Header({
               position: "absolute", top: "calc(100% + 10px)",
               right: 0,
               width: isMobile ? 220 : 240,
-              background: "rgba(255,255,255,0.95)",
+              background: "var(--hdr-dropdown-bg)",
               backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid rgba(255,255,255,0.65)",
+              border: "1px solid var(--hdr-dropdown-border)",
               borderRadius: 18, overflow: "hidden",
-              boxShadow: "0 16px 48px rgba(59,130,246,0.18)", zIndex: 100,
+              boxShadow: "var(--hdr-dropdown-shadow)", zIndex: 100,
             }}>
               <div style={{
                 padding: "16px 16px 12px",
-                background: "linear-gradient(135deg,rgba(29,78,216,0.06),rgba(59,130,246,0.04))",
-                borderBottom: "1px solid rgba(255,255,255,0.55)",
+                background: "var(--hdr-profile-gradient)",
+                borderBottom: "1px solid var(--hdr-dropdown-divider)",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: 12,
-                    background: rc.bg,
+                    background: avatarUrl ? "transparent" : rc.bg,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: "white", fontSize: 14, fontWeight: 800,
-                    boxShadow: `0 4px 12px ${rc.shadow}`,
+                    boxShadow: avatarUrl ? "0 2px 8px rgba(0,0,0,0.10)" : `0 4px 12px ${rc.shadow}`,
+                    overflow: "hidden",
                   }}>
-                    {userName.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      userName.split(" ").map(n => n[0]).join("").slice(0, 2)
+                    )}
                   </div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: "#1E293B" }}>{userName}</p>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: "var(--shell-text-dark)" }}>{userName}</p>
                     <span style={{
                       fontSize: 10, fontWeight: 700,
                       padding: "2px 8px", borderRadius: 99,
@@ -435,28 +567,32 @@ export function Header({
 
               <div style={{ padding: "8px" }}>
                 {[
-                  { label: "My Profile", icon: User,       color: "#3B82F6" },
-                  { label: "Settings",   icon: Settings,   color: "#D946EF" },
-                  { label: "Help",       icon: HelpCircle, color: "#84CC16" },
+                  { label: "My Profile", icon: User,       color: "#3B82F6", href: `/dashboard/${role}/profile`  },
+                  { label: "Settings",   icon: Settings,   color: "#D946EF", href: `/dashboard/${role}/settings` },
+                  { label: "Help",       icon: HelpCircle, color: "#84CC16", href: `/help`                      },
                 ].map((item, i) => (
-                  <button key={i} style={{
+                  <button key={i}
+                    onClick={() => { setShowProfile(false); router.push(item.href) }}
+                    style={{
                     width: "100%", display: "flex", alignItems: "center", gap: 10,
                     padding: "9px 12px", borderRadius: 10, border: "none",
                     background: "transparent", cursor: "pointer",
-                    fontSize: 13, fontWeight: 500, color: "#334155",
+                    fontSize: 13, fontWeight: 500, color: "var(--shell-text-body)",
                     transition: "all 0.15s", textAlign: "left",
                   }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${item.color}0d`; e.currentTarget.style.color = item.color }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#334155" }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--shell-text-body)" }}
                   >
                     <item.icon size={15} strokeWidth={2} />
                     {item.label}
                   </button>
                 ))}
 
-                <div style={{ height: 1, background: "rgba(255,255,255,0.55)", margin: "6px 0" }} />
+                <div style={{ height: 1, background: "var(--hdr-dropdown-divider)", margin: "6px 0" }} />
 
-                <button style={{
+                <button
+                  onClick={() => { setShowProfile(false); onLogout?.() }}
+                  style={{
                   width: "100%", display: "flex", alignItems: "center", gap: 10,
                   padding: "9px 12px", borderRadius: 10, border: "none",
                   background: "transparent", cursor: "pointer",

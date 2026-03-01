@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from "react"
 import {
   BookOpen, CheckCircle2, Clock, XCircle,
   AlertTriangle, Loader2, RefreshCw, GraduationCap,
+  LogOut,
 } from "lucide-react"
 import { DashboardLayout }  from "@/components/layout/dashboard-layout"
 import { Button }           from "@/components/ui/button"
@@ -16,8 +17,8 @@ import {
 import { Label } from "@/components/ui/label"
 import {
   getSubjectsByDept, getRegistrationsByStudent,
-  addRegistration, deleteRegistration, updateUserSemester,
-  getFacultySubjects,
+  addRegistration, deleteRegistration, unenrollFromSubject,
+  updateUserSemester, getFacultySubjects,
 } from "@/lib/db"
 import type { Subject, Registration, FacultySubject } from "@/lib/types"
 
@@ -125,6 +126,19 @@ export default function StudentRegistrationPage() {
     }
   }
 
+  async function handleUnenroll(registrationId: string, subjectId: string, subjectName: string) {
+    if (!confirm(`Are you sure you want to unenroll from "${subjectName}"?\n\nThis will also remove all your attendance records for this subject.`)) return
+    setSaving(subjectId)
+    try {
+      await unenrollFromSubject(registrationId, me.user!.id, subjectName)
+      setRegistrations(prev => prev.filter(r => r.id !== registrationId))
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
   const approvedCount = registrations.filter(r => r.status === "approved").length
   const pendingCount  = registrations.filter(r => r.status === "pending").length
 
@@ -132,6 +146,7 @@ export default function StudentRegistrationPage() {
     <DashboardLayout
       role="student"
       userName={me.user?.name ?? "Student"}
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Subject Registration"
       pageSubtitle="Register for subjects in your current semester"
       loading={loading}
@@ -285,9 +300,24 @@ export default function StudentRegistrationPage() {
                         }
                       </Button>
                     ) : (
-                      <div className={`w-full h-8 rounded-lg flex items-center justify-center text-xs font-semibold ${ss?.bg} ${ss?.text}`}>
-                        {status === "approved" ? "✅ Enrolled" : "❌ Rejected — contact admin"}
-                      </div>
+                      status === "approved" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUnenroll(reg.id, subject.id, subject.name)}
+                          disabled={isSaving}
+                          className="w-full h-8 text-red-600 border-red-200 hover:bg-red-50 text-xs font-semibold gap-1.5"
+                        >
+                          {isSaving
+                            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Unenrolling...</>
+                            : <><LogOut className="h-3.5 w-3.5" /> Unenroll</>
+                          }
+                        </Button>
+                      ) : (
+                        <div className={`w-full h-8 rounded-lg flex items-center justify-center text-xs font-semibold ${ss?.bg} ${ss?.text}`}>
+                          ❌ Rejected — contact admin
+                        </div>
+                      )
                     )}
                   </CardContent>
                 </Card>

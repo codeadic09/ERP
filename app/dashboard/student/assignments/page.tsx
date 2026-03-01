@@ -164,6 +164,7 @@ export default function StudentAssignmentsPage() {
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="Assignments"
       pageSubtitle={`${dept?.name ?? "Your department"} — all assignments`}
       loading={loading}

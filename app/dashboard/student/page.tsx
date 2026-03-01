@@ -164,6 +164,7 @@ export default function StudentDashboardPage() {
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="Dashboard"
       pageSubtitle={`Welcome back${me ? `, ${me.name.split(" ")[0]}` : ""}! Here's your overview.`}
       loading={loading}

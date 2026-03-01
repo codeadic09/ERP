@@ -21,8 +21,10 @@ import { Button } from "@/components/ui/button"
 import {
   getUsers, getDepartments,
   getNotices, getAttendance,
+  getSubjectsByFacultyId,
+  getStudentsEnrolledInSubject,
 } from "@/lib/db"
-import type { User, Department, Notice, Attendance } from "@/lib/types"
+import type { User, Department, Notice, Attendance, Subject } from "@/lib/types"
 
 // ─── Helpers ─────────────────────────────────────────────────────
 function Skeleton({ className = "" }: { className?: string }) {
@@ -51,6 +53,8 @@ export default function FacultyDashboard() {
   const [depts,      setDepts]      = useState<Department[]>([])
   const [notices,    setNotices]    = useState<Notice[]>([])
   const [attendance, setAttendance] = useState<Attendance[]>([])
+  const [mySubjects, setMySubjects] = useState<Subject[]>([])
+  const [enrolledStudents, setEnrolledStudents] = useState<User[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
 
@@ -62,10 +66,23 @@ export default function FacultyDashboard() {
     setLoading(true)
     setError(null)
     try {
-      const [u, d, n, a] = await Promise.all([
+      const myId = authUser.user?.id
+      const [u, d, n, a, ms] = await Promise.all([
         getUsers(), getDepartments(), getNotices(), getAttendance(),
+        myId ? getSubjectsByFacultyId(myId) : Promise.resolve([]),
       ])
-      setUsers(u); setDepts(d); setNotices(n); setAttendance(a)
+      setUsers(u); setDepts(d); setNotices(n); setAttendance(a); setMySubjects(ms)
+
+      // Fetch enrolled students for all faculty subjects (deduplicated)
+      const studentMap = new Map<string, User>()
+      await Promise.all(ms.map(async (sub) => {
+        try {
+          const students = await getStudentsEnrolledInSubject(sub.id)
+          students.forEach(s => studentMap.set(s.id, s))
+        } catch {}
+      }))
+      setEnrolledStudents(Array.from(studentMap.values()))
+
       // Use the authenticated user from useAuth
       setMe(authUser.user)
     } catch (e: any) {
@@ -84,8 +101,8 @@ export default function FacultyDashboard() {
   )
 
   const myStudents = useMemo(
-    () => users.filter(u => u.role === "student" && u.dept_id === me?.dept_id),
-    [users, me]
+    () => enrolledStudents,
+    [enrolledStudents]
   )
 
   const myNotices = useMemo(
@@ -156,20 +173,21 @@ export default function FacultyDashboard() {
 
     return [
       { label: "My Students",    value: myStudents.length, icon: GraduationCap, color: "text-blue-600",    bg: "bg-blue-50",    border: "border-blue-100"    },
-      { label: "My Department",  value: myDept?.code ?? "—",icon: BookOpen,     color: "text-purple-600",  bg: "bg-purple-50",  border: "border-purple-100"  },
+      { label: "My Subjects",     value: mySubjects.length,  icon: BookOpen,      color: "text-purple-600",  bg: "bg-purple-50",  border: "border-purple-100"  },
       { label: "Today Present",  value: todayPresent,       icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
       { label: "Attendance Rate",value: `${attRate}%`,      icon: TrendingUp,   color: "text-indigo-600",  bg: "bg-indigo-50",  border: "border-indigo-100"  },
       { label: "Notices",        value: myNotices.length,   icon: Bell,         color: "text-amber-600",   bg: "bg-amber-50",   border: "border-amber-100"   },
       { label: "Dept Faculty",   value: users.filter(u => u.role === "faculty" && u.dept_id === me?.dept_id).length,
                                         icon: Users,        color: "text-pink-600",    bg: "bg-pink-50",    border: "border-pink-100"    },
     ]
-  }, [myStudents, myDept, attendance, myNotices, users, me])
+  }, [myStudents, mySubjects, myDept, attendance, myNotices, users, me])
 
   // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
       role="faculty"
       userName={me?.name ?? "Faculty"}
+      avatarUrl={me?.avatar_url}
       pageTitle="Faculty Dashboard"
       pageSubtitle={`Welcome back${me ? `, ${me.name.split(" ")[0]}` : ""} · ${myDept?.name ?? "Loading..."}`}
       loading={loading}
@@ -199,7 +217,7 @@ export default function FacultyDashboard() {
                 Welcome, {me?.name?.split(" ")[0] ?? "Faculty"} 👋
               </h2>
               <p className="text-blue-100 text-sm">
-                {myDept?.name ?? "—"} · {myStudents.length} students under your department
+                {myDept?.name ?? "—"} · {mySubjects.length} subject{mySubjects.length !== 1 ? "s" : ""} · {myStudents.length} enrolled student{myStudents.length !== 1 ? "s" : ""}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -372,7 +390,7 @@ export default function FacultyDashboard() {
               {loading
                 ? <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
                 : myStudents.length === 0
-                  ? <p className="text-sm text-gray-400 text-center py-8">No students in your department</p>
+                  ? <p className="text-sm text-gray-400 text-center py-8">No students enrolled in your subjects</p>
                   : (
                     <div className="space-y-1 max-h-[210px] overflow-y-auto pr-1">
                       {myStudents.map(s => (

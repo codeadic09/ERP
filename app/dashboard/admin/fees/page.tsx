@@ -68,6 +68,75 @@ function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-lg bg-gray-100 ${className}`} />
 }
 
+// ─── FeeForm — defined OUTSIDE FeesPage to prevent focus loss ──
+interface FeeFormProps {
+  form:     FormData
+  setForm:  React.Dispatch<React.SetStateAction<FormData>>
+  students: User[]
+  depts:    Department[]
+}
+
+function FeeForm({ form, setForm, students, depts }: FeeFormProps) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+      <div className="col-span-2 space-y-1.5">
+        <Label className="text-xs font-semibold">Student *</Label>
+        <Select value={form.student_id} onValueChange={v => setForm(f => ({ ...f, student_id: v }))}>
+          <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select student" /></SelectTrigger>
+          <SelectContent>
+            {students.map(s => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name} — {depts.find(d => d.id === s.dept_id)?.code ?? "?"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Amount (₹) *</Label>
+        <Input type="number" placeholder="e.g. 24500" value={form.amount}
+          onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
+          className="h-9 text-sm" />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Status</Label>
+        <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as any }))}>
+          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="overdue">Overdue</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Due Date</Label>
+        <Input type="date" value={form.due_date}
+          onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
+          className="h-9 text-sm" />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Paid Date</Label>
+        <Input type="date" value={form.paid_date}
+          onChange={e => setForm(f => ({ ...f, paid_date: e.target.value }))}
+          className="h-9 text-sm"
+          disabled={form.status !== "paid"} />
+      </div>
+
+      <div className="col-span-2 space-y-1.5">
+        <Label className="text-xs font-semibold">Description</Label>
+        <Input placeholder="e.g. Semester 4 Tuition Fee" value={form.description}
+          onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+          className="h-9 text-sm" />
+      </div>
+    </div>
+  )
+}
+
 // ════════════════════════════════════════════════════════════════
 export default function FeesPage() {
   const me = useAuth("admin")
@@ -296,73 +365,12 @@ export default function FeesPage() {
     a.click(); URL.revokeObjectURL(url)
   }
 
-  // ── Shared form ───────────────────────────────────────────────
-  function FeeForm() {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs font-semibold">Student *</Label>
-          <Select value={form.student_id} onValueChange={v => setForm(f => ({ ...f, student_id: v }))}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select student" /></SelectTrigger>
-            <SelectContent>
-              {students.map(s => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name} — {depts.find(d => d.id === s.dept_id)?.code ?? "?"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Amount (₹) *</Label>
-          <Input type="number" placeholder="e.g. 24500" value={form.amount}
-            onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-            className="h-9 text-sm" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Status</Label>
-          <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as any }))}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Due Date</Label>
-          <Input type="date" value={form.due_date}
-            onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-            className="h-9 text-sm" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Paid Date</Label>
-          <Input type="date" value={form.paid_date}
-            onChange={e => setForm(f => ({ ...f, paid_date: e.target.value }))}
-            className="h-9 text-sm"
-            disabled={form.status !== "paid"} />
-        </div>
-
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs font-semibold">Description</Label>
-          <Input placeholder="e.g. Semester 4 Tuition Fee" value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            className="h-9 text-sm" />
-        </div>
-      </div>
-    )
-  }
-
   // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
       role="admin"
       userName="Admin"
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Fee Control"
       pageSubtitle="Manage student fee records and payments"
       loading={loading}
@@ -757,7 +765,7 @@ export default function FeesPage() {
               <Plus className="h-4 w-4 text-blue-600" /> Add Fee Record
             </DialogTitle>
           </DialogHeader>
-          <FeeForm />
+          <FeeForm form={form} setForm={setForm} students={students} depts={depts} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setAddOpen(false)} disabled={saving}>Cancel</Button>
             <Button size="sm" onClick={handleAdd}
@@ -778,7 +786,7 @@ export default function FeesPage() {
               <Edit3 className="h-4 w-4 text-blue-600" /> Edit Fee Record
             </DialogTitle>
           </DialogHeader>
-          <FeeForm />
+          <FeeForm form={form} setForm={setForm} students={students} depts={depts} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
             <Button size="sm" onClick={handleEdit} disabled={saving}

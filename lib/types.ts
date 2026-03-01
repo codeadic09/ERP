@@ -26,7 +26,9 @@ export interface User {
   status:      UserStatus
   enrolled_at: string
   created_at:  string
-  semester?:   number | null   // ← add this
+  semester?:   number | null
+  avatar_url?: string | null
+  bio?:        string | null
   departments?: Department
 }
 
@@ -46,11 +48,9 @@ export interface Fee {
 export interface Notice {
   id:         string
   title:      string
-  content:    string | null
+  body:       string | null
   target:     NoticeTarget
-  pinned:     boolean
   urgent:     boolean
-  priority:   string | null
   created_by: string | null
   created_at: string
 }

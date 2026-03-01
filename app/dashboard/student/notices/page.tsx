@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/hooks/useAuth"
 import { useState, useEffect, useMemo } from "react"
 import {
-  Bell, Pin, Search, Filter,
+  Bell, Search, Filter,
   Calendar, Users, GraduationCap,
   AlertCircle, CheckCircle2, Info,
   ChevronLeft, ChevronRight,
@@ -41,17 +41,7 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 }
 
-type Priority = "low" | "medium" | "high" | "urgent"
-type FilterVal = "all" | Priority | "pinned"
-
-const priorityConfig: Record<Priority, {
-  label: string; color: string; bg: string; border: string; dot: string
-}> = {
-  low:    { label: "Low",    color: "#64748B", bg: "rgba(100,116,139,0.08)", border: "rgba(100,116,139,0.18)", dot: "#94A3B8" },
-  medium: { label: "Medium", color: "#2563EB", bg: "rgba(37,99,235,0.08)",  border: "rgba(37,99,235,0.18)",  dot: "#3B82F6" },
-  high:   { label: "High",   color: "#D97706", bg: "rgba(217,119,6,0.08)",  border: "rgba(217,119,6,0.18)",  dot: "#F59E0B" },
-  urgent: { label: "Urgent", color: "#DC2626", bg: "rgba(220,38,38,0.08)",  border: "rgba(220,38,38,0.18)",  dot: "#EF4444" },
-}
+type FilterVal = "all" | "urgent"
 
 const PAGE_SIZE = 9
 
@@ -106,8 +96,7 @@ export default function StudentNoticesPage() {
   const stats = useMemo(() => ({
     total:  notices.length,
     unread: notices.filter(n => !read.has(n.id)).length,
-    urgent: notices.filter(n => (n as any).priority === "urgent").length,
-    pinned: notices.filter(n => n.pinned).length,
+    urgent: notices.filter(n => n.urgent).length,
   }), [notices, read])
 
   // ── Filtered + sorted ─────────────────────────────────────────
@@ -117,22 +106,16 @@ export default function StudentNoticesPage() {
         if (search) {
           const q = search.toLowerCase()
           if (!n.title.toLowerCase().includes(q) &&
-              !n.content.toLowerCase().includes(q)) return false
+              !(n.body ?? "").toLowerCase().includes(q)) return false
         }
-        if (filter === "pinned") return n.pinned
-        if (["low","medium","high","urgent"].includes(filter))
-          return (n as any).priority === filter
+        if (filter === "urgent")
+          return n.urgent
         return true
       })
       .sort((a, b) => {
-        // Pinned first, then urgent, then by date
-        if (a.pinned && !b.pinned) return -1
-        if (!a.pinned && b.pinned) return 1
-        const ap = ((a as any).priority ?? "medium") as Priority
-        const bp = ((b as any).priority ?? "medium") as Priority
-        const order: Priority[] = ["urgent","high","medium","low"]
-        if (order.indexOf(ap) !== order.indexOf(bp))
-          return order.indexOf(ap) - order.indexOf(bp)
+        // Urgent first, then by date
+        if (a.urgent && !b.urgent) return -1
+        if (!a.urgent && b.urgent) return 1
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
   }, [notices, search, filter])
@@ -150,6 +133,7 @@ export default function StudentNoticesPage() {
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="Notices"
       pageSubtitle="Announcements and updates from your institution"
       loading={loading}
@@ -181,12 +165,11 @@ export default function StudentNoticesPage() {
         )}
 
         {/* ── Stat cards ────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
             { label: "Total",   value: stats.total,  icon: Bell,         color: "text-blue-600",   bg: "bg-blue-50",   border: "border-blue-100"   },
             { label: "Unread",  value: stats.unread, icon: Info,         color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
             { label: "Urgent",  value: stats.urgent, icon: AlertCircle,  color: "text-red-600",    bg: "bg-red-50",    border: "border-red-100"    },
-            { label: "Pinned",  value: stats.pinned, icon: Pin,          color: "text-amber-600",  bg: "bg-amber-50",  border: "border-amber-100"  },
           ].map(s => (
             <Card key={s.label} className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
               <CardContent className="p-4">
@@ -288,10 +271,8 @@ export default function StudentNoticesPage() {
             : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {paginated.map(n => {
-                  const prio    = ((n as any).priority ?? "medium") as Priority
-                  const pc      = priorityConfig[prio]
                   const isUnread = !read.has(n.id)
-                  const isUrgent = prio === "urgent"
+                  const isUrgent = n.urgent
 
                   return (
                     <Card
@@ -301,9 +282,9 @@ export default function StudentNoticesPage() {
                         isUnread ? "bg-white/90" : "bg-white/60"
                       }`}
                     >
-                      {/* Priority accent bar */}
+                      {/* Urgent accent bar */}
                       <div className="absolute top-0 left-0 right-0 h-0.5"
-                        style={{ background: pc.dot }} />
+                        style={{ background: isUrgent ? "#EF4444" : "#3B82F6" }} />
 
                       {/* Unread dot */}
                       {isUnread && (
@@ -314,29 +295,18 @@ export default function StudentNoticesPage() {
 
                         {/* Badges row */}
                         <div className="flex items-center gap-1.5 flex-wrap mb-3 pr-4">
-                          {/* Priority */}
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                            style={{ background: pc.bg, color: pc.color, border: `1px solid ${pc.border}` }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: pc.dot }} />
-                            {pc.label}
-                          </span>
-
-                          {/* Pinned */}
-                          {n.pinned && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                              <Pin className="h-2.5 w-2.5" /> Pinned
-                            </span>
-                          )}
-
                           {/* Urgent pulse badge */}
                           {isUrgent && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
                               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
-                              Action Required
+                              Urgent
                             </span>
                           )}
+
+                          {/* Target */}
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                            <GraduationCap className="h-2.5 w-2.5" /> {n.target}
+                          </span>
                         </div>
 
                         {/* Title */}
@@ -347,9 +317,11 @@ export default function StudentNoticesPage() {
                         </h3>
 
                         {/* Content preview */}
-                        <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">
-                          {n.content}
-                        </p>
+                        {n.body && (
+                          <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">
+                            {n.body}
+                          </p>
+                        )}
 
                         {/* Footer */}
                         <div className="flex items-center justify-between">
@@ -417,31 +389,21 @@ export default function StudentNoticesPage() {
             <DialogTitle>Notice</DialogTitle>
           </DialogHeader>
           {viewing && (() => {
-            const prio = ((viewing as any).priority ?? "medium") as Priority
-            const pc   = priorityConfig[prio]
             return (
               <div className="space-y-4 py-2">
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2">
-                  <span
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                    style={{ background: pc.bg, color: pc.color, border: `1px solid ${pc.border}` }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: pc.dot }} />
-                    {pc.label}
-                  </span>
+                  {viewing.urgent && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">
+                      <AlertCircle className="h-3 w-3" /> Urgent
+                    </span>
+                  )}
 
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
                     <GraduationCap className="h-3 w-3" />
                     {viewing.target}
                   </span>
-
-                  {viewing.pinned && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                      <Pin className="h-3 w-3" /> Pinned
-                    </span>
-                  )}
 
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
                     <CheckCircle2 className="h-3 w-3" /> Read
@@ -454,11 +416,13 @@ export default function StudentNoticesPage() {
                 </h2>
 
                 {/* Content */}
-                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 max-h-[240px] overflow-y-auto">
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {viewing.content}
-                  </p>
-                </div>
+                {viewing.body && (
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 max-h-[240px] overflow-y-auto">
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {viewing.body}
+                    </p>
+                  </div>
+                )}
 
                 {/* Meta */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -6,7 +6,7 @@ import {
   CheckCircle2, XCircle, Clock, Search,
   CalendarDays, Users, RefreshCw, AlertTriangle,
   Loader2, Save, Download, BarChart2, TrendingUp,
-  AlertCircle
+  AlertCircle, BookOpen, ArrowLeft, ChevronRight,
 } from "lucide-react"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -28,6 +28,7 @@ import {
   getUsers, getDepartments,
   getAttendance, upsertAttendance,
   getSubjectsByFacultyId,
+  getStudentsEnrolledInSubject,
 } from "@/lib/db"
 import type { User, Department, Attendance, Subject } from "@/lib/types"
 
@@ -73,10 +74,15 @@ export default function FacultyAttendancePage() {
   const [savedMsg,      setSavedMsg]      = useState(false)
 
   // ── Subject + Date ────────────────────────────────────────────
-  const [subject,      setSubject]      = useState("")
+  const [subjectId,   setSubjectId]   = useState("")
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   )
+
+  // ── Enrolled students for selected subject ────────────────────
+  const [enrolledStudents, setEnrolledStudents] = useState<User[]>([])
+  const [loadingStudents,  setLoadingStudents]  = useState(false)
+  const [subjectEnrolledCounts, setSubjectEnrolledCounts] = useState<Record<string, number>>({})
 
   // ── Search / filter ───────────────────────────────────────────
   const [search,       setSearch]       = useState("")
@@ -98,6 +104,15 @@ export default function FacultyAttendancePage() {
       setDepts(d)
       setAttendance(a)
       setMySubjects(ms)
+      // Pre-fetch enrolled counts for all subjects
+      const counts: Record<string, number> = {}
+      await Promise.all(ms.map(async (s) => {
+        try {
+          const stu = await getStudentsEnrolledInSubject(s.id)
+          counts[s.id] = stu.length
+        } catch { counts[s.id] = 0 }
+      }))
+      setSubjectEnrolledCounts(counts)
     } catch (e: any) {
       setError(e.message ?? "Failed to load")
     } finally {
@@ -107,13 +122,32 @@ export default function FacultyAttendancePage() {
 
   useEffect(() => { if (authUser.user) load() }, [authUser.user])
 
-  // ── My dept students — uses stable string myDeptId ───────────
+  // ── My dept students (fallback) or enrolled students ─────────
   const myStudents = useMemo(
-    () => allUsers.filter(u =>
-      u.role === "student" && u.dept_id === myDeptId
-    ),
-    [allUsers, myDeptId]   // ← string, not object — no infinite loop
+    () => subjectId ? enrolledStudents : [],
+    [subjectId, enrolledStudents]
   )
+
+  // ── Load enrolled students when subject changes ───────────────
+  const selectedSubjectObj = useMemo(
+    () => mySubjects.find(s => s.id === subjectId),
+    [mySubjects, subjectId]
+  )
+
+  useEffect(() => {
+    if (!subjectId) { setEnrolledStudents([]); return }
+    let cancelled = false
+    setLoadingStudents(true)
+    getStudentsEnrolledInSubject(subjectId).then(students => {
+      if (!cancelled) {
+        setEnrolledStudents(students)
+        setLoadingStudents(false)
+      }
+    }).catch(() => {
+      if (!cancelled) setLoadingStudents(false)
+    })
+    return () => { cancelled = true }
+  }, [subjectId])
 
   // ── Build rows ────────────────────────────────────────────────
   useEffect(() => {
@@ -177,6 +211,29 @@ export default function FacultyAttendancePage() {
     })
   }, [myStudents, attendance])
 
+  // ── Per-subject overview (for subject selection screen) ───────
+  const subjectOverviewData = useMemo(() => {
+    return mySubjects.map(sub => {
+      const subAtt = attendance.filter(a => a.subject === sub.name)
+      const total = subAtt.length
+      const present = subAtt.filter(a => a.status === "present").length
+      const absent = subAtt.filter(a => a.status === "absent").length
+      const late = subAtt.filter(a => a.status === "late").length
+      const rate = total > 0 ? Math.round((present / total) * 100) : 0
+      const enrolled = subjectEnrolledCounts[sub.id] ?? 0
+
+      const today = new Date()
+      const weekAgo = new Date(today)
+      weekAgo.setDate(weekAgo.getDate() - 7)
+      const recent = subAtt.filter(a => new Date(a.date) >= weekAgo)
+      const recentRate = recent.length > 0
+        ? Math.round((recent.filter(a => a.status === "present").length / recent.length) * 100)
+        : null
+
+      return { subject: sub, enrolled, total, present, absent, late, rate, recentRate }
+    })
+  }, [mySubjects, attendance, subjectEnrolledCounts])
+
   // ── Filtered rows ─────────────────────────────────────────────
   const filteredRows = useMemo(() => {
     return rows.filter(r => {
@@ -199,12 +256,17 @@ export default function FacultyAttendancePage() {
 
   // ── Save ─────────────────────────────────────────────────────
   async function handleSave() {
+    if (!selectedSubjectObj) {
+      setError("Please select a subject before saving attendance.")
+      return
+    }
     setSaving(true)
     try {
+      const subjectName = selectedSubjectObj.name
       const records = rows.map(r => ({
         student_id: r.student.id,
-        faculty_id: myId ?? null,           // ← stable string
-        subject:    subject.trim() || null,
+        faculty_id: myId ?? null,
+        subject:    subjectName,
         date:       selectedDate,
         status:     r.status,
       }))
@@ -231,10 +293,12 @@ export default function FacultyAttendancePage() {
 
   // ── Export CSV ────────────────────────────────────────────────
   function exportCSV() {
+    const filteredAtt = subjectId && selectedSubjectObj
+      ? attendance.filter(a => a.subject === selectedSubjectObj.name && myStudents.some(s => s.id === a.student_id))
+      : attendance.filter(a => myStudents.some(s => s.id === a.student_id))
     const csvRows = [
       ["Date", "Student", "Email", "Department", "Subject", "Status"],
-      ...attendance
-        .filter(a => myStudents.some(s => s.id === a.student_id))
+      ...filteredAtt
         .map(a => {
           const s = myStudents.find(s => s.id === a.student_id)
           return [
@@ -262,6 +326,7 @@ export default function FacultyAttendancePage() {
     <DashboardLayout
       role="faculty"
       userName={myName}
+      avatarUrl={authUser.user?.avatar_url}
       pageTitle="Attendance"
       pageSubtitle="Mark and track student attendance"
       loading={loading}
@@ -284,6 +349,123 @@ export default function FacultyAttendancePage() {
             Attendance saved for {selectedDate}
           </div>
         )}
+
+        {/* ── Subject overview (no subject selected) ──────── */}
+        {!subjectId && !loading && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                <BookOpen className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">My Subjects</h2>
+                <p className="text-xs text-gray-500">Select a subject to mark attendance</p>
+              </div>
+            </div>
+
+            {mySubjects.length === 0 ? (
+              <Card className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
+                <CardContent className="py-12 text-center">
+                  <BookOpen className="h-10 w-10 mx-auto text-gray-300 mb-3" />
+                  <p className="text-sm font-medium text-gray-500">No subjects assigned</p>
+                  <p className="text-xs text-gray-400 mt-1">Contact admin to get subjects assigned to you</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {subjectOverviewData.map(({ subject, enrolled, total, present, absent, late, rate, recentRate }) => (
+                  <Card
+                    key={subject.id}
+                    className="cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 backdrop-blur-xl bg-white/70 border-white/50 group"
+                    onClick={() => setSubjectId(subject.id)}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition-colors truncate">
+                            {subject.name}
+                          </p>
+                          <p className="text-[11px] text-gray-400 mt-0.5">{subject.code} · Sem {subject.semester}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors mt-0.5 shrink-0" />
+                      </div>
+
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-6 h-6 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center">
+                          <Users className="h-3 w-3 text-blue-600" />
+                        </div>
+                        <span className="text-xs text-gray-600 font-medium">
+                          {enrolled} student{enrolled !== 1 ? "s" : ""} enrolled
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        {/* Attendance ring */}
+                        <div className="relative w-14 h-14 shrink-0">
+                          <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="15" fill="none" stroke="#F1F5F9" strokeWidth="2.5" />
+                            <circle cx="18" cy="18" r="15" fill="none"
+                              stroke={total === 0 ? "#E2E8F0" : rate >= 75 ? "#16A34A" : rate >= 50 ? "#D97706" : "#DC2626"}
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeDasharray={`${rate * 0.9425} 94.25`}
+                            />
+                          </svg>
+                          <span className={`absolute inset-0 flex items-center justify-center text-xs font-black ${
+                            total === 0 ? "text-gray-400" : rate >= 75 ? "text-emerald-600" : rate >= 50 ? "text-amber-600" : "text-red-600"
+                          }`}>
+                            {total > 0 ? `${rate}%` : "\u2014"}
+                          </span>
+                        </div>
+
+                        {/* Breakdown */}
+                        <div className="flex-1 space-y-1.5">
+                          {[
+                            { label: "Present", value: present, color: "text-emerald-600", dot: "bg-emerald-500" },
+                            { label: "Absent",  value: absent,  color: "text-red-600",     dot: "bg-red-500"     },
+                            { label: "Late",    value: late,    color: "text-amber-600",   dot: "bg-amber-500"   },
+                          ].map(s => (
+                            <div key={s.label} className="flex items-center justify-between text-[11px]">
+                              <span className="flex items-center gap-1.5 text-gray-500">
+                                <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                                {s.label}
+                              </span>
+                              <span className={`font-bold ${s.color}`}>{s.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {recentRate !== null && (
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-400">Last 7 days</span>
+                          <span className={`font-bold ${recentRate >= 75 ? "text-emerald-600" : recentRate >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                            {recentRate}% attendance
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {subjectId && (<>
+        {/* Back to subjects + subject info */}
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs"
+            onClick={() => { setSubjectId(""); setEnrolledStudents([]); }}>
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Subjects
+          </Button>
+          {selectedSubjectObj && (
+            <div className="border-l border-gray-200 pl-3">
+              <p className="text-sm font-bold text-gray-800">{selectedSubjectObj.name}</p>
+              <p className="text-[10px] text-gray-500">{selectedSubjectObj.code} · Sem {selectedSubjectObj.semester}</p>
+            </div>
+          )}
+        </div>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -391,25 +573,6 @@ export default function FacultyAttendancePage() {
                   />
                 </div>
 
-                {/* Subject dropdown */}
-                <Select
-                  value={subject}
-                  onValueChange={setSubject}
-                >
-                  <SelectTrigger className="h-8 text-xs w-48">
-                    <SelectValue placeholder={
-                      mySubjects.length === 0
-                        ? "No subjects assigned"
-                        : "Select subject"
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mySubjects.map(s => (
-                      <SelectItem key={s.id} value={s.name}>{s.name} ({s.code})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
                 {/* Search */}
                 <div className="relative min-w-[160px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
@@ -460,7 +623,7 @@ export default function FacultyAttendancePage() {
                   <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
                 </Button>
                 <Button size="sm" onClick={handleSave}
-                  disabled={saving || loading || rows.length === 0}
+                  disabled={saving || loading || rows.length === 0 || !subjectId}
                   className="h-8 bg-blue-600 hover:bg-blue-700 text-white gap-1.5 text-xs font-semibold">
                   {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                   Save Attendance
@@ -503,9 +666,13 @@ export default function FacultyAttendancePage() {
                       ? (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-12 text-gray-400 text-sm">
-                            {myStudents.length === 0
-                              ? "No students in your department"
-                              : "No students match your search"
+                            {!subjectId
+                              ? "Select a subject to see enrolled students"
+                              : loadingStudents
+                                ? "Loading enrolled students..."
+                                : myStudents.length === 0
+                                  ? "No students enrolled in this subject"
+                                  : "No students match your search"
                             }
                           </TableCell>
                         </TableRow>
@@ -612,6 +779,7 @@ export default function FacultyAttendancePage() {
             )}
           </CardContent>
         </Card>
+        </>)}
 
       </div>
     </DashboardLayout>

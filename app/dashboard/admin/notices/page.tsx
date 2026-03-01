@@ -59,6 +59,105 @@ function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-lg bg-gray-100 ${className}`} />
 }
 
+// ─── NoticeForm — defined OUTSIDE NoticesPage to prevent focus loss ──
+interface NoticeFormProps {
+  form:    FormData
+  setForm: React.Dispatch<React.SetStateAction<FormData>>
+}
+
+function NoticeForm({ form, setForm }: NoticeFormProps) {
+  return (
+    <div className="space-y-4 py-2">
+
+      {/* Title */}
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Title *</Label>
+        <Input
+          placeholder="e.g. Mid-semester exam schedule released"
+          value={form.title}
+          onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+          className="h-9 text-sm"
+        />
+      </div>
+
+      {/* Body */}
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">Body</Label>
+        <textarea
+          placeholder="Detailed notice content..."
+          value={form.body}
+          onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
+          rows={4}
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Target */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold">Target Audience</Label>
+          <Select
+            value={form.target}
+            onValueChange={v => setForm(f => ({ ...f, target: v as any }))}
+          >
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Students">Students Only</SelectItem>
+              <SelectItem value="Faculty">Faculty Only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Priority */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold">Priority</Label>
+          <Select
+            value={form.urgent ? "urgent" : "normal"}
+            onValueChange={v => setForm(f => ({ ...f, urgent: v === "urgent" }))}
+          >
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="urgent">🔴 Urgent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Preview */}
+      {form.title && (
+        <div className={`p-3 rounded-xl border text-sm ${
+          form.urgent
+            ? "bg-red-50 border-red-200"
+            : "bg-gray-50 border-gray-200"
+        }`}>
+          <div className="flex items-start gap-2">
+            {form.urgent
+              ? <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+              : <Bell        className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+            }
+            <div className="min-w-0">
+              <p className="font-bold text-gray-800 text-xs">{form.title}</p>
+              {form.body && <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{form.body}</p>}
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  form.target === "All"      ? "bg-gray-100 text-gray-600"   :
+                  form.target === "Students" ? "bg-blue-50 text-blue-700"   :
+                                               "bg-purple-50 text-purple-700"
+                }`}>{form.target}</span>
+                {form.urgent && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">Urgent</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ════════════════════════════════════════════════════════════════
 export default function NoticesPage() {
   const me = useAuth("admin")
@@ -181,105 +280,12 @@ export default function NoticesPage() {
     finally { setSaving(false) }
   }
 
-  // ── Shared form ───────────────────────────────────────────────
-  function NoticeForm() {
-    return (
-      <div className="space-y-4 py-2">
-
-        {/* Title */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Title *</Label>
-          <Input
-            placeholder="e.g. Mid-semester exam schedule released"
-            value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            className="h-9 text-sm"
-          />
-        </div>
-
-        {/* Body */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Body</Label>
-          <textarea
-            placeholder="Detailed notice content..."
-            value={form.body}
-            onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-            rows={4}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Target */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Target Audience</Label>
-            <Select
-              value={form.target}
-              onValueChange={v => setForm(f => ({ ...f, target: v as any }))}
-            >
-              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All</SelectItem>
-                <SelectItem value="Students">Students Only</SelectItem>
-                <SelectItem value="Faculty">Faculty Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Priority */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Priority</Label>
-            <Select
-              value={form.urgent ? "urgent" : "normal"}
-              onValueChange={v => setForm(f => ({ ...f, urgent: v === "urgent" }))}
-            >
-              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="urgent">🔴 Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Preview */}
-        {form.title && (
-          <div className={`p-3 rounded-xl border text-sm ${
-            form.urgent
-              ? "bg-red-50 border-red-200"
-              : "bg-gray-50 border-gray-200"
-          }`}>
-            <div className="flex items-start gap-2">
-              {form.urgent
-                ? <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
-                : <Bell        className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-              }
-              <div className="min-w-0">
-                <p className="font-bold text-gray-800 text-xs">{form.title}</p>
-                {form.body && <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{form.body}</p>}
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    form.target === "All"      ? "bg-gray-100 text-gray-600"   :
-                    form.target === "Students" ? "bg-blue-50 text-blue-700"   :
-                                                 "bg-purple-50 text-purple-700"
-                  }`}>{form.target}</span>
-                  {form.urgent && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">Urgent</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
   // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
       role="admin"
       userName="Admin"
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Notices"
       pageSubtitle="Publish and manage announcements"
       loading={loading}
@@ -568,7 +574,7 @@ export default function NoticesPage() {
               Published immediately and visible to the selected audience.
             </DialogDescription>
           </DialogHeader>
-          <NoticeForm />
+          <NoticeForm form={form} setForm={setForm} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setAddOpen(false)} disabled={saving}>Cancel</Button>
             <Button size="sm" onClick={handleAdd}
@@ -589,7 +595,7 @@ export default function NoticesPage() {
               <Edit3 className="h-4 w-4 text-blue-600" /> Edit Notice
             </DialogTitle>
           </DialogHeader>
-          <NoticeForm />
+          <NoticeForm form={form} setForm={setForm} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
             <Button size="sm" onClick={handleEdit} disabled={saving}

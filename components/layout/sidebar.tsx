@@ -8,9 +8,9 @@ import {
   Settings, GraduationCap, BookOpen,
   ClipboardCheck, FileText, Award, Megaphone,
   LogOut, Shield, Menu, ChevronLeft, X,
-  CreditCard, UserCircle, HelpCircle
+  CreditCard, UserCircle, HelpCircle, MonitorSmartphone
 } from "lucide-react"
-import { logout } from "@/lib/auth"
+import { logout, logoutAllDevices } from "@/lib/auth"
 
 type Role       = "admin" | "faculty" | "student"
 type NavItem    = { label: string; href: string; icon: any }
@@ -25,6 +25,13 @@ const navConfig: Record<Role, NavSection[]> = {
       { label: "Subjects",       href: "/dashboard/admin/subjects",       icon: BookOpen       },
       { label: "Registrations",  href: "/dashboard/admin/registrations",  icon: ClipboardCheck },
       { label: "Fee Control",    href: "/dashboard/admin/fees",           icon: Wallet         },
+    ]},
+    { section: "Communication", items: [
+      { label: "Notices", href: "/dashboard/admin/notices", icon: Megaphone },
+    ]},
+    { section: "Account", items: [
+      { label: "Profile",  href: "/dashboard/admin/profile",  icon: UserCircle },
+      { label: "Settings", href: "/dashboard/admin/settings", icon: Settings   },
     ]},
   ],
   faculty: [
@@ -67,8 +74,11 @@ const roleConfig = {
 export interface SidebarProps {
   role:      Role
   userName?: string
+  avatarUrl?: string | null
   mobileOpen?: boolean
   onMobileClose?: () => void
+  onLogout?: () => void
+  onLogoutAll?: () => void
 }
 
 const EW   = 240
@@ -77,7 +87,7 @@ const EASE = "cubic-bezier(0.4, 0, 0.2, 1)"
 const DUR  = "0.3s"
 const MOBILE_BP = 768
 
-export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileClose }: SidebarProps) {
+export function Sidebar({ role, userName = "User", avatarUrl, mobileOpen = false, onMobileClose, onLogout, onLogoutAll }: SidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
   const [collapsed, setCollapsed] = useState(false)
@@ -117,7 +127,17 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
 
   async function handleLogout() {
     if (isMobile && onMobileClose) onMobileClose()
-    await logout()
+    if (onLogout) onLogout()           // show overlay in parent
+    await new Promise(r => setTimeout(r, 1200))  // let animation play
+    await logout()                     // local scope — only this device
+    router.replace("/login")
+  }
+
+  async function handleLogoutAll() {
+    if (isMobile && onMobileClose) onMobileClose()
+    if (onLogoutAll) onLogoutAll()     // show overlay in parent
+    await new Promise(r => setTimeout(r, 1200))
+    await logoutAllDevices()           // global scope — every device
     router.replace("/login")
   }
 
@@ -139,18 +159,17 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
       <aside style={{
         width:               isMobile ? 280 : (c ? CW : EW),
         minWidth:            isMobile ? 280 : (c ? CW : EW),
-        height:              isMobile ? "100%" : "auto",
-        minHeight:           isMobile ? "100%" : "100vh",
-        background:          "rgba(255,255,255,0.92)",
+        height:              "100%",
+        background:          "var(--shell-bg)",
         backdropFilter:      "blur(24px)",
         WebkitBackdropFilter:"blur(24px)",
-        borderRight:         "1px solid rgba(226,232,240,0.7)",
+        borderRight:         "1px solid var(--shell-border)",
+        boxShadow:           "var(--shell-shadow)",
         display:             "flex",
         flexDirection:       "column",
         transition:          isMobile ? "none" : T,
         flexShrink:          0,
-        position:            isMobile ? "relative" : "sticky",
-        top:                 0,
+        position:            "relative",
         zIndex:              isMobile ? 51 : 40,
         overflowX:           "hidden",
         overflowY:           "hidden",
@@ -160,7 +179,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
         {/* ── HEADER ── */}
         <div style={{
           height: 64, display: "flex", alignItems: "center",
-          padding: "0 14px", borderBottom: "1px solid rgba(226,232,240,0.6)",
+          padding: "0 14px", borderBottom: "1px solid var(--shell-border-light)",
           flexShrink: 0, gap: 10, overflow: "hidden",
         }}>
           <div style={{
@@ -176,15 +195,15 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
             overflow: "hidden", maxWidth: c ? 0 : 120, opacity: c ? 0 : 1,
             transition: TFADE, whiteSpace: "nowrap", flex: 1, minWidth: 0,
           }}>
-            <p style={{ fontSize: 14, fontWeight: 900, color: "#0F172A", margin: 0, lineHeight: 1.2 }}>UniCore</p>
-            <p style={{ fontSize: 10, color: "#94A3B8", margin: 0, fontWeight: 500 }}>ERP Portal</p>
+            <p style={{ fontSize: 14, fontWeight: 900, color: "var(--shell-text)", margin: 0, lineHeight: 1.2 }}>UniCore</p>
+            <p style={{ fontSize: 10, color: "var(--shell-text-muted)", margin: 0, fontWeight: 500 }}>ERP Portal</p>
           </div>
 
           {isMobile ? (
             <button onClick={onMobileClose} title="Close menu" style={{
               width: 32, height: 32, borderRadius: 10,
-              border: "1px solid rgba(226,232,240,0.9)",
-              background: "rgba(248,250,252,0.9)", color: "#64748B",
+              border: "1px solid var(--shell-btn-border)",
+              background: "var(--shell-btn-bg)", color: "var(--shell-text-secondary)",
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0, padding: 0, marginLeft: "auto",
             }}>
@@ -195,8 +214,8 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
               onClick={() => setCollapsed(true)} title="Collapse"
               style={{
                 width: 28, height: 28, borderRadius: 8,
-                border: "1px solid rgba(226,232,240,0.9)",
-                background: "rgba(248,250,252,0.9)", color: "#64748B",
+                border: "1px solid var(--shell-btn-border)",
+                background: "var(--shell-btn-bg)", color: "var(--shell-text-secondary)",
                 cursor: c ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0, opacity: c ? 0 : 1, maxWidth: c ? 0 : 28,
@@ -204,10 +223,10 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
                 transition: `opacity 0.22s ${EASE}, max-width ${DUR} ${EASE}`,
               }}
               onMouseEnter={e => {
-                if (!c) { const b = e.currentTarget; b.style.background="rgba(59,130,246,0.10)"; b.style.borderColor="rgba(59,130,246,0.28)"; b.style.color="#2563EB" }
+                if (!c) { const b = e.currentTarget; b.style.background="var(--shell-hover-btn-bg)"; b.style.borderColor="var(--shell-hover-btn-border)"; b.style.color="#2563EB" }
               }}
               onMouseLeave={e => {
-                const b = e.currentTarget; b.style.background="rgba(248,250,252,0.9)"; b.style.borderColor="rgba(226,232,240,0.9)"; b.style.color="#64748B"
+                const b = e.currentTarget; b.style.background="var(--shell-btn-bg)"; b.style.borderColor="var(--shell-btn-border)"; b.style.color="var(--shell-text-secondary)"
               }}
             >
               <ChevronLeft size={14} strokeWidth={2.5} />
@@ -227,13 +246,13 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
               onClick={() => setCollapsed(false)} title="Expand"
               style={{
                 width: 34, height: 34, margin: "10px 0 6px", borderRadius: 10,
-                border: "1px solid rgba(226,232,240,0.9)",
-                background: "rgba(248,250,252,0.9)", color: "#64748B",
+                border: "1px solid var(--shell-btn-border)",
+                background: "var(--shell-btn-bg)", color: "var(--shell-text-secondary)",
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0, transition: "background 0.15s, border-color 0.15s, color 0.15s",
               }}
-              onMouseEnter={e => { const b = e.currentTarget; b.style.background="rgba(59,130,246,0.10)"; b.style.borderColor="rgba(59,130,246,0.28)"; b.style.color="#2563EB" }}
-              onMouseLeave={e => { const b = e.currentTarget; b.style.background="rgba(248,250,252,0.9)"; b.style.borderColor="rgba(226,232,240,0.9)"; b.style.color="#64748B" }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.background="var(--shell-hover-btn-bg)"; b.style.borderColor="var(--shell-hover-btn-border)"; b.style.color="#2563EB" }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.background="var(--shell-btn-bg)"; b.style.borderColor="var(--shell-btn-border)"; b.style.color="var(--shell-text-secondary)" }}
             >
               <Menu size={15} strokeWidth={2.5} />
             </button>
@@ -243,7 +262,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
         {/* ── ROLE BADGE ── */}
         <div style={{
           padding: c ? "8px 0" : "10px 12px",
-          borderBottom: "1px solid rgba(226,232,240,0.5)",
+          borderBottom: "1px solid var(--shell-border-subtle)",
           display: "flex", justifyContent: c ? "center" : "flex-start",
           flexShrink: 0, transition: T, overflow: "hidden",
         }}>
@@ -255,18 +274,23 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
           }}>
             <div style={{
               width: c ? 32 : 30, height: c ? 32 : 30,
-              borderRadius: c ? 10 : 8, background: `${rc.color}18`,
-              border: `1px solid ${rc.color}28`,
+              borderRadius: c ? 10 : 8,
+              background: avatarUrl ? "transparent" : `${rc.color}18`,
+              border: avatarUrl ? "none" : `1px solid ${rc.color}28`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, transition: T,
+              flexShrink: 0, transition: T, overflow: "hidden",
             }}>
-              <rc.icon size={c ? 15 : 14} color={rc.color} strokeWidth={2} />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <rc.icon size={c ? 15 : 14} color={rc.color} strokeWidth={2} />
+              )}
             </div>
             <div style={{
               overflow: "hidden", maxWidth: c ? 0 : 150, opacity: c ? 0 : 1,
               transition: TFADE, whiteSpace: "nowrap", minWidth: 0,
             }}>
-              <p style={{ fontSize: 12, fontWeight: 800, color: "#1E293B", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</p>
+              <p style={{ fontSize: 12, fontWeight: 800, color: "var(--shell-text-dark)", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</p>
               <p style={{ fontSize: 10, color: rc.color, margin: 0, fontWeight: 700 }}>{rc.label}</p>
             </div>
           </div>
@@ -285,7 +309,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
                 transition: mounted ? `max-height ${DUR} ${EASE}, opacity 0.2s ${EASE}, margin ${DUR} ${EASE}` : "none",
               }}>
                 <p style={{
-                  fontSize: 9, fontWeight: 800, color: "#94A3B8",
+                  fontSize: 9, fontWeight: 800, color: "var(--shell-text-muted)",
                   textTransform: "uppercase", letterSpacing: "0.1em",
                   padding: "4px 10px 3px", whiteSpace: "nowrap", margin: 0,
                 }}>
@@ -295,7 +319,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
 
               {si > 0 && (
                 <div style={{
-                  height: 1, background: "rgba(226,232,240,0.7)",
+                  height: 1, background: "var(--shell-border-divider)",
                   margin: c ? "2px 10px 6px" : "0 10px",
                   maxHeight: c ? 1 : 0, opacity: c ? 1 : 0, overflow: "hidden",
                   transition: mounted ? `max-height ${DUR} ${EASE}, opacity 0.2s ${EASE}, margin ${DUR} ${EASE}` : "none",
@@ -317,7 +341,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
                       boxShadow: isActive ? "0 2px 8px rgba(37,99,235,0.08)" : "none",
                       position: "relative", marginBottom: 2,
                     }}
-                    onMouseEnter={e => { if (!isActive) { const el = e.currentTarget; el.style.background="rgba(59,130,246,0.06)"; el.style.border="1px solid rgba(59,130,246,0.14)" } }}
+                    onMouseEnter={e => { if (!isActive) { const el = e.currentTarget; el.style.background="var(--shell-hover-bg)"; el.style.border="1px solid var(--shell-hover-border)" } }}
                     onMouseLeave={e => { if (!isActive) { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent" } }}
                   >
                     <div style={{
@@ -329,15 +353,15 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
                     <div style={{
                       width: c ? 36 : 30, height: c ? 36 : 30,
                       borderRadius: c ? 11 : 8, flexShrink: 0,
-                      background: isActive ? "linear-gradient(135deg,rgba(37,99,235,0.18),rgba(59,130,246,0.10))" : c ? "rgba(100,116,139,0.07)" : "transparent",
+                      background: isActive ? "linear-gradient(135deg,rgba(37,99,235,0.18),rgba(59,130,246,0.10))" : c ? "var(--shell-icon-bg)" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       transition: T, border: isActive && c ? "1px solid rgba(37,99,235,0.20)" : "1px solid transparent",
                     }}>
-                      <item.icon size={c ? 17 : 15} color={isActive ? "#2563EB" : "#64748B"} strokeWidth={isActive ? 2.5 : 2} />
+                      <item.icon size={c ? 17 : 15} color={isActive ? "#2563EB" : "var(--shell-text-secondary)"} strokeWidth={isActive ? 2.5 : 2} />
                     </div>
                     <span style={{
                       fontSize: isMobile ? 14 : 13, fontWeight: isActive ? 700 : 500,
-                      color: isActive ? "#1D4ED8" : "#334155",
+                      color: isActive ? "#1D4ED8" : "var(--shell-text-body)",
                       whiteSpace: "nowrap", overflow: "hidden",
                       maxWidth: c ? 0 : 160, opacity: c ? 0 : 1, transition: TFADE,
                     }}>
@@ -352,7 +376,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
 
         {/* ── BOTTOM ── */}
         <div style={{
-          padding: "10px 8px", borderTop: "1px solid rgba(226,232,240,0.6)",
+          padding: "10px 8px", borderTop: "1px solid var(--shell-border-light)",
           display: "flex", flexDirection: "column", gap: 3, flexShrink: 0,
           paddingBottom: isMobile ? "calc(10px + env(safe-area-inset-bottom, 0px))" : 10,
         }}>
@@ -364,18 +388,18 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
               borderRadius: 12, textDecoration: "none",
               border: "1px solid transparent", transition: T,
             }}
-            onMouseEnter={e => { const el = e.currentTarget; el.style.background="rgba(148,163,184,0.09)"; el.style.border="1px solid rgba(148,163,184,0.18)" }}
+            onMouseEnter={e => { const el = e.currentTarget; el.style.background="var(--shell-help-hover-bg)"; el.style.border="1px solid var(--shell-help-hover-border)" }}
             onMouseLeave={e => { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent" }}
           >
             <div style={{
               width: c ? 36 : 30, height: c ? 36 : 30, borderRadius: c ? 11 : 8,
               flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-              background: c ? "rgba(100,116,139,0.07)" : "transparent", transition: T,
+              background: c ? "var(--shell-icon-bg)" : "transparent", transition: T,
             }}>
-              <HelpCircle size={c ? 17 : 15} color="#64748B" strokeWidth={2} />
+              <HelpCircle size={c ? 17 : 15} color="var(--shell-text-secondary)" strokeWidth={2} />
             </div>
             <span style={{
-              fontSize: isMobile ? 14 : 13, fontWeight: 500, color: "#64748B",
+              fontSize: isMobile ? 14 : 13, fontWeight: 500, color: "var(--shell-text-secondary)",
               whiteSpace: "nowrap", overflow: "hidden",
               maxWidth: c ? 0 : 160, opacity: c ? 0 : 1, transition: TFADE,
             }}>
@@ -409,6 +433,33 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
               Logout
             </span>
           </button>
+
+          <button onClick={handleLogoutAll} title={c ? "Logout All Devices" : undefined}
+            style={{
+              display: "flex", alignItems: "center",
+              justifyContent: c ? "center" : "flex-start",
+              gap: 10, padding: c ? "9px 0" : (isMobile ? "11px 11px" : "8px 11px"),
+              borderRadius: 12, border: "1px solid transparent",
+              background: "transparent", cursor: "pointer", width: "100%", transition: T,
+            }}
+            onMouseEnter={e => { const b = e.currentTarget; b.style.background="rgba(220,38,38,0.07)"; b.style.border="1px solid rgba(220,38,38,0.18)" }}
+            onMouseLeave={e => { const b = e.currentTarget; b.style.background="transparent"; b.style.border="1px solid transparent" }}
+          >
+            <div style={{
+              width: c ? 36 : 30, height: c ? 36 : 30, borderRadius: c ? 11 : 8,
+              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+              background: c ? "rgba(220,38,38,0.07)" : "transparent", transition: T,
+            }}>
+              <MonitorSmartphone size={c ? 17 : 15} color="#DC2626" strokeWidth={2} />
+            </div>
+            <span style={{
+              fontSize: isMobile ? 14 : 13, fontWeight: 500, color: "#DC2626",
+              whiteSpace: "nowrap", overflow: "hidden",
+              maxWidth: c ? 0 : 160, opacity: c ? 0 : 1, transition: TFADE,
+            }}>
+              Logout All Devices
+            </span>
+          </button>
         </div>
       </aside>
     </>
@@ -421,7 +472,7 @@ export function Sidebar({ role, userName = "User", mobileOpen = false, onMobileC
       <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", animation: `sb-fade-in 0.2s ${EASE}` }}>
         <div onClick={onMobileClose} style={{
           position: "absolute", inset: 0,
-          background: "rgba(15,23,42,0.4)",
+          background: "var(--shell-overlay-bg)",
           backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
         }} />
         <div style={{ position: "relative", zIndex: 1, height: "100%" }}>

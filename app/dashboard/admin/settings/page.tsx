@@ -8,7 +8,7 @@ export default function AdminSettingsPage() {
   const me = useAuth("admin")
   if (!me) return null
   return (
-    <DashboardLayout role="admin" userName="Dr. Admin"
+    <DashboardLayout role="admin" userName="Dr. Admin" avatarUrl={me.user?.avatar_url}
       pageTitle="Settings" pageSubtitle="Manage your preferences and account settings">
       <SettingsPage role="admin" userName="Dr. Admin" />
     </DashboardLayout>

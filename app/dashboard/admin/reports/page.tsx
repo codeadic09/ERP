@@ -229,6 +229,7 @@ export default function ReportsPage() {
     <DashboardLayout
       role="admin"
       userName="Admin"
+      avatarUrl={me.user?.avatar_url}
       pageTitle="Reports"
       pageSubtitle="Analytics and insights across the university"
       loading={loading}

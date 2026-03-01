@@ -2,15 +2,17 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import {
   GraduationCap, ArrowRight, BarChart3, Shield,
   Users, BookOpen, ClipboardCheck, Award,
   Calendar, Bell, Wallet, Sparkles,
   CheckCircle, Globe, Zap, Lock,
   ChevronRight, Star, TrendingUp,
-  Menu, X
 } from "lucide-react"
+import Lottie from "lottie-react"
+import type { LottieRefCurrentProps } from "lottie-react"
+import { HeroSection } from "@/components/hero/HeroSection"
 
 /* ── Mobile detection hook ── */
 function useMobile(breakpoint = 768) {
@@ -44,7 +46,7 @@ function useCountUp(end: number, duration = 1400, trigger = true) {
 }
 
 /* ── CountUp component ── */
-function CountUp({ value, className, style }: { value: string; className?: string; style?: React.CSSProperties }) {
+export function CountUp({ value, className, style }: { value: string; className?: string; style?: React.CSSProperties }) {
   const ref = useRef<HTMLSpanElement>(null)
   const [visible, setVisible] = useState(false)
 
@@ -75,63 +77,77 @@ function CountUp({ value, className, style }: { value: string; className?: strin
   return <span ref={ref} className={className} style={style}>{prefix}{formatted}{suffix}</span>
 }
 
+/* ══════════════════════════════════════════
+   DATA
+   ══════════════════════════════════════════ */
+
 const features = [
-  { icon:BarChart3,     color:"#3B82F6", title:"Smart Analytics",       sub:"Real-time dashboards with live academic metrics and trends"          },
-  { icon:ClipboardCheck,color:"#D946EF", title:"Attendance Tracking",   sub:"Automated attendance with instant faculty notifications"              },
-  { icon:Award,         color:"#84CC16", title:"Result Management",     sub:"One-click result publishing across all semesters and exams"           },
-  { icon:Calendar,      color:"#FBBF24", title:"Smart Timetable",       sub:"AI-generated conflict-free scheduling for all departments"            },
-  { icon:Bell,          color:"#F43F5E", title:"Instant Notices",       sub:"Push notifications for exams, events, and announcements"              },
-  { icon:Wallet,        color:"#3B82F6", title:"Fee Management",        sub:"Online payments, receipts, and overdue tracking in one place"         },
-  { icon:Shield,        color:"#D946EF", title:"Role-Based Access",     sub:"Separate secure portals for admin, faculty, and students"             },
-  { icon:Sparkles,      color:"#84CC16", title:"AI Insights",           sub:"Predictive analytics to identify at-risk students early"              },
+  { icon: BarChart3,      color: "#3B82F6", title: "Smart Analytics",       sub: "Real-time dashboards with live academic metrics and trends" },
+  { icon: ClipboardCheck, color: "#D946EF", title: "Attendance Tracking",   sub: "Automated attendance with instant faculty notifications" },
+  { icon: Award,          color: "#84CC16", title: "Result Management",     sub: "One-click result publishing across all semesters and exams" },
+  { icon: Calendar,       color: "#FBBF24", title: "Smart Timetable",       sub: "AI-generated conflict-free scheduling for all departments" },
+  { icon: Bell,           color: "#F43F5E", title: "Instant Notices",       sub: "Push notifications for exams, events, and announcements" },
+  { icon: Wallet,         color: "#3B82F6", title: "Fee Management",        sub: "Online payments, receipts, and overdue tracking in one place" },
+  { icon: Shield,         color: "#D946EF", title: "Role-Based Access",     sub: "Separate secure portals for admin, faculty, and students" },
+  { icon: Sparkles,       color: "#84CC16", title: "AI Insights",           sub: "Predictive analytics to identify at-risk students early" },
 ]
 
 const stats = [
-  { value:"2,800+", label:"Students Enrolled",   icon:Users,      color:"#3B82F6" },
-  { value:"180+",   label:"Faculty Members",      icon:BookOpen,   color:"#D946EF" },
-  { value:"6",      label:"Departments",          icon:Globe,      color:"#84CC16" },
-  { value:"99.9%",  label:"Uptime Guaranteed",    icon:Zap,        color:"#FBBF24" },
+  { value: "2,800+", label: "Students Enrolled", icon: Users,    color: "#3B82F6" },
+  { value: "180+",   label: "Faculty Members",   icon: BookOpen, color: "#D946EF" },
+  { value: "6",      label: "Departments",       icon: Globe,    color: "#84CC16" },
+  { value: "99.9%",  label: "Uptime Guaranteed",  icon: Zap,      color: "#FBBF24" },
 ]
 
 const roles = [
   {
-    role:"Admin",
-    icon:Shield,
-    color:"#1D4ED8",
-    bg:"linear-gradient(135deg,#1D4ED8,#3B82F6)",
-    shadow:"rgba(59,130,246,0.35)",
-    desc:"Full control over the university ecosystem — manage users, departments, fees, and system-wide settings.",
-    perks:["Manage all users & roles","Approve registrations","System analytics","Fee & exam control"],
-    href:"/login",
+    role: "Admin",
+    icon: Shield,
+    color: "#1D4ED8",
+    bg: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
+    shadow: "rgba(59,130,246,0.35)",
+    desc: "Full control over the university ecosystem — manage users, departments, fees, and system-wide settings.",
+    perks: ["Manage all users & roles", "Approve registrations", "System analytics", "Fee & exam control"],
+    href: "/login",
   },
   {
-    role:"Faculty",
-    icon:BookOpen,
-    color:"#A21CAF",
-    bg:"linear-gradient(135deg,#D946EF,#E879F9)",
-    shadow:"rgba(217,70,239,0.35)",
-    desc:"Streamline your teaching workflow — mark attendance, publish marks, and engage with your students.",
-    perks:["Mark & export attendance","Upload results & grades","Manage assignments","View student analytics"],
-    href:"/login",
+    role: "Faculty",
+    icon: BookOpen,
+    color: "#A21CAF",
+    bg: "linear-gradient(135deg,#D946EF,#E879F9)",
+    shadow: "rgba(217,70,239,0.35)",
+    desc: "Streamline your teaching workflow — mark attendance, publish marks, and engage with your students.",
+    perks: ["Mark & export attendance", "Upload results & grades", "Manage assignments", "View student analytics"],
+    href: "/login",
   },
   {
-    role:"Student",
-    icon:GraduationCap,
-    color:"#3F6212",
-    bg:"linear-gradient(135deg,#84CC16,#A3E635)",
-    shadow:"rgba(132,204,22,0.35)",
-    desc:"Track your academic journey — check attendance, results, timetable, and stay updated on campus news.",
-    perks:["View attendance & results","Download hall tickets","Check timetable","Pay fees online"],
-    href:"/login",
+    role: "Student",
+    icon: GraduationCap,
+    color: "#3F6212",
+    bg: "linear-gradient(135deg,#84CC16,#A3E635)",
+    shadow: "rgba(132,204,22,0.35)",
+    desc: "Track your academic journey — check attendance, results, timetable, and stay updated on campus news.",
+    perks: ["View attendance & results", "Download hall tickets", "Check timetable", "Pay fees online"],
+    href: "/login",
   },
 ]
 
 const steps = [
-  { n:"01", title:"Sign Up",        sub:"Create your account and choose your role",          color:"#3B82F6" },
-  { n:"02", title:"Get Approved",   sub:"Admin verifies and activates your account",         color:"#D946EF" },
-  { n:"03", title:"Access Portal",  sub:"Log in to your personalized role-based dashboard",  color:"#84CC16" },
-  { n:"04", title:"Start Learning", sub:"Manage academics, fees, and results seamlessly",    color:"#FBBF24" },
+  { n: "01", title: "Sign Up",        sub: "Create your account and choose your role",         color: "#3B82F6" },
+  { n: "02", title: "Get Approved",   sub: "Admin verifies and activates your account",        color: "#D946EF" },
+  { n: "03", title: "Access Portal",  sub: "Log in to your personalized role-based dashboard", color: "#84CC16" },
+  { n: "04", title: "Start Learning", sub: "Manage academics, fees, and results seamlessly",   color: "#FBBF24" },
 ]
+
+/* ══════════════════════════════════════════
+   SPACING SYSTEM (8px grid)
+   ══════════════════════════════════════════ */
+const SP = {
+  section: { mobile: 72, tablet: 100, desktop: 136 },
+  gutter:  { mobile: 20, desktop: 40 },
+  heading: { mobile: 40, desktop: 64 },
+  inner:   { mobile: 16, desktop: 24 },
+} as const
 
 export default function LandingPage() {
   const pageRef = useRef<HTMLDivElement>(null)
@@ -139,436 +155,338 @@ export default function LandingPage() {
   const isUnder1024 = useMobile(1024)
   const isTablet = isUnder1024 && !isMobile
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [navHidden, setNavHidden] = useState(false)
+  const [navScrolled, setNavScrolled] = useState(false)
+  const lastScrollY = useRef(0)
+  const lottieRef = useRef<LottieRefCurrentProps>(null)
+  const [menuAnimData, setMenuAnimData] = useState<object | null>(null)
+  const isFirstRender = useRef(true)
 
-  // Lock body scroll when mobile nav is open
+  /* Force light mode on landing page — strip dark class from <html> */
   useEffect(() => {
-    if (mobileNavOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
+    const html = document.documentElement
+    const wasDark = html.classList.contains("dark")
+    html.classList.remove("dark")
+    // Also prevent next-themes MutationObserver from re-adding it
+    const observer = new MutationObserver(() => {
+      if (html.classList.contains("dark")) {
+        html.classList.remove("dark")
+      }
+    })
+    observer.observe(html, { attributes: true, attributeFilter: ["class"] })
+    return () => {
+      observer.disconnect()
+      if (wasDark) html.classList.add("dark")
     }
+  }, [])
+
+  /* Load Lottie animation data on mount */
+  useEffect(() => {
+    fetch("/lottie/menu-toggle.json")
+      .then(r => r.json())
+      .then(setMenuAnimData)
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (mobileNavOpen) document.body.style.overflow = "hidden"
+    else document.body.style.overflow = ""
     return () => { document.body.style.overflow = "" }
   }, [mobileNavOpen])
+
+  /* Drive Lottie segments when menu toggles */
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    const anim = lottieRef.current
+    if (!anim) return
+    if (mobileNavOpen) {
+      anim.playSegments([0, 84], true)
+    } else {
+      anim.playSegments([84, 168], true)
+    }
+  }, [mobileNavOpen])
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      setNavScrolled(y > 20)
+      if (y > lastScrollY.current && y > 80) setNavHidden(true)
+      else setNavHidden(false)
+      lastScrollY.current = y
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   useEffect(() => {
     const els = pageRef.current?.querySelectorAll(".reveal, .reveal-left, .reveal-scale")
     if (!els) return
     const io = new IntersectionObserver(
       (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("visible"); io.unobserve(e.target) } }),
-      { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
     )
     els.forEach(el => io.observe(el))
     return () => io.disconnect()
   }, [])
 
-  const px = isMobile ? 16 : 32
+  /* Dynamic spacing helpers */
+  const secPad = isMobile ? SP.section.mobile : isTablet ? SP.section.tablet : SP.section.desktop
+  const hPad   = isMobile ? SP.gutter.mobile  : SP.gutter.desktop
+  const headMb = isMobile ? SP.heading.mobile  : SP.heading.desktop
 
   return (
-    <div ref={pageRef} style={{ minHeight:"100vh", fontFamily:"var(--font-sans,system-ui,sans-serif)", overflowX:"hidden" }}>
+    <div ref={pageRef} className="landing-page" style={{ minHeight: "100vh", fontFamily: "var(--font-sans,system-ui,sans-serif)", overflowX: "hidden" }}>
 
       {/* ══════════════════════════════
-          NAVBAR
+          NAVBAR — Airy, balanced height
       ══════════════════════════════ */}
       <nav style={{
-        position:"sticky", top:0, zIndex:50,
-        background:"rgba(255,255,255,0.75)",
-        backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
-        borderBottom:"1px solid rgba(255,255,255,0.62)",
-        boxShadow:"0 2px 16px rgba(59,130,246,0.08)",
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        background: navScrolled ? "rgba(255,255,255,0.72)" : "transparent",
+        backdropFilter: navScrolled ? "blur(16px) saturate(1.8)" : "none",
+        WebkitBackdropFilter: navScrolled ? "blur(16px) saturate(1.8)" : "none",
+        borderBottom: navScrolled ? "1px solid rgba(255,255,255,0.55)" : "1px solid transparent",
+        boxShadow: navScrolled
+          ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 20px rgba(15,23,42,0.06), 0 12px 48px rgba(59,130,246,0.06)"
+          : "none",
+        transform: navHidden ? "translateY(-100%)" : "translateY(0)",
+        transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1), background 0.3s ease, backdrop-filter 0.3s ease, border-bottom 0.3s ease, box-shadow 0.3s ease",
       }}>
         <div style={{
-          maxWidth:1200, margin:"0 auto",
-          padding: isMobile ? "0 16px" : "0 32px",
-          height: isMobile ? 56 : 64,
-          display:"flex", alignItems:"center", justifyContent:"space-between",
+          maxWidth: 1120, margin: "0 auto",
+          padding: isMobile ? "0 20px" : "0 40px",
+          height: isMobile ? 60 : 72,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           {/* Logo */}
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{
-              width:36, height:36, borderRadius:11,
-              background:"linear-gradient(135deg,#1D4ED8,#3B82F6)",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              boxShadow:"0 4px 12px rgba(59,130,246,0.38)",
+              width: 38, height: 38, borderRadius: 12,
+              background: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 6px rgba(29,78,216,0.25), 0 8px 20px rgba(59,130,246,0.30), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}>
               <GraduationCap size={18} color="white" />
             </div>
             <div>
-              <p style={{ fontSize:15, fontWeight:900, lineHeight:1, background:"linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              <p style={{ fontSize: 16, fontWeight: 900, lineHeight: 1, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 UniCore ERP
               </p>
-              <p style={{ fontSize:9, color:"#94A3B8", fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase" }}>
+              <p style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 1 }}>
                 University Management
               </p>
             </div>
           </div>
 
-          {/* Nav Links — desktop only */}
+          {/* Nav links — desktop */}
           {!isMobile && (
-            <div style={{ display:"flex", alignItems:"center", gap:32 }}>
-              {["Features","How It Works","Portals","Contact"].map(l => (
-                <a key={l} href={`#${l.toLowerCase().replace(/ /g,"-")}`} className="nav-link">{l}</a>
+            <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
+              {["Features", "How It Works", "Portals", "Contact"].map(l => (
+                <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} className="nav-link">{l}</a>
               ))}
             </div>
           )}
 
-          {/* CTA — desktop only */}
+          {/* CTA — desktop */}
           {!isMobile && (
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Link href="/login" className="nav-btn-login">Sign In</Link>
               <Link href="/login" className="nav-btn-signup">
-                Get Started <ChevronRight size={14} strokeWidth={2.5} style={{ marginLeft:2 }} />
+                Get Started <ChevronRight size={14} strokeWidth={2.5} style={{ marginLeft: 2 }} />
               </Link>
             </div>
           )}
 
-          {/* Hamburger — mobile only */}
+          {/* Hamburger — mobile (Lottie animation) */}
           {isMobile && (
-            <button
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open menu"
-              style={{
-                display:"flex", alignItems:"center", justifyContent:"center",
-                width:40, height:40, borderRadius:12,
-                background:"rgba(59,130,246,0.08)",
-                border:"1px solid rgba(59,130,246,0.15)",
-                cursor:"pointer", WebkitTapHighlightColor:"transparent",
-              }}
-            >
-              <Menu size={20} color="#1E293B" strokeWidth={2.5} />
+            <button onClick={() => setMobileNavOpen(v => !v)} aria-label={mobileNavOpen ? "Close menu" : "Open menu"} style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 36, height: 36, borderRadius: 10,
+              background: navScrolled ? "rgba(59,130,246,0.08)" : "rgba(255,255,255,0.12)",
+              border: navScrolled ? "1px solid rgba(59,130,246,0.15)" : "1px solid rgba(255,255,255,0.2)",
+              cursor: "pointer", WebkitTapHighlightColor: "transparent",
+              padding: 0, overflow: "visible",
+              transition: "background 0.3s ease, border 0.3s ease",
+            }}>
+              {menuAnimData ? (
+                <Lottie
+                  lottieRef={lottieRef}
+                  animationData={menuAnimData}
+                  loop={false}
+                  autoplay={false}
+                  style={{
+                    width: 22, height: 22,
+                    filter: navScrolled ? "none" : "invert(1)",
+                    transition: "filter 0.3s ease",
+                  }}
+                />
+              ) : (
+                <span style={{ width: 16, height: 16, display: "block" }} />
+              )}
             </button>
           )}
         </div>
       </nav>
 
-      {/* Mobile nav overlay */}
+      {/* Mobile nav popup */}
       {isMobile && mobileNavOpen && (
-        <div style={{
-          position:"fixed", inset:0, zIndex:100,
-          background:"rgba(255,255,255,0.95)",
-          backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
-          padding:"80px 24px 32px",
-          display:"flex", flexDirection:"column", gap:8,
-        }}>
-          <button
+        <>
+          {/* Backdrop — z-index below nav so hamburger stays crisp */}
+          <div
             onClick={() => setMobileNavOpen(false)}
-            aria-label="Close menu"
             style={{
-              position:"absolute", top:16, right:16,
-              width:40, height:40, borderRadius:12,
-              background:"rgba(0,0,0,0.05)",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              cursor:"pointer", border:"none",
+              position: "fixed", inset: 0, zIndex: 40,
+              background: "rgba(0,0,0,0.25)",
+              backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
             }}
-          >
-            <X size={20} color="#1E293B" strokeWidth={2.5} />
-          </button>
+          />
+          {/* Popup card — between backdrop and nav */}
+          <div style={{
+            position: "fixed", top: 68, right: 16, zIndex: 45,
+            width: 240,
+            background: "rgba(255,255,255,0.97)",
+            backdropFilter: "blur(24px) saturate(1.6)", WebkitBackdropFilter: "blur(24px) saturate(1.6)",
+            borderRadius: 18,
+            border: "1px solid rgba(255,255,255,0.7)",
+            borderTop: "1px solid rgba(255,255,255,0.9)",
+            boxShadow: "0 4px 12px rgba(15,23,42,0.06), 0 16px 48px rgba(15,23,42,0.14), 0 32px 72px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+            padding: "8px",
+            animation: "nav-popup-in 0.2s cubic-bezier(0.16,1,0.3,1) both",
+            transformOrigin: "top right",
+          }}>
+            {["Features", "How It Works", "Portals", "Contact"].map(l => (
+              <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} onClick={() => setMobileNavOpen(false)}
+                style={{
+                  display: "block",
+                  padding: "12px 16px", borderRadius: 12,
+                  fontSize: 14, fontWeight: 600, color: "#1E293B", textDecoration: "none",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,130,246,0.06)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                {l}
+              </a>
+            ))}
 
-          {["Features","How It Works","Portals","Contact"].map(l => (
-            <a
-              key={l}
-              href={`#${l.toLowerCase().replace(/ /g,"-")}`}
-              onClick={() => setMobileNavOpen(false)}
-              style={{
-                display:"flex", alignItems:"center", gap:12,
-                padding:"16px 20px", borderRadius:16,
-                fontSize:16, fontWeight:700, color:"#1E293B",
-                textDecoration:"none",
-                background:"rgba(255,255,255,0.6)",
-                border:"1px solid rgba(255,255,255,0.55)",
-              }}
-            >
-              {l}
-            </a>
-          ))}
+            <div style={{ height: 1, background: "rgba(226,232,240,0.5)", margin: "6px 12px" }} />
 
-          <div style={{ marginTop:"auto", display:"flex", flexDirection:"column", gap:10 }}>
             <Link href="/login" onClick={() => setMobileNavOpen(false)} style={{
-              display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-              padding:"14px", borderRadius:16,
-              background:"rgba(59,130,246,0.08)", border:"1px solid rgba(59,130,246,0.18)",
-              color:"#1D4ED8", fontSize:15, fontWeight:700, textDecoration:"none",
+              display: "block", textAlign: "center",
+              padding: "10px 16px", borderRadius: 12, margin: "4px 0",
+              color: "#1D4ED8", fontSize: 14, fontWeight: 700, textDecoration: "none",
+              transition: "background 0.15s ease",
             }}>
               Sign In
             </Link>
             <Link href="/login" onClick={() => setMobileNavOpen(false)} style={{
-              display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-              padding:"14px", borderRadius:16,
-              background:"linear-gradient(135deg,#1D4ED8,#3B82F6)",
-              color:"white", fontSize:15, fontWeight:700, textDecoration:"none",
-              boxShadow:"0 8px 20px rgba(59,130,246,0.35)",
+              display: "block", textAlign: "center",
+              padding: "10px 16px", borderRadius: 12,
+              background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", color: "white",
+              fontSize: 14, fontWeight: 700, textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(59,130,246,0.3)",
             }}>
-              Get Started <ArrowRight size={16} strokeWidth={2.5} />
+              Get Started
             </Link>
           </div>
-        </div>
+        </>
       )}
 
       {/* ══════════════════════════════
-          HERO
+          HERO — WebGL Dark Hero Section
       ══════════════════════════════ */}
-      <section style={{
-        minHeight: isMobile ? "auto" : "92vh",
-        display:"flex", alignItems:"center",
-        padding: isMobile ? "40px 16px" : "80px 32px",
-        position:"relative", overflow:"hidden",
-      }}>
-        {/* BG orbs */}
-        <div style={{ position:"absolute", top:"-5%", left:"-8%", width:500, height:500, background:"radial-gradient(circle,rgba(59,130,246,0.18) 0%,transparent 65%)", borderRadius:"50%", pointerEvents:"none" }} />
-        <div style={{ position:"absolute", bottom:"-8%", right:"-8%", width:500, height:500, background:"radial-gradient(circle,rgba(217,70,239,0.14) 0%,transparent 65%)", borderRadius:"50%", pointerEvents:"none" }} />
-        <div style={{ position:"absolute", top:"40%", right:"15%", width:280, height:280, background:"radial-gradient(circle,rgba(132,204,22,0.14) 0%,transparent 65%)", borderRadius:"50%", pointerEvents:"none" }} />
-
-        <div style={{
-          maxWidth:1200, margin:"0 auto", width:"100%",
-          display:"flex",
-          flexDirection: isMobile ? "column" : "row",
-          alignItems:"center",
-          gap: isMobile ? 32 : 64,
-          position:"relative", zIndex:1,
-        }}>
-          {/* Left */}
-          <div style={{ flex:1 }}>
-            <div className="hero-anim-badge" style={{
-              display:"inline-flex", alignItems:"center", gap:8,
-              padding:"6px 14px", borderRadius:99, marginBottom: isMobile ? 20 : 28,
-              background:"rgba(59,130,246,0.10)",
-              border:"1px solid rgba(59,130,246,0.22)",
-            }}>
-              <Sparkles size={12} color="#3B82F6" strokeWidth={2.5} />
-              <span style={{ fontSize:12, fontWeight:700, color:"#1D4ED8" }}>
-                Next-Gen University ERP System
-              </span>
-            </div>
-
-            <h1 className="hero-anim-title" style={{
-              fontSize: isMobile ? "clamp(28px, 7vw, 40px)" : 56,
-              fontWeight:900, lineHeight:1.12,
-              color:"#1E293B", marginBottom: isMobile ? 16 : 20,
-              letterSpacing:"-0.02em",
-            }}>
-              Manage your{" "}
-              <span style={{ background:"linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
-                entire campus
-              </span>
-              <br />from one place
-            </h1>
-
-            <p className="hero-anim-desc" style={{
-              fontSize: isMobile ? 15 : 17,
-              color:"#64748B", lineHeight:1.75,
-              marginBottom: isMobile ? 28 : 36,
-              maxWidth:520,
-            }}>
-              UniCore ERP unifies attendance, results, timetables, fees, and communications into one sleek, role-based platform — built for modern universities.
-            </p>
-
-            {/* CTAs */}
-            <div className="hero-anim-cta" style={{
-              display:"flex", gap:14, alignItems:"center",
-              flexWrap:"wrap", marginBottom: isMobile ? 28 : 40,
-              flexDirection: isMobile ? "column" : "row",
-            }}>
-              <Link href="/login" className="hero-btn-primary" style={ isMobile ? { width:"100%", justifyContent:"center" } : undefined}>
-                Get Started Free <ArrowRight size={16} strokeWidth={2.5} />
-              </Link>
-              <Link href="/login" className="hero-btn-secondary" style={ isMobile ? { width:"100%", justifyContent:"center" } : undefined}>
-                Sign In <ChevronRight size={15} strokeWidth={2.5} />
-              </Link>
-            </div>
-
-            {/* Trust badges */}
-            <div className="hero-anim-trust" style={{ display:"flex", gap: isMobile ? 16 : 20, flexWrap:"wrap" }}>
-              {[
-                { icon:Lock, text:"SOC 2 Compliant" },
-                { icon:Zap,  text:"99.9% Uptime" },
-                { icon:Star, text:"4.9/5 Rating" },
-              ].map((b,i) => (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
-                  <b.icon size={13} color="#3B82F6" strokeWidth={2.5} />
-                  <span style={{ fontSize:12, fontWeight:600, color:"#64748B" }}>{b.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — Hero glass card mockup (hidden on mobile) */}
-          {!isMobile && (
-            <div style={{ flex:1, display:"flex", justifyContent:"center", position:"relative" }}>
-              {/* ERP Doodles */}
-              <svg className="doodle doodle-1" style={{ top:-18, left:10, width:44, height:44 }} viewBox="0 0 48 48" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 8v32c6-4 12-4 18 0V8c-6 4-12 4-18 0z" /><path d="M24 8v32c6-4 12-4 18 0V8c-6 4-12 4-18 0z" />
-              </svg>
-              <svg className="doodle doodle-2" style={{ top:40, right:-14, width:38, height:38 }} viewBox="0 0 48 48" fill="none" stroke="#D946EF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M34 6l8 8-24 24H10v-8L34 6z" /><path d="M28 12l8 8" />
-              </svg>
-              <svg className="doodle doodle-3" style={{ top:-22, right:60, width:46, height:46 }} viewBox="0 0 48 48" fill="none" stroke="#84CC16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M24 4L2 18l22 14 22-14L24 4z" /><path d="M36 24v12c-4 4-8 6-12 6s-8-2-12-6V24" /><path d="M46 18v14" />
-              </svg>
-              <svg className="doodle doodle-4" style={{ bottom:60, left:-18, width:40, height:40 }} viewBox="0 0 48 48" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="8" y="4" width="32" height="40" rx="4" /><rect x="14" y="10" width="20" height="10" rx="2" /><circle cx="18" cy="28" r="1.5" fill="#FBBF24" /><circle cx="24" cy="28" r="1.5" fill="#FBBF24" /><circle cx="30" cy="28" r="1.5" fill="#FBBF24" /><circle cx="18" cy="36" r="1.5" fill="#FBBF24" /><circle cx="24" cy="36" r="1.5" fill="#FBBF24" /><circle cx="30" cy="36" r="1.5" fill="#FBBF24" />
-              </svg>
-              <svg className="doodle doodle-5" style={{ bottom:-14, right:40, width:42, height:42 }} viewBox="0 0 48 48" fill="none" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 42V6" /><path d="M6 42h36" /><path d="M14 32v10" /><path d="M22 24v18" /><path d="M30 28v14" /><path d="M38 18v24" />
-              </svg>
-              <svg className="doodle doodle-6" style={{ bottom:20, right:-20, width:36, height:36 }} viewBox="0 0 48 48" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="24" cy="24" r="8" /><path d="M24 2v8M24 38v8M4.9 13l6.9 4M36.2 31l6.9 4M4.9 35l6.9-4M36.2 17l6.9-4" />
-              </svg>
-
-              <div className="hero-anim-card hero-float" style={{
-                width:"100%", maxWidth:460,
-                background:"rgba(255,255,255,0.78)",
-                backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
-                border:"1px solid rgba(255,255,255,0.70)",
-                borderRadius:28,
-                boxShadow:"0 24px 64px rgba(59,130,246,0.18), 0 4px 20px rgba(0,0,0,0.06)",
-                overflow:"hidden", position:"relative", zIndex:1,
-              }}>
-                <div style={{ height:3, background:"linear-gradient(to right,#1D4ED8,#3B82F6,#D946EF,#84CC16,#FBBF24)" }} />
-                <div style={{ padding:"24px 28px" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-                    <div>
-                      <p style={{ fontSize:15, fontWeight:900, color:"#1E293B" }}>Dashboard</p>
-                      <p style={{ fontSize:11, color:"#64748B" }}>Semester 4 — CSE</p>
-                    </div>
-                    <div style={{ width:34, height:34, borderRadius:10, background:"linear-gradient(135deg,#84CC16,#A3E635)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 12px rgba(132,204,22,0.38)" }}>
-                      <GraduationCap size={16} color="white" />
-                    </div>
-                  </div>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
-                    {[
-                      { label:"Attendance", value:"87%", color:"#3B82F6", trend:"+2%" },
-                      { label:"CGPA", value:"8.4", color:"#D946EF", trend:"+0.2" },
-                      { label:"Subjects", value:"6", color:"#84CC16", trend:"Active" },
-                      { label:"Rank", value:"#12", color:"#FBBF24", trend:"Top 15%" },
-                    ].map((k,i) => (
-                      <div key={i} style={{
-                        padding:"14px 16px", borderRadius:16,
-                        background:"rgba(255,255,255,0.72)",
-                        border:"1px solid rgba(255,255,255,0.65)",
-                        backdropFilter:"blur(8px)",
-                      }}>
-                        <p style={{ fontSize:10, color:"#64748B", fontWeight:600, marginBottom:4 }}>{k.label}</p>
-                        <p style={{ fontSize:22, fontWeight:900, color:"#1E293B", lineHeight:1 }}>
-                          <CountUp value={k.value} />
-                        </p>
-                        <p style={{ fontSize:10, color:k.color, fontWeight:700, marginTop:4 }}>{k.trend}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{
-                    padding:"16px", borderRadius:16,
-                    background:"rgba(255,255,255,0.65)",
-                    border:"1px solid rgba(255,255,255,0.65)",
-                    marginBottom:14,
-                  }}>
-                    <p style={{ fontSize:11, fontWeight:700, color:"#1E293B", marginBottom:10 }}>Attendance Trend</p>
-                    <div style={{ display:"flex", alignItems:"flex-end", gap:5, height:52 }}>
-                      {[65,72,80,75,87,84,90,87].map((h,i) => (
-                        <div key={i} className="hero-bar" style={{
-                          flex:1, borderRadius:"4px 4px 0 0",
-                          background: i === 7
-                            ? "linear-gradient(to top,#1D4ED8,#3B82F6)"
-                            : `rgba(59,130,246,${0.15 + i * 0.08})`,
-                          height: `${h}%`,
-                          animationDelay: `${0.8 + i * 0.07}s`,
-                        }} />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-                    {[
-                      { label:"DSA Lecture", time:"Today 10:00 AM", color:"#3B82F6" },
-                      { label:"Assignment Due", time:"Today 11:59 PM", color:"#F43F5E" },
-                      { label:"End-Sem Results", time:"March 5, 2026", color:"#84CC16" },
-                    ].map((item,i) => (
-                      <div key={i} style={{
-                        display:"flex", alignItems:"center", gap:10,
-                        padding:"8px 12px", borderRadius:10,
-                        background:"rgba(255,255,255,0.65)",
-                        border:"1px solid rgba(255,255,255,0.60)",
-                      }}>
-                        <div style={{ width:7, height:7, borderRadius:"50%", background:item.color, flexShrink:0, boxShadow:`0 0 6px ${item.color}80` }} />
-                        <p style={{ fontSize:11, color:"#1E293B", fontWeight:600, flex:1 }}>{item.label}</p>
-                        <p style={{ fontSize:10, color:"#94A3B8", fontWeight:500 }}>{item.time}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      <HeroSection isMobile={isMobile} isTablet={isTablet} />
 
       {/* ══════════════════════════════
-          STATS
+          STATS — Depth Plane 1 (recessed)
       ══════════════════════════════ */}
+      <div className="depth-divider" />
       <section style={{
-        padding: `56px ${px}px`,
-        background:"rgba(255,255,255,0.45)",
-        backdropFilter:"blur(12px)",
-        borderTop:"1px solid rgba(255,255,255,0.55)",
-        borderBottom:"1px solid rgba(255,255,255,0.55)",
+        padding: `${isMobile ? 56 : 80}px ${hPad}px`,
+        background: "rgba(248,250,252,0.80)",
+        backdropFilter: "blur(12px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        borderTop: "1px solid rgba(255,255,255,0.5)",
+        borderBottom: "1px solid rgba(255,255,255,0.3)",
+        position: "relative",
+        zIndex: 1,
+        boxShadow: "inset 0 2px 12px rgba(59,130,246,0.04), inset 0 -1px 8px rgba(59,130,246,0.02)",
       }}>
+        {/* Ambient glow orb */}
+        <div style={{ position: "absolute", top: "-60px", left: "20%", width: 200, height: 200, borderRadius: "50%", background: "rgba(59,130,246,0.06)", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: "-40px", right: "15%", width: 160, height: 160, borderRadius: "50%", background: "rgba(217,70,239,0.05)", filter: "blur(50px)", pointerEvents: "none", zIndex: 0 }} />
         <div style={{
-          maxWidth:1200, margin:"0 auto",
-          display:"grid",
+          maxWidth: 1120, margin: "0 auto",
+          display: "grid",
           gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
-          gap: isMobile ? 14 : 24,
+          gap: isMobile ? 16 : 32,
         }}>
-          {stats.map((s,i) => (
+          {stats.map((s, i) => (
             <div key={i} className={`stat-card reveal stagger-${i + 1}`}>
-              <div style={{ width:44, height:44, borderRadius:13, background:`${s.color}14`, border:`1px solid ${s.color}28`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: `${s.color}0C`, border: `1px solid ${s.color}1A`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", boxShadow: `0 2px 8px ${s.color}15, 0 4px 16px ${s.color}0A, inset 0 1px 0 rgba(255,255,255,0.5)` }}>
                 <s.icon size={20} color={s.color} strokeWidth={2} />
               </div>
-              <p style={{ fontSize: isMobile ? 24 : 30, fontWeight:900, color:"#1E293B", lineHeight:1 }}>
+              <p style={{ fontSize: isMobile ? 26 : 32, fontWeight: 900, color: "#0F172A", lineHeight: 1 }}>
                 <CountUp value={s.value} />
               </p>
-              <p style={{ fontSize:12, color:"#64748B", marginTop:6, fontWeight:500 }}>{s.label}</p>
+              <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 8, fontWeight: 500, letterSpacing: "0.01em" }}>{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ══════════════════════════════
-          FEATURES
+          FEATURES — Depth Plane 2 (elevated)
       ══════════════════════════════ */}
-      <section id="features" style={{ padding: `${isMobile ? 56 : 96}px ${px}px` }}>
-        <div style={{ maxWidth:1200, margin:"0 auto" }}>
-          <div className="reveal" style={{ textAlign:"center", marginBottom: isMobile ? 36 : 56 }}>
-            <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 14px", borderRadius:99, background:"rgba(59,130,246,0.10)", border:"1px solid rgba(59,130,246,0.22)", marginBottom:16 }}>
+      <div className="depth-divider" />
+      <section id="features" style={{
+        padding: `${secPad}px ${hPad}px`,
+        background: "rgba(255,255,255,0.82)",
+        backdropFilter: "blur(12px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        position: "relative",
+        zIndex: 2,
+        boxShadow: "0 -1px 0 rgba(255,255,255,0.6), 0 1px 0 rgba(255,255,255,0.6)",
+      }}>
+        {/* Ambient glow orbs */}
+        <div style={{ position: "absolute", top: "10%", right: "5%", width: 280, height: 280, borderRadius: "50%", background: "rgba(59,130,246,0.05)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: "15%", left: "8%", width: 220, height: 220, borderRadius: "50%", background: "rgba(217,70,239,0.04)", filter: "blur(70px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+
+          {/* Section header — extra bottom margin for breathing room */}
+          <div className="reveal" style={{ textAlign: "center", marginBottom: headMb, position: "relative", zIndex: 1 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.16)", marginBottom: 20, boxShadow: "0 2px 8px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.5)" }}>
               <Sparkles size={12} color="#3B82F6" strokeWidth={2.5} />
-              <span style={{ fontSize:12, fontWeight:700, color:"#1D4ED8" }}>Everything you need</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#1D4ED8" }}>Everything you need</span>
             </div>
-            <h2 style={{ fontSize: isMobile ? "clamp(24px, 6vw, 32px)" : 38, fontWeight:900, color:"#1E293B", marginBottom:14, letterSpacing:"-0.02em" }}>
+            <h2 style={{ fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, fontWeight: 900, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               Powerful features,{" "}
-              <span style={{ background:"linear-gradient(135deg,#1D4ED8,#D946EF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              <span style={{ background: "linear-gradient(135deg,#1D4ED8,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 built for education
               </span>
             </h2>
-            <p style={{ fontSize: isMobile ? 14 : 15, color:"#64748B", maxWidth:520, margin:"0 auto", lineHeight:1.7 }}>
+            <p style={{ fontSize: isMobile ? 14 : 16, color: "#64748B", maxWidth: 500, margin: "0 auto", lineHeight: 1.75 }}>
               From attendance to analytics, UniCore covers every academic need with a beautiful, intuitive interface.
             </p>
           </div>
 
           <div style={{
-            display:"grid",
+            display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2,1fr)" : isTablet ? "repeat(2,1fr)" : "repeat(4,1fr)",
-            gap: isMobile ? 12 : 20,
+            gap: isMobile ? 14 : 20,
           }}>
-            {features.map((f,i) => (
+            {features.map((f, i) => (
               <div key={i} className={`glass-feature-card reveal stagger-${i + 1}`}>
-                <div style={{
-                  width: isMobile ? 38 : 44, height: isMobile ? 38 : 44, borderRadius:13,
-                  background:`${f.color}14`, border:`1px solid ${f.color}28`,
-                  display:"flex", alignItems:"center", justifyContent:"center", marginBottom:14,
+                <div className="icon-depth" style={{
+                  width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 14,
+                  background: `${f.color}0C`, border: `1px solid ${f.color}1A`,
+                  display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18,
+                  boxShadow: `0 2px 8px ${f.color}12, 0 4px 16px ${f.color}08, inset 0 1px 0 rgba(255,255,255,0.5)`,
                 }}>
                   <f.icon size={isMobile ? 18 : 20} color={f.color} strokeWidth={2} />
                 </div>
-                <h3 style={{ fontSize: isMobile ? 13 : 14, fontWeight:800, color:"#1E293B", marginBottom:6 }}>{f.title}</h3>
-                <p style={{ fontSize: isMobile ? 11 : 12, color:"#64748B", lineHeight:1.65 }}>{f.sub}</p>
+                <h3 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: isMobile ? 11 : 13, color: "#64748B", lineHeight: 1.7 }}>{f.sub}</p>
               </div>
             ))}
           </div>
@@ -576,51 +494,59 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════
-          HOW IT WORKS
+          HOW IT WORKS — Depth Plane 1 (recessed)
       ══════════════════════════════ */}
+      <div className="depth-divider" />
       <section id="how-it-works" style={{
-        padding: `${isMobile ? 48 : 80}px ${px}px`,
-        background:"rgba(255,255,255,0.40)",
-        backdropFilter:"blur(12px)",
-        borderTop:"1px solid rgba(255,255,255,0.55)",
-        borderBottom:"1px solid rgba(255,255,255,0.55)",
+        padding: `${secPad}px ${hPad}px`,
+        background: "rgba(248,250,252,0.80)",
+        backdropFilter: "blur(12px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        borderTop: "1px solid rgba(255,255,255,0.5)",
+        borderBottom: "1px solid rgba(255,255,255,0.3)",
+        position: "relative",
+        zIndex: 1,
+        boxShadow: "inset 0 2px 12px rgba(59,130,246,0.04), inset 0 -1px 8px rgba(59,130,246,0.02)",
       }}>
-        <div style={{ maxWidth:1200, margin:"0 auto" }}>
-          <div className="reveal" style={{ textAlign:"center", marginBottom: isMobile ? 36 : 52 }}>
-            <h2 style={{ fontSize: isMobile ? "clamp(24px, 6vw, 32px)" : 36, fontWeight:900, color:"#1E293B", marginBottom:12, letterSpacing:"-0.02em" }}>
+        {/* Ambient glow */}
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 320, height: 320, borderRadius: "50%", background: "rgba(132,204,22,0.04)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <div className="reveal" style={{ textAlign: "center", marginBottom: headMb }}>
+            <h2 style={{ fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, fontWeight: 900, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               Up and running in{" "}
-              <span style={{ background:"linear-gradient(135deg,#3B82F6,#84CC16)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              <span style={{ background: "linear-gradient(135deg,#3B82F6,#84CC16)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 minutes
               </span>
             </h2>
-            <p style={{ fontSize: isMobile ? 14 : 15, color:"#64748B" }}>Four simple steps to get started</p>
+            <p style={{ fontSize: isMobile ? 14 : 16, color: "#64748B", lineHeight: 1.75 }}>Four simple steps to get started</p>
           </div>
 
           <div style={{
-            display:"grid",
+            display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
-            gap: isMobile ? 16 : 24,
+            gap: isMobile ? 16 : 28,
           }}>
-            {steps.map((s,i) => (
-              <div key={i} style={{ position:"relative" }}>
+            {steps.map((s, i) => (
+              <div key={i} style={{ position: "relative" }}>
                 {/* Connector — desktop only */}
                 {!isMobile && i < steps.length - 1 && (
                   <div style={{
-                    position:"absolute", top:28, left:"calc(50% + 28px)", right:"-50%",
-                    height:2, background:"linear-gradient(to right,rgba(148,163,184,0.30),rgba(148,163,184,0.10))", zIndex:0,
+                    position: "absolute", top: 32, left: "calc(50% + 32px)", right: "-50%",
+                    height: 1.5, background: "linear-gradient(to right,rgba(148,163,184,0.25),rgba(148,163,184,0.05))", zIndex: 0,
                   }} />
                 )}
-                <div className={`glass-feature-card reveal stagger-${i + 1}`} style={{ textAlign:"center", position:"relative", zIndex:1 }}>
+                <div className={`glass-feature-card reveal stagger-${i + 1}`} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
                   <div style={{
-                    width: isMobile ? 44 : 52, height: isMobile ? 44 : 52, borderRadius:16,
-                    background:`${s.color}14`, border:`1.5px solid ${s.color}28`,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    margin:"0 auto 14px",
+                    width: isMobile ? 48 : 56, height: isMobile ? 48 : 56, borderRadius: 16,
+                    background: `${s.color}0C`, border: `1.5px solid ${s.color}1A`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 18px",
+                    boxShadow: `0 2px 8px ${s.color}15, 0 6px 20px ${s.color}0A, inset 0 1px 0 rgba(255,255,255,0.5)`,
                   }}>
-                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight:900, color:s.color }}>{s.n}</span>
+                    <span style={{ fontSize: isMobile ? 17 : 19, fontWeight: 900, color: s.color }}>{s.n}</span>
                   </div>
-                  <h3 style={{ fontSize: isMobile ? 13 : 14, fontWeight:800, color:"#1E293B", marginBottom:6 }}>{s.title}</h3>
-                  <p style={{ fontSize: isMobile ? 11 : 12, color:"#64748B", lineHeight:1.65 }}>{s.sub}</p>
+                  <h3 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>{s.title}</h3>
+                  <p style={{ fontSize: isMobile ? 11 : 13, color: "#64748B", lineHeight: 1.7 }}>{s.sub}</p>
                 </div>
               </div>
             ))}
@@ -629,59 +555,72 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════
-          ROLE CARDS
+          ROLE CARDS — Depth Plane 3 (foreground focus)
       ══════════════════════════════ */}
-      <section id="portals" style={{ padding: `${isMobile ? 56 : 96}px ${px}px` }}>
-        <div style={{ maxWidth:1200, margin:"0 auto" }}>
-          <div className="reveal" style={{ textAlign:"center", marginBottom: isMobile ? 36 : 52 }}>
-            <h2 style={{ fontSize: isMobile ? "clamp(24px, 6vw, 32px)" : 36, fontWeight:900, color:"#1E293B", marginBottom:12, letterSpacing:"-0.02em" }}>
+      <div className="depth-divider" />
+      <section id="portals" style={{
+        padding: `${secPad}px ${hPad}px`,
+        background: "rgba(255,255,255,0.85)",
+        backdropFilter: "blur(14px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.4)",
+        position: "relative",
+        zIndex: 3,
+        boxShadow: "0 -2px 20px rgba(59,130,246,0.04), 0 2px 20px rgba(59,130,246,0.04)",
+      }}>
+        {/* Ambient glow orbs */}
+        <div style={{ position: "absolute", top: "5%", left: "10%", width: 240, height: 240, borderRadius: "50%", background: "rgba(29,78,216,0.04)", filter: "blur(70px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "8%", width: 200, height: 200, borderRadius: "50%", background: "rgba(217,70,239,0.04)", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 300, height: 300, borderRadius: "50%", background: "rgba(132,204,22,0.03)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <div className="reveal" style={{ textAlign: "center", marginBottom: headMb }}>
+            <h2 style={{ fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, fontWeight: 900, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               One platform,{" "}
-              <span style={{ background:"linear-gradient(135deg,#1D4ED8,#D946EF,#84CC16)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              <span style={{ background: "linear-gradient(135deg,#1D4ED8,#D946EF,#84CC16)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 three portals
               </span>
             </h2>
-            <p style={{ fontSize: isMobile ? 14 : 15, color:"#64748B", maxWidth:480, margin:"0 auto" }}>
+            <p style={{ fontSize: isMobile ? 14 : 16, color: "#64748B", maxWidth: 460, margin: "0 auto", lineHeight: 1.75 }}>
               Tailored experiences for every role in your university
             </p>
           </div>
 
           <div style={{
-            display:"grid",
+            display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(3,1fr)",
-            gap: isMobile ? 16 : 24,
+            gap: isMobile ? 20 : 28,
           }}>
-            {roles.map((r,i) => (
+            {roles.map((r, i) => (
               <div key={i} className={`role-card reveal stagger-${i + 1}`}>
-                <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:18 }}>
-                  <div style={{ width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, borderRadius:15, background:r.bg, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 8px 20px ${r.shadow}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+                  <div style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, borderRadius: 16, background: r.bg, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${r.shadow}, 0 12px 28px ${r.shadow}60, inset 0 1px 0 rgba(255,255,255,0.2)`, flexShrink: 0 }}>
                     <r.icon size={isMobile ? 20 : 22} color="white" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: isMobile ? 16 : 17, fontWeight:900, color:"#1E293B" }}>{r.role} Portal</h3>
-                    <span style={{ fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:99, background:`${r.color}14`, color:r.color, border:`1px solid ${r.color}28` }}>
+                    <h3 style={{ fontSize: isMobile ? 17 : 18, fontWeight: 900, color: "#0F172A" }}>{r.role} Portal</h3>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99, background: `${r.color}0C`, color: r.color, border: `1px solid ${r.color}1A`, display: "inline-block", marginTop: 4 }}>
                       Role-based access
                     </span>
                   </div>
                 </div>
 
-                <p style={{ fontSize:13, color:"#64748B", lineHeight:1.7, marginBottom:20 }}>{r.desc}</p>
+                <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.75, marginBottom: 24 }}>{r.desc}</p>
 
-                <div style={{ flex:1, marginBottom:24 }}>
-                  {r.perks.map((p,j) => (
-                    <div key={j} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                      <CheckCircle size={13} color={r.color} strokeWidth={2.5} style={{ flexShrink:0 }} />
-                      <span style={{ fontSize:12, color:"#334155", fontWeight:500 }}>{p}</span>
+                <div style={{ flex: 1, marginBottom: 28 }}>
+                  {r.perks.map((p, j) => (
+                    <div key={j} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                      <CheckCircle size={13} color={r.color} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>{p}</span>
                     </div>
                   ))}
                 </div>
 
                 <Link href={r.href} style={{
-                  display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-                  padding:"12px", borderRadius:16,
-                  background:r.bg, color:"white",
-                  fontSize:13, fontWeight:700, textDecoration:"none",
-                  boxShadow:`0 8px 20px ${r.shadow}`,
-                  transition:"all 0.2s",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  padding: "13px", borderRadius: 16,
+                  background: r.bg, color: "white",
+                  fontSize: 13, fontWeight: 700, textDecoration: "none",
+                  boxShadow: `0 2px 6px ${r.shadow}60, 0 8px 24px ${r.shadow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
+                  transition: "all 0.3s cubic-bezier(0.16,1,0.3,1)",
                 }}>
                   Enter {r.role} Portal <ArrowRight size={14} strokeWidth={2.5} />
                 </Link>
@@ -692,39 +631,49 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════
-          CTA BANNER
+          CTA BANNER — Depth Plane 4 (peak elevation)
       ══════════════════════════════ */}
-      <section style={{ padding: `${isMobile ? 48 : 80}px ${px}px` }}>
-        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+      <div className="depth-divider" />
+      <section style={{
+        padding: `${isMobile ? 48 : 80}px ${hPad}px ${isMobile ? 64 : 104}px`,
+        background: "rgba(255,255,255,0.82)",
+        backdropFilter: "blur(12px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        position: "relative",
+        zIndex: 4,
+      }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
           <div className="reveal-scale" style={{
-            borderRadius: isMobile ? 20 : 32,
-            padding: isMobile ? "36px 20px" : "60px 52px",
-            background:"linear-gradient(135deg,#1D4ED8 0%,#3B82F6 45%,#D946EF 100%)",
-            position:"relative", overflow:"hidden", textAlign:"center",
+            borderRadius: isMobile ? 24 : 36,
+            padding: isMobile ? "44px 24px" : isTablet ? "56px 40px" : "72px 64px",
+            background: "linear-gradient(135deg,#1D4ED8 0%,#3B82F6 45%,#D946EF 100%)",
+            position: "relative", overflow: "hidden", textAlign: "center",
+            boxShadow: "0 4px 12px rgba(29,78,216,0.15), 0 16px 48px rgba(59,130,246,0.25), 0 32px 80px rgba(29,78,216,0.20), inset 0 1px 0 rgba(255,255,255,0.12)",
           }}>
-            <div style={{ position:"absolute", top:-80, right:-80, width:280, height:280, borderRadius:"50%", background:"rgba(255,255,255,0.08)" }} />
-            <div style={{ position:"absolute", bottom:-60, left:-60, width:220, height:220, borderRadius:"50%", background:"rgba(255,255,255,0.06)" }} />
+            <div style={{ position: "absolute", top: -100, right: -100, width: 320, height: 320, borderRadius: "50%", background: "rgba(255,255,255,0.08)", filter: "blur(2px)" }} />
+            <div style={{ position: "absolute", bottom: -80, left: -80, width: 260, height: 260, borderRadius: "50%", background: "rgba(255,255,255,0.06)", filter: "blur(2px)" }} />
+            <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 400, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)", filter: "blur(40px)" }} />
 
-            <div style={{ position:"relative", zIndex:1 }}>
-              <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 14px", borderRadius:99, background:"rgba(255,255,255,0.18)", border:"1px solid rgba(255,255,255,0.30)", marginBottom:20 }}>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99, background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", marginBottom: 28 }}>
                 <TrendingUp size={12} color="white" strokeWidth={2.5} />
-                <span style={{ fontSize:12, fontWeight:700, color:"white" }}>Join 2,800+ students today</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "white" }}>Join 2,800+ students today</span>
               </div>
               <h2 style={{
-                fontSize: isMobile ? "clamp(22px, 5.5vw, 30px)" : 38,
-                fontWeight:900, color:"white", marginBottom:14, letterSpacing:"-0.02em",
+                fontSize: isMobile ? "clamp(24px, 6vw, 32px)" : 40,
+                fontWeight: 900, color: "white", marginBottom: 18, letterSpacing: "-0.025em", lineHeight: 1.15,
               }}>
                 Ready to transform your<br />university experience?
               </h2>
-              <p style={{ fontSize: isMobile ? 14 : 15, color:"rgba(255,255,255,0.80)", maxWidth:480, margin:"0 auto 32px", lineHeight:1.7 }}>
+              <p style={{ fontSize: isMobile ? 14 : 16, color: "rgba(255,255,255,0.75)", maxWidth: 460, margin: "0 auto 40px", lineHeight: 1.75 }}>
                 Join thousands of students, faculty, and admins already using UniCore ERP to manage their academic world.
               </p>
-              <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", flexDirection: isMobile ? "column" : "row" }}>
+              <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", flexDirection: isMobile ? "column" : "row" }}>
                 <Link href="/login" className="cta-btn-white">
-                  Get Started Free <ArrowRight size={15} strokeWidth={2.5} style={{ marginLeft:6 }} />
+                  Get Started Free <ArrowRight size={15} strokeWidth={2.5} style={{ marginLeft: 6 }} />
                 </Link>
                 <Link href="/login" className="cta-btn-ghost">
-                  Sign In <ChevronRight size={15} strokeWidth={2.5} style={{ marginLeft:4 }} />
+                  Sign In <ChevronRight size={15} strokeWidth={2.5} style={{ marginLeft: 4 }} />
                 </Link>
               </div>
             </div>
@@ -733,46 +682,51 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════
-          FOOTER
+          FOOTER — Depth Plane 0 (grounded)
       ══════════════════════════════ */}
+      <div className="depth-divider" />
       <footer style={{
-        borderTop:"1px solid rgba(255,255,255,0.55)",
-        background:"rgba(255,255,255,0.60)",
-        backdropFilter:"blur(16px)",
-        padding: isMobile ? "36px 16px 24px" : "48px 32px 28px",
+        borderTop: "1px solid rgba(255,255,255,0.4)",
+        background: "rgba(248,250,252,0.85)",
+        backdropFilter: "blur(12px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        padding: isMobile ? "44px 20px 28px" : "64px 40px 36px",
+        position: "relative",
+        zIndex: 1,
+        boxShadow: "inset 0 2px 16px rgba(59,130,246,0.03)",
       }}>
-        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
           <div style={{
-            display:"grid",
+            display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "2fr 1fr 1fr 1fr",
-            gap: isMobile ? 28 : 40,
-            marginBottom: isMobile ? 28 : 40,
+            gap: isMobile ? 32 : 48,
+            marginBottom: isMobile ? 36 : 48,
           }}>
             {/* Brand */}
             <div>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                <div style={{ width:34, height:34, borderRadius:10, background:"linear-gradient(135deg,#1D4ED8,#3B82F6)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 12px rgba(59,130,246,0.38)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(29,78,216,0.25), 0 8px 20px rgba(59,130,246,0.30), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
                   <GraduationCap size={16} color="white" />
                 </div>
-                <span style={{ fontSize:14, fontWeight:900, background:"linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>UniCore ERP</span>
+                <span style={{ fontSize: 15, fontWeight: 900, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>UniCore ERP</span>
               </div>
-              <p style={{ fontSize:12, color:"#64748B", lineHeight:1.7, maxWidth:260 }}>
+              <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.8, maxWidth: 280 }}>
                 Modernizing university management with a powerful, role-based ERP platform. Built for students, faculty, and admins.
               </p>
             </div>
 
             {/* Links */}
             {[
-              { title:"Product",  links:["Features","How It Works","Portals","Pricing"] },
-              { title:"Portals",  links:["Admin Login","Faculty Login","Student Login","Signup"] },
-              { title:"Support",  links:["Documentation","Contact Us","FAQ","Status Page"] },
-            ].map((col,i) => (
+              { title: "Product",  links: ["Features", "How It Works", "Portals", "Pricing"] },
+              { title: "Portals",  links: ["Admin Login", "Faculty Login", "Student Login", "Signup"] },
+              { title: "Support",  links: ["Documentation", "Contact Us", "FAQ", "Status Page"] },
+            ].map((col, i) => (
               <div key={i}>
-                <p style={{ fontSize:11, fontWeight:800, color:"#1E293B", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:14 }}>
+                <p style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>
                   {col.title}
                 </p>
                 {col.links.map(l => (
-                  <div key={l} style={{ marginBottom:8 }}>
+                  <div key={l} style={{ marginBottom: 10 }}>
                     <a href="#" className="footer-link">{l}</a>
                   </div>
                 ))}
@@ -782,19 +736,19 @@ export default function LandingPage() {
 
           {/* Bottom bar */}
           <div style={{
-            borderTop:"1px solid rgba(255,255,255,0.55)",
-            paddingTop:20,
-            display:"flex",
+            borderTop: "1px solid rgba(226,232,240,0.4)",
+            paddingTop: 24,
+            display: "flex",
             flexDirection: isMobile ? "column" : "row",
-            justifyContent:"space-between", alignItems:"center",
-            flexWrap:"wrap", gap:12,
+            justifyContent: "space-between", alignItems: "center",
+            flexWrap: "wrap", gap: 16,
             textAlign: isMobile ? "center" : undefined,
           }}>
-            <p style={{ fontSize:12, color:"#94A3B8" }}>
+            <p style={{ fontSize: 12, color: "#94A3B8" }}>
               © 2026 Code· Built with ❤️ for modern universities
             </p>
-            <div style={{ display:"flex", gap:20 }}>
-              {["Privacy","Terms","Cookies"].map(l => (
+            <div style={{ display: "flex", gap: 24 }}>
+              {["Privacy", "Terms", "Cookies"].map(l => (
                 <a key={l} href="#" className="footer-link">{l}</a>
               ))}
             </div>

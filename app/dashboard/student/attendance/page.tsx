@@ -6,10 +6,10 @@ import {
   ClipboardCheck, CheckCircle2, XCircle, Clock,
   TrendingUp, AlertCircle, Calendar, ChevronLeft,
   ChevronRight, AlertTriangle, RefreshCw,
-  Activity, BarChart2, Filter
+  Activity, BarChart2, Filter, BookOpen, User as UserIcon,
 } from "lucide-react"
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
   Cell, PieChart, Pie,
 } from "recharts"
@@ -20,8 +20,11 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select"
-import { getUsers, getAttendance } from "@/lib/db"
-import type { User, Attendance } from "@/lib/types"
+import {
+  getAttendanceByStudent,
+  getStudentSubjectsWithFaculty,
+} from "@/lib/db"
+import type { User, Attendance, Subject } from "@/lib/types"
 
 // ─── Helpers ─────────────────────────────────────────────────────
 function Skeleton({ className = "" }: { className?: string }) {
@@ -54,34 +57,46 @@ function buildCalendar(year: number, month: number) {
   return grid
 }
 
+type SubjectInfo = Subject & { faculty: User[] }
+type SubjectStats = {
+  subject: SubjectInfo
+  total: number; present: number; absent: number; late: number; pct: number
+}
+
 // ════════════════════════════════════════════════════════════════
 export default function StudentAttendancePage() {
   const authUser = useAuth("student")
   if (!authUser) return null
 
-  // ── Data ─────────────────────────────────────────────────────
+  // ── Data ──────────────────────────────────────────────────────
   const [me,         setMe]         = useState<User | null>(null)
   const [attendance, setAttendance] = useState<Attendance[]>([])
+  const [subjects,   setSubjects]   = useState<SubjectInfo[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
 
-  // ── Calendar nav ─────────────────────────────────────────────
+  // ── Calendar nav ──────────────────────────────────────────────
   const today = new Date()
   const [calYear,  setCalYear]  = useState(today.getFullYear())
   const [calMonth, setCalMonth] = useState(today.getMonth())
 
-  // ── Filter ────────────────────────────────────────────────────
-  const [filterStatus, setFilterStatus] = useState<"all" | AttStatus>("all")
+  // ── Subject filter ────────────────────────────────────────────
+  const [selectedSubject, setSelectedSubject] = useState<string>("all")
+  const [filterStatus,    setFilterStatus]    = useState<"all" | AttStatus>("all")
 
-  // ── Load ─────────────────────────────────────────────────────
+  // ── Load ──────────────────────────────────────────────────────
   async function load() {
     setLoading(true); setError(null)
     try {
       const student = authUser.user
       setMe(student)
       if (student) {
-        const att = await getAttendance()
-        setAttendance(att.filter(a => a.student_id === student.id))
+        const [att, subs] = await Promise.all([
+          getAttendanceByStudent(student.id),
+          getStudentSubjectsWithFaculty(student.id),
+        ])
+        setAttendance(att)
+        setSubjects(subs)
       }
     } catch (e: any) {
       setError(e.message ?? "Failed to load")
@@ -99,57 +114,83 @@ export default function StudentAttendancePage() {
     const absent  = attendance.filter(a => a.status === "absent").length
     const late    = attendance.filter(a => a.status === "late").length
     const pct     = total ? Math.round((present / total) * 100) : 0
-    // Sessions needed to reach 75%
     const needed  = pct < 75 && total > 0
       ? Math.ceil((0.75 * total - present) / 0.25)
       : 0
     return { total, present, absent, late, pct, needed }
   }, [attendance])
 
-  // ── Monthly breakdown (last 6 months) ─────────────────────────
+  // ── Subject-wise stats ────────────────────────────────────────
+  const subjectStats: SubjectStats[] = useMemo(() => {
+    return subjects.map(subj => {
+      const recs    = attendance.filter(a => a.subject === subj.name)
+      const present = recs.filter(a => a.status === "present").length
+      const absent  = recs.filter(a => a.status === "absent").length
+      const late    = recs.filter(a => a.status === "late").length
+      const total   = recs.length
+      const pct     = total ? Math.round((present / total) * 100) : 0
+      return { subject: subj, total, present, absent, late, pct }
+    })
+  }, [subjects, attendance])
+
+  // ── Displayed stats (overall or filtered by subject) ──────────
+  const displayStats = useMemo(() => {
+    const recs    = selectedSubject === "all" ? attendance : attendance.filter(a => a.subject === selectedSubject)
+    const total   = recs.length
+    const present = recs.filter(a => a.status === "present").length
+    const absent  = recs.filter(a => a.status === "absent").length
+    const late    = recs.filter(a => a.status === "late").length
+    const pct     = total ? Math.round((present / total) * 100) : 0
+    return { total, present, absent, late, pct }
+  }, [attendance, selectedSubject])
+
+  // ── Monthly breakdown (filtered by subject) ───────────────────
   const monthlyData = useMemo(() => {
+    const recs = selectedSubject === "all" ? attendance : attendance.filter(a => a.subject === selectedSubject)
     return Array.from({ length: 6 }, (_, i) => {
       const d = new Date()
       d.setMonth(d.getMonth() - (5 - i))
       const y = d.getFullYear()
       const m = d.getMonth()
       const label = d.toLocaleDateString("en-IN", { month: "short" })
-      const recs  = attendance.filter(a => {
+      const mRecs = recs.filter(a => {
         const ad = new Date(a.date)
         return ad.getFullYear() === y && ad.getMonth() === m
       })
       return {
         label,
-        present: recs.filter(a => a.status === "present").length,
-        absent:  recs.filter(a => a.status === "absent").length,
-        late:    recs.filter(a => a.status === "late").length,
-        pct:     recs.length ? Math.round((recs.filter(a => a.status === "present").length / recs.length) * 100) : 0,
+        present: mRecs.filter(a => a.status === "present").length,
+        absent:  mRecs.filter(a => a.status === "absent").length,
+        late:    mRecs.filter(a => a.status === "late").length,
+        pct:     mRecs.length ? Math.round((mRecs.filter(a => a.status === "present").length / mRecs.length) * 100) : 0,
       }
     })
-  }, [attendance])
+  }, [attendance, selectedSubject])
 
   // ── Pie data ──────────────────────────────────────────────────
   const pieData = useMemo(() => [
-    { name: "Present", value: stats.present, color: "#16A34A" },
-    { name: "Late",    value: stats.late,    color: "#D97706" },
-    { name: "Absent",  value: stats.absent,  color: "#DC2626" },
-  ].filter(d => d.value > 0), [stats])
+    { name: "Present", value: displayStats.present, color: "#16A34A" },
+    { name: "Late",    value: displayStats.late,    color: "#D97706" },
+    { name: "Absent",  value: displayStats.absent,  color: "#DC2626" },
+  ].filter(d => d.value > 0), [displayStats])
 
-  // ── Calendar date map ─────────────────────────────────────────
+  // ── Calendar date map (filtered by subject) ───────────────────
   const dateMap = useMemo(() => {
+    const recs = selectedSubject === "all" ? attendance : attendance.filter(a => a.subject === selectedSubject)
     const m: Record<string, AttStatus> = {}
-    attendance.forEach(a => { m[a.date] = a.status as AttStatus })
+    recs.forEach(a => { m[a.date] = a.status as AttStatus })
     return m
-  }, [attendance])
+  }, [attendance, selectedSubject])
 
   // ── Calendar grid ─────────────────────────────────────────────
   const calGrid   = useMemo(() => buildCalendar(calYear, calMonth), [calYear, calMonth])
   const monthRecs = useMemo(() => {
-    return attendance.filter(a => {
+    const recs = selectedSubject === "all" ? attendance : attendance.filter(a => a.subject === selectedSubject)
+    return recs.filter(a => {
       const d = new Date(a.date)
       return d.getFullYear() === calYear && d.getMonth() === calMonth
     })
-  }, [attendance, calYear, calMonth])
+  }, [attendance, selectedSubject, calYear, calMonth])
 
   // ── Month navigation ──────────────────────────────────────────
   function prevMonth() {
@@ -165,17 +206,22 @@ export default function StudentAttendancePage() {
   // ── Filtered records list ─────────────────────────────────────
   const filteredRecords = useMemo(() => {
     return [...attendance]
-      .filter(a => filterStatus === "all" || a.status === filterStatus)
+      .filter(a => {
+        if (selectedSubject !== "all" && a.subject !== selectedSubject) return false
+        if (filterStatus !== "all" && a.status !== filterStatus) return false
+        return true
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  }, [attendance, filterStatus])
+  }, [attendance, selectedSubject, filterStatus])
 
   // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="My Attendance"
-      pageSubtitle="Track your attendance across all sessions"
+      pageSubtitle="Track your attendance across all subjects"
       loading={loading}
     >
       <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0">
@@ -192,7 +238,7 @@ export default function StudentAttendancePage() {
         {!loading && stats.pct < 75 && stats.total > 0 && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            Your attendance is <strong>{stats.pct}%</strong> — below the 75% requirement.
+            Your overall attendance is <strong>{stats.pct}%</strong> — below the 75% requirement.
             {stats.needed > 0 && <> You need <strong>{stats.needed}</strong> more consecutive present sessions to recover.</>}
           </div>
         )}
@@ -223,8 +269,117 @@ export default function StudentAttendancePage() {
           ))}
         </div>
 
+        {/* ═══ SUBJECT-WISE ATTENDANCE CARDS ═══════════════════ */}
+        {!loading && subjectStats.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-blue-600" />
+              Subject-wise Attendance
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subjectStats.map(ss => {
+                const isCritical = ss.total > 0 && ss.pct < 75
+                return (
+                  <Card
+                    key={ss.subject.id}
+                    className={`backdrop-blur-xl bg-white/70 shadow-sm transition-all hover:shadow-md cursor-pointer ${
+                      selectedSubject === ss.subject.name
+                        ? "ring-2 ring-blue-400 border-blue-200"
+                        : "border-white/50"
+                    }`}
+                    onClick={() => setSelectedSubject(
+                      selectedSubject === ss.subject.name ? "all" : ss.subject.name
+                    )}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      {/* Subject header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-800 truncate">{ss.subject.name}</p>
+                          <p className="text-[10px] text-gray-400 font-medium">{ss.subject.code} • Sem {ss.subject.semester}</p>
+                        </div>
+                        <div className={`text-lg font-black leading-none ${
+                          ss.pct >= 75 ? "text-emerald-600" : ss.pct >= 50 ? "text-amber-600" : "text-red-600"
+                        }`}>
+                          {ss.total > 0 ? `${ss.pct}%` : "—"}
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${ss.pct}%`,
+                            background: ss.pct >= 75 ? "#16A34A" : ss.pct >= 50 ? "#D97706" : "#DC2626",
+                          }}
+                        />
+                      </div>
+
+                      {/* Stats row */}
+                      <div className="flex items-center gap-3 text-[10px]">
+                        <span className="text-emerald-600 font-bold">{ss.present}P</span>
+                        <span className="text-red-600 font-bold">{ss.absent}A</span>
+                        <span className="text-amber-600 font-bold">{ss.late}L</span>
+                        <span className="text-gray-400 ml-auto">{ss.total} classes</span>
+                      </div>
+
+                      {/* Critical warning */}
+                      {isCritical && (
+                        <div className="flex items-center gap-1.5 p-2 rounded-lg bg-red-50 border border-red-100">
+                          <AlertCircle className="h-3 w-3 text-red-500 shrink-0" />
+                          <span className="text-[10px] text-red-600 font-semibold">Below 75% — attend more classes!</span>
+                        </div>
+                      )}
+
+                      {/* Faculty info */}
+                      {ss.subject.faculty.length > 0 && (
+                        <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                          <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                            <UserIcon className="h-3 w-3 text-indigo-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-gray-700 truncate">
+                              {ss.subject.faculty.map(f => f.name).join(", ")}
+                            </p>
+                            <p className="text-[9px] text-gray-400">Faculty</p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {!loading && subjectStats.length === 0 && attendance.length === 0 && (
+          <Card className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
+            <CardContent className="py-12 flex flex-col items-center gap-3 text-gray-400">
+              <BookOpen className="h-10 w-10 text-gray-200" />
+              <p className="text-sm font-medium">No attendance records yet</p>
+              <p className="text-xs">Once your teachers mark attendance, it will appear here.</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Subject filter pill ───────────────────────────── */}
+        {selectedSubject !== "all" && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-gray-500">Showing:</span>
+            <button
+              onClick={() => setSelectedSubject("all")}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
+            >
+              {selectedSubject}
+              <XCircle className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
         {/* ── Charts row ────────────────────────────────────── */}
-        {!loading && (
+        {!loading && displayStats.total > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Monthly stacked bar */}
@@ -233,6 +388,9 @@ export default function StudentAttendancePage() {
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <BarChart2 className="h-4 w-4 text-blue-600" />
                   Monthly Overview
+                  {selectedSubject !== "all" && (
+                    <span className="text-[10px] font-medium text-gray-400">({selectedSubject})</span>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -258,7 +416,7 @@ export default function StudentAttendancePage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Activity className="h-4 w-4 text-indigo-600" />
-                  Overall Split
+                  {selectedSubject === "all" ? "Overall Split" : selectedSubject}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4 flex flex-col items-center">
@@ -278,8 +436,8 @@ export default function StudentAttendancePage() {
                           </PieChart>
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                          <p className={`text-xl font-black ${stats.pct >= 75 ? "text-emerald-600" : "text-red-600"}`}>
-                            {stats.pct}%
+                          <p className={`text-xl font-black ${displayStats.pct >= 75 ? "text-emerald-600" : "text-red-600"}`}>
+                            {displayStats.pct}%
                           </p>
                           <p className="text-[9px] text-gray-400 font-semibold">PRESENT</p>
                         </div>
@@ -416,7 +574,7 @@ export default function StudentAttendancePage() {
                   <Select value={filterStatus} onValueChange={v => setFilterStatus(v as any)}>
                     <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="present">Present</SelectItem>
                       <SelectItem value="absent">Absent</SelectItem>
                       <SelectItem value="late">Late</SelectItem>

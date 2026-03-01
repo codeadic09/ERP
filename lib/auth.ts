@@ -30,7 +30,13 @@ export function dashboardPath(role: string) {
 }
 
 export async function logout() {
-  const supabase = createClient()         // ✅ fresh instance, not singleton
-  await supabase.auth.signOut({ scope: "global" })  // ✅ "global" clears all sessions, not just local tab
+  const supabase = createClient()
+  await supabase.auth.signOut({ scope: "local" })   // only this device / browser
+  clearSession()
+}
+
+export async function logoutAllDevices() {
+  const supabase = createClient()
+  await supabase.auth.signOut({ scope: "global" })  // revoke every session on every device
   clearSession()
 }

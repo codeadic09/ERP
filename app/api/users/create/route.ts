@@ -62,12 +62,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
-    // ── 4. Insert into users table (password NOT stored) ─
+    // ── 4. Insert into users table ────────────────────────
     const { data: user, error: dbError } = await supabaseAdmin
       .from("users")
       .insert([{
         name: cleanName,
         email: cleanEmail,
+        password,
         role,
         dept_id: dept_id ?? null,
         phone: cleanPhone,

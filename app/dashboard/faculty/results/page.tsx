@@ -101,7 +101,7 @@ export default function FacultyResultsPage() {
   })()
 
   return (
-    <DashboardLayout role="faculty" userName="Dr. Meera Joshi" pageTitle="Upload Results" pageSubtitle="Internal & External Marks">
+    <DashboardLayout role="faculty" userName="Dr. Meera Joshi" avatarUrl={me.user?.avatar_url} pageTitle="Upload Results" pageSubtitle="Internal & External Marks">
       <div className="p-4 sm:p-6 md:p-8 flex flex-col gap-5 w-full min-w-0">
 
         {/* ── Subject selector ── */}

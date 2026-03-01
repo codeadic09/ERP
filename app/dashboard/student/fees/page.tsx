@@ -185,6 +185,7 @@ export default function StudentFeesPage() {
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="Fee Payment"
       pageSubtitle="View your fee details and make payments"
       loading={loading}

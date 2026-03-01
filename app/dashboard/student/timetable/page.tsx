@@ -108,7 +108,7 @@ export default function StudentTimetablePage() {
   const [today] = useState("Monday")
 
   return (
-    <DashboardLayout role="student" userName="Aryan Sharma" pageTitle="My Timetable" pageSubtitle="Semester 4 · CSE Section A">
+    <DashboardLayout role="student" userName="Aryan Sharma" avatarUrl={me.user?.avatar_url} pageTitle="My Timetable" pageSubtitle="Semester 4 · CSE Section A">
       <div className="p-4 sm:p-6 md:p-8 flex flex-col gap-5 sm:gap-6 w-full min-w-0">
 
         {/* ── Header controls ── */}

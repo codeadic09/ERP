@@ -197,6 +197,7 @@ export default function StudentResultsPage() {
     <DashboardLayout
       role="student"
       userName={me?.name ?? "Student"}
+      avatarUrl={me?.avatar_url}
       pageTitle="My Results"
       pageSubtitle="Academic performance across all subjects"
       loading={loading}
