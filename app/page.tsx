@@ -591,7 +591,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p style={{ fontSize: isMobile ? 14 : 16, color: "#64748B", maxWidth: 460, margin: "0 auto", lineHeight: 1.75 }}>
-              <Shiva></Shiva> for every role in your university
+              Tailored experiences for every role in your university
             </p>
           </div>
 
