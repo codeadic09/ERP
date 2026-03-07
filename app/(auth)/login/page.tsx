@@ -289,7 +289,7 @@ export default function LoginPage() {
                   <currentTab.icon size={26} color="white" strokeWidth={2.5} />
                 </div>
                 <h1 style={{ fontSize: 24, fontWeight: 900, color: "#0F172A", margin: 0, letterSpacing: "-0.02em" }}>
-                  UniCore ERP
+                  InfiCampus
                 </h1>
                 <p style={{ fontSize: 13, color: "#64748B", marginTop: 4, fontWeight: 500 }}>
                   Sign in as {activeRole === "student" ? "Student" : "Faculty"}

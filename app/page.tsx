@@ -270,7 +270,7 @@ export default function LandingPage() {
             </div>
             <div>
               <p style={{ fontSize: 16, fontWeight: 900, lineHeight: 1, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                UniCore ERP
+                InfiCampus
               </p>
               <p style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 1 }}>
                 University Management
@@ -281,9 +281,10 @@ export default function LandingPage() {
           {/* Nav links — desktop */}
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
-              {["Features", "How It Works", "Portals", "Contact"].map(l => (
+              {["Features", "How It Works", "Portals"].map(l => (
                 <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} className="nav-link">{l}</a>
               ))}
+              <Link href="/contact" className="nav-link">Contact</Link>
             </div>
           )}
 
@@ -354,7 +355,7 @@ export default function LandingPage() {
             animation: "nav-popup-in 0.2s cubic-bezier(0.16,1,0.3,1) both",
             transformOrigin: "top right",
           }}>
-            {["Features", "How It Works", "Portals", "Contact"].map(l => (
+            {["Features", "How It Works", "Portals"].map(l => (
               <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} onClick={() => setMobileNavOpen(false)}
                 style={{
                   display: "block",
@@ -368,6 +369,16 @@ export default function LandingPage() {
                 {l}
               </a>
             ))}
+            <Link href="/contact" onClick={() => setMobileNavOpen(false)}
+              style={{
+                display: "block",
+                padding: "12px 16px", borderRadius: 12,
+                fontSize: 14, fontWeight: 600, color: "#1E293B", textDecoration: "none",
+                transition: "background 0.15s ease",
+              }}
+            >
+              Contact
+            </Link>
 
             <div style={{ height: 1, background: "rgba(226,232,240,0.5)", margin: "6px 12px" }} />
 
@@ -466,7 +477,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p style={{ fontSize: isMobile ? 14 : 16, color: "#64748B", maxWidth: 500, margin: "0 auto", lineHeight: 1.75 }}>
-              From attendance to analytics, UniCore covers every academic need with a beautiful, intuitive interface.
+              From attendance to analytics, InfiCampus covers every academic need with a beautiful, intuitive interface.
             </p>
           </div>
 
@@ -666,14 +677,14 @@ export default function LandingPage() {
                 Ready to transform your<br />university experience?
               </h2>
               <p style={{ fontSize: isMobile ? 14 : 16, color: "rgba(255,255,255,0.75)", maxWidth: 460, margin: "0 auto 40px", lineHeight: 1.75 }}>
-                Join thousands of students, faculty, and admins already using UniCore ERP to manage their academic world.
+                Join thousands of students, faculty, and admins already using InfiCampus to manage their academic world.
               </p>
               <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", flexDirection: isMobile ? "column" : "row" }}>
                 <Link href="/login" className="cta-btn-white">
                   Get Started Free <ArrowRight size={15} strokeWidth={2.5} style={{ marginLeft: 6 }} />
                 </Link>
-                <Link href="/login" className="cta-btn-ghost">
-                  Sign In <ChevronRight size={15} strokeWidth={2.5} style={{ marginLeft: 4 }} />
+                <Link href="/contact" className="cta-btn-ghost">
+                  Deploy for Your University <ChevronRight size={15} strokeWidth={2.5} style={{ marginLeft: 4 }} />
                 </Link>
               </div>
             </div>
@@ -708,30 +719,40 @@ export default function LandingPage() {
                 <div style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(29,78,216,0.25), 0 8px 20px rgba(59,130,246,0.30), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
                   <GraduationCap size={16} color="white" />
                 </div>
-                <span style={{ fontSize: 15, fontWeight: 900, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>UniCore ERP</span>
+                <span style={{ fontSize: 15, fontWeight: 900, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>InfiCampus</span>
               </div>
               <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.8, maxWidth: 280 }}>
-                Modernizing university management with a powerful, role-based ERP platform. Built for students, faculty, and admins.
+                Modernizing university management with a powerful, role-based platform. Built for students, faculty, and admins.
               </p>
             </div>
 
             {/* Links */}
-            {[
-              { title: "Product",  links: ["Features", "How It Works", "Portals", "Pricing"] },
-              { title: "Portals",  links: ["Admin Login", "Faculty Login", "Student Login", "Signup"] },
-              { title: "Support",  links: ["Documentation", "Contact Us", "FAQ", "Status Page"] },
-            ].map((col, i) => (
-              <div key={i}>
-                <p style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>
-                  {col.title}
-                </p>
-                {col.links.map(l => (
-                  <div key={l} style={{ marginBottom: 10 }}>
-                    <a href="#" className="footer-link">{l}</a>
-                  </div>
-                ))}
-              </div>
-            ))}
+            {/* Product */}
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>Product</p>
+              {["Features", "How It Works", "Portals"].map(l => (
+                <div key={l} style={{ marginBottom: 10 }}><a href="#" className="footer-link">{l}</a></div>
+              ))}
+              <div style={{ marginBottom: 10 }}><Link href="/contact#pricing" className="footer-link">Pricing</Link></div>
+            </div>
+
+            {/* Portals */}
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>Portals</p>
+              {["Admin Login", "Faculty Login", "Student Login", "Signup"].map(l => (
+                <div key={l} style={{ marginBottom: 10 }}><a href="#" className="footer-link">{l}</a></div>
+              ))}
+            </div>
+
+            {/* Support */}
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 18 }}>Support</p>
+              {["Documentation", "FAQ", "Status Page"].map(l => (
+                <div key={l} style={{ marginBottom: 10 }}><a href="#" className="footer-link">{l}</a></div>
+              ))}
+              <div style={{ marginBottom: 10 }}><Link href="/contact" className="footer-link">Contact Us</Link></div>
+              <div style={{ marginBottom: 10 }}><Link href="/help" className="footer-link">Help Center</Link></div>
+            </div>
           </div>
 
           {/* Bottom bar */}

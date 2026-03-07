@@ -7,7 +7,7 @@ import {
   TrendingUp, Calendar, Clock, CheckCircle2,
   AlertCircle, ChevronRight, GraduationCap,
   Loader2, RefreshCw, AlertTriangle,
-  BarChart2, Activity, Wallet
+  BarChart2, Activity, Wallet, Megaphone, Send
 } from "lucide-react"
 import {
   AreaChart, Area, BarChart, Bar,
@@ -18,13 +18,23 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { LiquidGlassBackground } from "@/components/liquid-glass-bg"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
 import {
   getUsers, getDepartments,
   getNotices, getAttendance,
   getSubjectsByFacultyId,
   getStudentsEnrolledInSubject,
+  addNotice,
+  getTimetableSlotsByFaculty,
 } from "@/lib/db"
-import type { User, Department, Notice, Attendance, Subject } from "@/lib/types"
+import type { User, Department, Notice, Attendance, Subject, TimetableSlot } from "@/lib/types"
 
 // ─── Helpers ─────────────────────────────────────────────────────
 function Skeleton({ className = "" }: { className?: string }) {
@@ -55,12 +65,18 @@ export default function FacultyDashboard() {
   const [attendance, setAttendance] = useState<Attendance[]>([])
   const [mySubjects, setMySubjects] = useState<Subject[]>([])
   const [enrolledStudents, setEnrolledStudents] = useState<User[]>([])
+  const [timetableSlots, setTimetableSlots] = useState<TimetableSlot[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
 
   // ── Simulated logged-in faculty ──────────────────────────────
   // In production, replace with actual session user
   const [me, setMe] = useState<User | null>(null)
+
+  // ── Publish notice form ──────────────────────────────────────
+  const [noticeForm, setNoticeForm] = useState({ title: "", body: "", target: "Students" as "All" | "Students" | "Faculty" })
+  const [publishing, setPublishing] = useState(false)
+  const [publishSuccess, setPublishSuccess] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -72,6 +88,11 @@ export default function FacultyDashboard() {
         myId ? getSubjectsByFacultyId(myId) : Promise.resolve([]),
       ])
       setUsers(u); setDepts(d); setNotices(n); setAttendance(a); setMySubjects(ms)
+
+      // Fetch timetable slots for this faculty
+      if (myId) {
+        try { setTimetableSlots(await getTimetableSlotsByFaculty(myId)) } catch {}
+      }
 
       // Fetch enrolled students for all faculty subjects (deduplicated)
       const studentMap = new Map<string, User>()
@@ -93,6 +114,29 @@ export default function FacultyDashboard() {
   }
 
   useEffect(() => { if (authUser.user) load() }, [authUser.user])
+
+  // ── Publish notice handler ───────────────────────────────────
+  async function handlePublishNotice() {
+    if (!noticeForm.title.trim() || !noticeForm.body.trim()) return
+    setPublishing(true)
+    try {
+      const newNotice = await addNotice({
+        title: noticeForm.title.trim(),
+        body: noticeForm.body.trim(),
+        target: noticeForm.target,
+        urgent: false,
+        created_by: me?.id ?? "",
+      } as any)
+      setNotices(prev => [newNotice, ...prev])
+      setNoticeForm({ title: "", body: "", target: "Students" })
+      setPublishSuccess("Notice published successfully!")
+      setTimeout(() => setPublishSuccess(null), 3000)
+    } catch (e: any) {
+      setError(e.message ?? "Failed to publish notice")
+    } finally {
+      setPublishing(false)
+    }
+  }
 
   // ── Derived ───────────────────────────────────────────────────
   const myDept = useMemo(
@@ -182,6 +226,15 @@ export default function FacultyDashboard() {
     ]
   }, [myStudents, mySubjects, myDept, attendance, myNotices, users, me])
 
+  // ── Today's schedule ─────────────────────────────────────────
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  const todaySchedule = useMemo(() => {
+    const todayIdx = (new Date().getDay() + 6) % 7  // 0=Mon
+    return timetableSlots
+      .filter(s => s.day_of_week === todayIdx)
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }, [timetableSlots])
+
   // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
@@ -250,6 +303,81 @@ export default function FacultyDashboard() {
               ))
           }
         </div>
+
+        {/* ── Today's Schedule ───────────────────────────────── */}
+        <Card className="liquid-glass">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                  <Clock className="h-3.5 w-3.5 text-indigo-600" />
+                </div>
+                Today&apos;s Schedule
+                <span className="text-[10px] font-medium text-gray-400 ml-1">
+                  {DAYS[(new Date().getDay() + 6) % 7]}
+                </span>
+              </CardTitle>
+              <Link href="/dashboard/faculty/timetable" className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1">
+                Full Timetable <ChevronRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading
+              ? <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+              : todaySchedule.length === 0
+                ? (
+                  <div className="py-10 flex flex-col items-center gap-2 text-gray-400">
+                    <Calendar className="h-8 w-8 text-gray-200" />
+                    <p className="text-xs font-medium">No classes scheduled today</p>
+                    <p className="text-[10px] text-gray-300">Enjoy your free day!</p>
+                  </div>
+                )
+                : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {todaySchedule.map(slot => {
+                      const now = new Date()
+                      const [sh, sm] = slot.start_time.split(":").map(Number)
+                      const [eh, em] = slot.end_time.split(":").map(Number)
+                      const startMin = sh * 60 + sm
+                      const endMin   = eh * 60 + em
+                      const nowMin   = now.getHours() * 60 + now.getMinutes()
+                      const isActive = nowMin >= startMin && nowMin < endMin
+                      const isPast   = nowMin >= endMin
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`p-3 rounded-xl border transition-all ${
+                            isActive
+                              ? "bg-blue-50 border-blue-200 ring-1 ring-blue-300"
+                              : isPast
+                                ? "bg-gray-50 border-gray-100 opacity-60"
+                                : "bg-white border-gray-100 hover:border-blue-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              isActive ? "bg-blue-500 animate-pulse" : isPast ? "bg-gray-300" : "bg-emerald-400"
+                            }`} />
+                            <span className="text-[11px] font-bold text-gray-500">
+                              {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                            </span>
+                            {isActive && <span className="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full ml-auto">NOW</span>}
+                          </div>
+                          <p className="text-sm font-bold text-gray-800 truncate">
+                            {slot.subjects?.name ?? "—"}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            {slot.subjects?.code} {slot.room ? `· Room ${slot.room}` : ""} {slot.section ? `· Sec ${slot.section}` : ""}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+            }
+          </CardContent>
+        </Card>
 
         {/* ── Row 1 — Weekly attendance + Student att bars ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -459,6 +587,81 @@ export default function FacultyDashboard() {
           </Card>
         </div>
 
+        {/* ── Publish Notice Card ───────────────────────────── */}
+        <Card className="liquid-glass">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                  <Megaphone className="h-3.5 w-3.5 text-amber-600" />
+                </div>
+                Publish Notice
+              </CardTitle>
+              <a href="/dashboard/faculty/notices" className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1">
+                All Notices <ChevronRight className="h-3 w-3" />
+              </a>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {publishSuccess && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold mb-4">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                {publishSuccess}
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-500">Title <span className="text-red-400">*</span></Label>
+                <Input
+                  placeholder="e.g. Assignment submission deadline"
+                  value={noticeForm.title}
+                  onChange={e => setNoticeForm(f => ({ ...f, title: e.target.value }))}
+                  maxLength={120}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="space-y-1.5 flex-1">
+                  <Label className="text-xs font-semibold text-gray-500">Audience</Label>
+                  <Select value={noticeForm.target} onValueChange={v => setNoticeForm(f => ({ ...f, target: v as any }))}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">Everyone</SelectItem>
+                      <SelectItem value="Students">Students Only</SelectItem>
+                      <SelectItem value="Faculty">Faculty Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5 mb-3">
+              <Label className="text-xs font-semibold text-gray-500">Content <span className="text-red-400">*</span></Label>
+              <Textarea
+                placeholder="Write your notice content here..."
+                value={noticeForm.body}
+                onChange={e => setNoticeForm(f => ({ ...f, body: e.target.value }))}
+                rows={3}
+                maxLength={1000}
+                className="resize-none text-sm"
+              />
+              <p className="text-[10px] text-gray-400 text-right">{noticeForm.body.length}/1000</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={handlePublishNotice}
+              disabled={publishing || !noticeForm.title.trim() || !noticeForm.body.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs font-semibold h-9"
+            >
+              {publishing
+                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Publishing...</>
+                : <><Send className="h-3.5 w-3.5" /> Publish Notice</>
+              }
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* ── Row 3 — Quick actions ─────────────────────────── */}
         <Card className="liquid-glass">
           <CardHeader className="pb-3">
@@ -474,7 +677,7 @@ export default function FacultyDashboard() {
               {[
                 { label: "Mark Attendance", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", href: "/dashboard/faculty/attendance" },
                 { label: "My Students",     icon: GraduationCap,color: "text-blue-600",    bg: "bg-blue-50",    border: "border-blue-100",    href: "/dashboard/faculty/students"   },
-                { label: "View Notices",    icon: Bell,         color: "text-amber-600",   bg: "bg-amber-50",   border: "border-amber-100",   href: "/dashboard/faculty/notices"    },
+                { label: "Manage Notices",  icon: Megaphone,    color: "text-amber-600",   bg: "bg-amber-50",   border: "border-amber-100",   href: "/dashboard/faculty/notices"    },
                 { label: "My Profile",      icon: BookOpen,     color: "text-purple-600",  bg: "bg-purple-50",  border: "border-purple-100",  href: "/dashboard/faculty/profile"    },
               ].map(a => (
                 <a key={a.label} href={a.href}

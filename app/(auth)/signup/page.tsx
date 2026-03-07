@@ -150,7 +150,7 @@ export default function SignupPage() {
               <GraduationCap size={17} color="white" />
             </div>
             <span style={{ fontWeight:900, fontSize:15, background:"linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
-              UniCore ERP
+              InfiCampus
             </span>
           </div>
 
@@ -249,7 +249,7 @@ export default function SignupPage() {
               </div>
 
               <Field label="Full Name"     icon={User}  placeholder="e.g. Aryan Sharma"         field="name"  error={errors.name}  />
-              <Field label="Email Address" icon={Mail}  placeholder="you@unicore.edu"            field="email" error={errors.email} />
+              <Field label="Email Address" icon={Mail}  placeholder="you@inficampus.edu"            field="email" error={errors.email} />
               <Field label="Phone Number"  icon={Phone} placeholder="+91 98765 43210"            field="phone" error={errors.phone} />
 
               <button

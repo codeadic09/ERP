@@ -49,7 +49,7 @@ function noticeColor(n: Notice) {
   return "#64748B"
 }
 
-const READ_KEY = "unicore_read_notices"
+const READ_KEY = "inficampus_read_notices"
 function getReadIds(): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]")) }
   catch { return new Set() }

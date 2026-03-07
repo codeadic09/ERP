@@ -27,6 +27,7 @@ export interface User {
   enrolled_at: string
   created_at:  string
   semester?:   number | null
+  section?:    string | null
   avatar_url?: string | null
   bio?:        string | null
   departments?: Department
@@ -132,5 +133,56 @@ export interface Registration {
   created_at: string
   users?:     User
   subjects?:  Subject
+}
+
+// ── Timetable ──────────────────────────────────────────────────
+
+export interface TimetableRequest {
+  id:          string
+  faculty_id:  string
+  dept_id:     string
+  status:      "pending" | "approved" | "rejected"
+  message:     string | null
+  admin_note:  string | null
+  created_at:  string
+  updated_at:  string
+  users?:      User
+  departments?: Department
+}
+
+export interface TimetableSlot {
+  id:          string
+  dept_id:     string
+  subject_id:  string
+  faculty_id:  string
+  day_of_week: number          // 0=Mon … 6=Sun
+  start_time:  string          // "HH:MM:SS"
+  end_time:    string
+  room:        string | null
+  section:     string | null
+  semester:    number | null
+  created_by:  string | null
+  created_at:  string
+  updated_at:  string
+  departments?: Department
+  subjects?:    Subject
+  users?:       User           // assigned faculty
+}
+
+// ── Class Teacher ──────────────────────────────────────────────
+
+export interface ClassTeacher {
+  id:          string
+  faculty_id:  string
+  dept_id:     string
+  section:     string
+  semester:    number
+  status:      "pending" | "approved" | "rejected"
+  message:     string | null
+  admin_note:  string | null
+  created_at:  string
+  updated_at:  string
+  users?:      User
+  departments?: Department
 }
 

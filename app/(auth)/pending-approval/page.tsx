@@ -13,7 +13,7 @@ const steps = [
   { label: "Account Created",      sub: "Your details have been submitted",     done: true,  icon: CheckCircle },
   { label: "Under Review",         sub: "Admin is verifying your credentials",  done: false, icon: Clock       },
   { label: "Approval Granted",     sub: "You'll receive an email confirmation", done: false, icon: Shield      },
-  { label: "Access Dashboard",     sub: "Start your UniCore journey",           done: false, icon: Sparkles    },
+  { label: "Access Dashboard",     sub: "Start your InfiCampus journey",           done: false, icon: Sparkles    },
 ]
 
 export default function PendingApprovalPage() {
@@ -112,7 +112,7 @@ export default function PendingApprovalPage() {
             </h1>
             <p style={{ fontSize: 14, color: "#64748B", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
               Your registration is being reviewed by the admin team. You'll receive an email at{" "}
-              <span style={{ fontWeight: 700, color: "#1D4ED8" }}>aryan@unicore.edu</span>{" "}
+              <span style={{ fontWeight: 700, color: "#1D4ED8" }}>aryan@inficampus.edu</span>{" "}
               once approved — usually within <strong>24 hours</strong>.
             </p>
           </div>
@@ -285,8 +285,8 @@ export default function PendingApprovalPage() {
           {/* Footer note */}
           <p style={{ textAlign:"center", fontSize:11, color:"#94A3B8", marginTop:20, lineHeight:1.6 }}>
             Need help?{" "}
-            <a href="mailto:support@unicore.edu" style={{ color:"#3B82F6", fontWeight:600, textDecoration:"none" }}>
-              support@unicore.edu
+            <a href="mailto:support@inficampus.edu" style={{ color:"#3B82F6", fontWeight:600, textDecoration:"none" }}>
+              support@inficampus.edu
             </a>
             {" "}· Average approval: <strong style={{ color:"#64748B" }}>within 24 hours</strong>
           </p>

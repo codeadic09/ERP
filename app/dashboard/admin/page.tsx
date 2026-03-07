@@ -220,7 +220,7 @@ export default function AdminOverviewPage() {
                 Good {time ? (time.getHours() < 12 ? "Morning" : time.getHours() < 17 ? "Afternoon" : "Evening") : "Day"}, Admin 👋
               </h2>
               <p className="text-blue-100 text-sm mt-1">
-                UniCore ERP — everything is running smoothly today.
+                InfiCampus — everything is running smoothly today.
               </p>
             </div>
             <div className="text-right shrink-0">

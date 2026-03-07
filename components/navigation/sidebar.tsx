@@ -89,7 +89,7 @@ export function Sidebar() {
       >
         {/* Sidebar Header */}
         <div className="p-6 border-b border-white/20">
-          <h1 className="text-2xl font-bold gradient-text mb-1">ERP</h1>
+          <h1 className="text-2xl font-bold gradient-text mb-1">InfiCampus</h1>
           <p className="text-sm text-gray-600">University Management</p>
         </div>
 

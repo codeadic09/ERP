@@ -205,7 +205,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           >
             <Sparkles size={11} color="#51A2FF" strokeWidth={2.5} />
             <span style={{ fontSize: 11, fontWeight: 700, color: '#51A2FF', letterSpacing: '0.04em' }}>
-              NEXT-GEN UNIVERSITY ERP
+              NEXT-GEN UNIVERSITY PLATFORM
             </span>
           </div>
 
@@ -247,7 +247,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
               margin: isMobile ? '0 auto 36px' : undefined,
             }}
           >
-            UniCore ERP unifies attendance, results, timetables, fees, and
+            InfiCampus unifies attendance, results, timetables, fees, and
             communications into one sleek, role-based platform — built for
             modern universities.
           </p>

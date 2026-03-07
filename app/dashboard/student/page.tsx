@@ -7,7 +7,8 @@ import {
   Award, CreditCard, Bell, TrendingUp,
   AlertCircle, CheckCircle2, Clock,
   Calendar, BookOpen, ChevronRight,
-  AlertTriangle, Loader2, Activity
+  AlertTriangle, Loader2, Activity,
+  UserCheck, Mail, Phone
 } from "lucide-react"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -20,11 +21,12 @@ import Link from "next/link"
 import {
   getUsers, getDepartments, getAttendance,
   getFees, getNotices, getAssignmentsByDept,
-  getResultsByStudent,
+  getResultsByStudent, getTimetableSlots,
+  getClassTeacherForDivision,
 } from "@/lib/db"
 import type {
   User, Department, Attendance,
-  Fee, Notice, Assignment, Result,
+  Fee, Notice, Assignment, Result, TimetableSlot, ClassTeacher,
 } from "@/lib/types"
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -63,6 +65,8 @@ export default function StudentDashboardPage() {
   const [notices,     setNotices]     = useState<Notice[]>([])
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [results,     setResults]     = useState<Result[]>([])
+  const [timetableSlots, setTimetableSlots] = useState<TimetableSlot[]>([])
+  const [classTeacher, setClassTeacher] = useState<ClassTeacher | null>(null)
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState<string | null>(null)
 
@@ -92,6 +96,19 @@ export default function StudentDashboardPage() {
         ])
         setAssignments(asgn)
         setResults(res)
+
+        // Fetch timetable for student's department
+        if (d) {
+          try { setTimetableSlots(await getTimetableSlots(d.id)) } catch {}
+        }
+
+        // Fetch class teacher for student's division
+        if (d && student.section && student.semester) {
+          try {
+            const ct = await getClassTeacherForDivision(d.id, student.section, student.semester)
+            setClassTeacher(ct)
+          } catch {}
+        }
       }
     } catch (e: any) {
       setError(e.message ?? "Failed to load")
@@ -158,6 +175,15 @@ export default function StudentDashboardPage() {
     none:    { label: "No Record",color: "#94A3B8", bg: "bg-gray-50",    border: "border-gray-100",    icon: AlertCircle  },
   }
   const fs = feeConf[(fee?.status as keyof typeof feeConf) ?? "none"]
+
+  // ── Today's schedule ──────────────────────────────────────────
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  const todaySchedule = useMemo(() => {
+    const todayIdx = (new Date().getDay() + 6) % 7  // 0=Mon
+    return timetableSlots
+      .filter(s => s.day_of_week === todayIdx)
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }, [timetableSlots])
 
   // ════════════════════════════════════════════════════════════
   return (
@@ -252,6 +278,119 @@ export default function StudentDashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* ── Your Class Teacher ───────────────────────────── */}
+        {classTeacher && classTeacher.users && (
+          <Card className="liquid-glass overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-blue-100 border border-purple-200 flex items-center justify-center shrink-0">
+                  <UserCheck className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Your Class Teacher</p>
+                  <p className="text-sm font-black text-gray-900">{classTeacher.users.name}</p>
+                  <div className="flex flex-wrap items-center gap-3 mt-1">
+                    {classTeacher.users.email && (
+                      <span className="text-[11px] text-gray-400 flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> {classTeacher.users.email}
+                      </span>
+                    )}
+                    {classTeacher.users.phone && (
+                      <span className="text-[11px] text-gray-400 flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {classTeacher.users.phone}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 font-bold">
+                    Sem {classTeacher.semester}
+                  </span>
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 font-bold">
+                    Sec {classTeacher.section}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Today's Schedule ─────────────────────────────── */}
+        <Card className="liquid-glass">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                  <Clock className="h-3.5 w-3.5 text-indigo-600" />
+                </div>
+                Today&apos;s Schedule
+                <span className="text-[10px] font-medium text-gray-400 ml-1">
+                  {DAYS[(new Date().getDay() + 6) % 7]}
+                </span>
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading
+              ? <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+              : todaySchedule.length === 0
+                ? (
+                  <div className="py-10 flex flex-col items-center gap-2 text-gray-400">
+                    <Calendar className="h-8 w-8 text-gray-200" />
+                    <p className="text-xs font-medium">No classes scheduled today</p>
+                    <p className="text-[10px] text-gray-300">Enjoy your free day!</p>
+                  </div>
+                )
+                : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {todaySchedule.map(slot => {
+                      const now = new Date()
+                      const [sh, sm] = slot.start_time.split(":").map(Number)
+                      const [eh, em] = slot.end_time.split(":").map(Number)
+                      const startMin = sh * 60 + sm
+                      const endMin   = eh * 60 + em
+                      const nowMin   = now.getHours() * 60 + now.getMinutes()
+                      const isActive = nowMin >= startMin && nowMin < endMin
+                      const isPast   = nowMin >= endMin
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`p-3 rounded-xl border transition-all ${
+                            isActive
+                              ? "bg-blue-50 border-blue-200 ring-1 ring-blue-300"
+                              : isPast
+                                ? "bg-gray-50 border-gray-100 opacity-60"
+                                : "bg-white border-gray-100 hover:border-blue-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              isActive ? "bg-blue-500 animate-pulse" : isPast ? "bg-gray-300" : "bg-emerald-400"
+                            }`} />
+                            <span className="text-[11px] font-bold text-gray-500">
+                              {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                            </span>
+                            {isActive && <span className="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full ml-auto">NOW</span>}
+                          </div>
+                          <p className="text-sm font-bold text-gray-800 truncate">
+                            {slot.subjects?.name ?? "—"}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            {slot.subjects?.code} {slot.room ? `· Room ${slot.room}` : ""} {slot.section ? `· Sec ${slot.section}` : ""}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            {slot.users?.name ? `Prof. ${slot.users.name}` : ""}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+            }
+          </CardContent>
+        </Card>
 
         {/* ── Middle row ────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

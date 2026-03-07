@@ -76,7 +76,7 @@ const FAQS = [
 
 // ─── Contact channels ─────────────────────────────────────────────
 const CHANNELS = [
-  { icon: Mail,         label: "Email Support",   sub: "support@unicore.edu",      color: "#3B82F6",  bg: "rgba(59,130,246,0.08)"  },
+  { icon: Mail,         label: "Email Support",   sub: "support@inficampus.edu",      color: "#3B82F6",  bg: "rgba(59,130,246,0.08)"  },
   { icon: Phone,        label: "Phone Helpdesk",  sub: "+91 98765 00000",          color: "#16A34A",  bg: "rgba(22,163,74,0.08)"   },
   { icon: MessageSquare,label: "Live Chat",        sub: "Mon–Fri, 9am–6pm IST",    color: "#8B5CF6",  bg: "rgba(139,92,246,0.08)"  },
 ]
@@ -138,7 +138,7 @@ export default function HelpPage() {
             <GraduationCap className="h-4 w-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-black text-gray-900">UniCore ERP</p>
+            <p className="text-sm font-black text-gray-900">InfiCampus</p>
             <p className="text-[10px] text-gray-400 font-medium">Help & Support</p>
           </div>
         </div>
@@ -362,7 +362,7 @@ export default function HelpPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 pb-6">
-          UniCore ERP · v2.0 · © 2026 · All rights reserved
+          InfiCampus · v2.0 · © 2026 · All rights reserved
         </p>
 
       </div>

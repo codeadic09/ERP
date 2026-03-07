@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ── UniCore ERP — Deep Maroon & Rose Theme ── */
+  /* ── InfiCampus — Deep Maroon & Rose Theme ── */
   --background: #FDF2F8;
   --background-accent: #FCE7F3;
   --foreground: #1a0508;

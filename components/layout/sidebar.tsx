@@ -8,7 +8,8 @@ import {
   Settings, GraduationCap, BookOpen,
   ClipboardCheck, FileText, Award, Megaphone,
   LogOut, Shield, Menu, ChevronLeft, X,
-  CreditCard, UserCircle, HelpCircle, MonitorSmartphone
+  CreditCard, UserCircle, HelpCircle, MonitorSmartphone,
+  Calendar, UserCheck,
 } from "lucide-react"
 import { logout, logoutAllDevices } from "@/lib/auth"
 
@@ -24,6 +25,8 @@ const navConfig: Record<Role, NavSection[]> = {
       { label: "Departments",    href: "/dashboard/admin/departments",    icon: Building2      },
       { label: "Subjects",       href: "/dashboard/admin/subjects",       icon: BookOpen       },
       { label: "Registrations",  href: "/dashboard/admin/registrations",  icon: ClipboardCheck },
+      { label: "Timetable",      href: "/dashboard/admin/timetable",      icon: Calendar       },
+      { label: "Class Teachers", href: "/dashboard/admin/class-teachers", icon: UserCheck      },
       { label: "Fee Control",    href: "/dashboard/admin/fees",           icon: Wallet         },
     ]},
     { section: "Communication", items: [
@@ -41,6 +44,8 @@ const navConfig: Record<Role, NavSection[]> = {
       { label: "Assignments", href: "/dashboard/faculty/assignments", icon: FileText       },
       { label: "Results",     href: "/dashboard/faculty/results",     icon: Award          },
       { label: "My Students", href: "/dashboard/faculty/students",    icon: GraduationCap  },
+      { label: "Class Teacher", href: "/dashboard/faculty/class-teacher", icon: UserCheck    },
+      { label: "Timetable",   href: "/dashboard/faculty/timetable",   icon: Calendar       },
     ]},
     { section: "Communication", items: [{ label: "Notices", href: "/dashboard/faculty/notices", icon: Megaphone }] },
     { section: "Account", items: [
@@ -55,6 +60,7 @@ const navConfig: Record<Role, NavSection[]> = {
       { label: "Registration",  href: "/dashboard/student/registration", icon: ClipboardCheck },
       { label: "Assignments",   href: "/dashboard/student/assignments",  icon: FileText       },
       { label: "Results",       href: "/dashboard/student/results",      icon: Award          },
+      { label: "Timetable",     href: "/dashboard/student/timetable",    icon: Calendar       },
     ]},
     { section: "Finance",       items: [{ label: "Fee Payment", href: "/dashboard/student/fees",   icon: CreditCard }] },
     { section: "Communication", items: [{ label: "Notices",     href: "/dashboard/student/notices", icon: Bell       }] },
@@ -195,8 +201,8 @@ export function Sidebar({ role, userName = "User", avatarUrl, mobileOpen = false
             overflow: "hidden", maxWidth: c ? 0 : 120, opacity: c ? 0 : 1,
             transition: TFADE, whiteSpace: "nowrap", flex: 1, minWidth: 0,
           }}>
-            <p style={{ fontSize: 14, fontWeight: 900, color: "var(--shell-text)", margin: 0, lineHeight: 1.2 }}>UniCore</p>
-            <p style={{ fontSize: 10, color: "var(--shell-text-muted)", margin: 0, fontWeight: 500 }}>ERP Portal</p>
+            <p style={{ fontSize: 14, fontWeight: 900, color: "var(--shell-text)", margin: 0, lineHeight: 1.2 }}>InfiCampus</p>
+            <p style={{ fontSize: 10, color: "var(--shell-text-muted)", margin: 0, fontWeight: 500 }}>University Portal</p>
           </div>
 
           {isMobile ? (

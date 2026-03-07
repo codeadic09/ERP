@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client"
 import type {
   User, Department, Fee, Notice,
   Attendance, Assignment, Result, Payment, Subject, Registration,
-  FacultySubject,
+  FacultySubject, TimetableRequest, TimetableSlot,
 } from "@/lib/types"
 
 // ════════════════════════════════════════════════════════
@@ -800,6 +800,293 @@ export async function updateUserProfile(
     .from("users")
     .update(updates)
     .eq("id", id)
+    .select("*, departments(id, name, code, color)")
+    .single()
+  if (error) throw error
+  return data as User
+}
+
+// ════════════════════════════════════════════════════════
+// TIMETABLE REQUESTS (coordinator access)
+// ════════════════════════════════════════════════════════
+
+export async function getTimetableRequests() {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_requests")
+    .select(`*, users:faculty_id(id, name, email, dept_id), departments(id, name, code, color)`)
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return data as TimetableRequest[]
+}
+
+export async function getTimetableRequestByFaculty(facultyId: string, deptId: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_requests")
+    .select(`*`)
+    .eq("faculty_id", facultyId)
+    .eq("dept_id", deptId)
+    .maybeSingle()
+  if (error) throw error
+  return data as TimetableRequest | null
+}
+
+export async function addTimetableRequest(
+  req: { faculty_id: string; dept_id: string; message?: string }
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_requests")
+    .insert([req])
+    .select()
+    .single()
+  if (error) throw error
+  return data as TimetableRequest
+}
+
+export async function updateTimetableRequest(
+  id: string,
+  updates: { status?: string; admin_note?: string }
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_requests")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select(`*, users:faculty_id(id, name, email, dept_id), departments(id, name, code, color)`)
+    .single()
+  if (error) throw error
+  return data as TimetableRequest
+}
+
+// ════════════════════════════════════════════════════════
+// TIMETABLE SLOTS
+// ════════════════════════════════════════════════════════
+
+export async function getTimetableSlots(deptId?: string) {
+  const supabase = createClient()
+  let q = supabase
+    .from("timetable_slots")
+    .select(`*, departments(id, name, code, color), subjects:subject_id(id, name, code), users:faculty_id(id, name, email)`)
+    .order("day_of_week")
+    .order("start_time")
+  if (deptId) q = q.eq("dept_id", deptId)
+  const { data, error } = await q
+  if (error) throw error
+  return data as TimetableSlot[]
+}
+
+export async function getTimetableSlotsByFaculty(facultyId: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_slots")
+    .select(`*, departments(id, name, code, color), subjects:subject_id(id, name, code), users:faculty_id(id, name, email)`)
+    .eq("faculty_id", facultyId)
+    .order("day_of_week")
+    .order("start_time")
+  if (error) throw error
+  return data as TimetableSlot[]
+}
+
+export async function addTimetableSlot(
+  slot: Omit<TimetableSlot, "id" | "created_at" | "updated_at" | "departments" | "subjects" | "users">
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_slots")
+    .insert([slot])
+    .select(`*, departments(id, name, code, color), subjects:subject_id(id, name, code), users:faculty_id(id, name, email)`)
+    .single()
+  if (error) throw error
+  return data as TimetableSlot
+}
+
+export async function updateTimetableSlot(
+  id: string,
+  updates: Partial<Omit<TimetableSlot, "id" | "created_at" | "departments" | "subjects" | "users">>
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_slots")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select(`*, departments(id, name, code, color), subjects:subject_id(id, name, code), users:faculty_id(id, name, email)`)
+    .single()
+  if (error) throw error
+  return data as TimetableSlot
+}
+
+export async function deleteTimetableSlot(id: string) {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("timetable_slots")
+    .delete()
+    .eq("id", id)
+  if (error) throw error
+}
+
+/** Check if a faculty member is already booked at a given day+time */
+export async function checkFacultyConflict(
+  facultyId: string,
+  dayOfWeek: number,
+  startTime: string,
+  endTime: string,
+  excludeSlotId?: string
+) {
+  const supabase = createClient()
+  let q = supabase
+    .from("timetable_slots")
+    .select(`*, subjects:subject_id(id, name, code), departments(id, name, code)`)
+    .eq("faculty_id", facultyId)
+    .eq("day_of_week", dayOfWeek)
+    .lt("start_time", endTime)
+    .gt("end_time", startTime)
+  if (excludeSlotId) q = q.neq("id", excludeSlotId)
+  const { data, error } = await q
+  if (error) throw error
+  return data as TimetableSlot[]
+}
+
+/** Bulk-insert timetable slots (from Excel upload or multi-add).
+ *  Returns the inserted rows with joined data. */
+export async function bulkAddTimetableSlots(
+  slots: Omit<TimetableSlot, "id" | "created_at" | "updated_at" | "departments" | "subjects" | "users">[]
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("timetable_slots")
+    .insert(slots)
+    .select(`*, departments(id, name, code, color), subjects:subject_id(id, name, code), users:faculty_id(id, name, email)`)
+  if (error) throw error
+  return data as TimetableSlot[]
+}
+
+/** Delete all timetable slots for a given department + section combo */
+export async function deleteTimetableSlotsBySection(deptId: string, section: string) {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("timetable_slots")
+    .delete()
+    .eq("dept_id", deptId)
+    .eq("section", section)
+  if (error) throw error
+}
+
+// ════════════════════════════════════════════════════════
+// CLASS TEACHERS
+// ════════════════════════════════════════════════════════
+
+import type { ClassTeacher } from "@/lib/types"
+
+/** Get all class teacher records (optionally filtered by dept) */
+export async function getClassTeachers(deptId?: string) {
+  const supabase = createClient()
+  let q = supabase
+    .from("class_teachers")
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .order("created_at", { ascending: false })
+  if (deptId) q = q.eq("dept_id", deptId)
+  const { data, error } = await q
+  if (error) throw error
+  return data as ClassTeacher[]
+}
+
+/** Get the class teacher for a specific division (dept + section + semester) */
+export async function getClassTeacherForDivision(deptId: string, section: string, semester: number) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("class_teachers")
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .eq("dept_id", deptId)
+    .eq("section", section)
+    .eq("semester", semester)
+    .eq("status", "approved")
+    .maybeSingle()
+  if (error) throw error
+  return data as ClassTeacher | null
+}
+
+/** Get class teacher request by faculty (for a specific dept) */
+export async function getClassTeacherByFaculty(facultyId: string, deptId: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("class_teachers")
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .eq("faculty_id", facultyId)
+    .eq("dept_id", deptId)
+  if (error) throw error
+  return data as ClassTeacher[]
+}
+
+/** Faculty requests to become class teacher for a division */
+export async function addClassTeacherRequest(req: {
+  faculty_id: string; dept_id: string;
+  section: string; semester: number; message?: string
+}) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("class_teachers")
+    .insert([req])
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .single()
+  if (error) throw error
+  return data as ClassTeacher
+}
+
+/** Admin approves/rejects a class teacher request */
+export async function updateClassTeacher(
+  id: string,
+  updates: { status?: string; admin_note?: string }
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("class_teachers")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .single()
+  if (error) throw error
+  return data as ClassTeacher
+}
+
+/** Delete a class teacher record */
+export async function deleteClassTeacher(id: string) {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("class_teachers")
+    .delete()
+    .eq("id", id)
+  if (error) throw error
+}
+
+/** Get students in a specific division (dept + section + semester) */
+export async function getStudentsByDivision(deptId: string, section?: string, semester?: number) {
+  const supabase = createClient()
+  let q = supabase
+    .from("users")
+    .select("*, departments(id, name, code, color)")
+    .eq("role", "student")
+    .eq("dept_id", deptId)
+    .order("name")
+  if (section)  q = q.eq("section", section)
+  if (semester) q = q.eq("semester", semester)
+  const { data, error } = await q
+  if (error) throw error
+  return data as User[]
+}
+
+/** Assign a student to a section+semester (class teacher adds students) */
+export async function updateStudentDivision(
+  studentId: string,
+  updates: { section?: string; semester?: number }
+) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("id", studentId)
+    .eq("role", "student")
     .select("*, departments(id, name, code, color)")
     .single()
   if (error) throw error
