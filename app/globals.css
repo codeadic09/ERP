@@ -2042,6 +2042,18 @@
   color: #E4E4E7 !important;
 }
 
+/* — Hide / dim recharts CartesianGrid dotted lines in dark — */
+.dark .recharts-cartesian-grid line,
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* — Recharts axis labels — */
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #71717A !important;
+}
+
 /* — KPI icon containers in dark — */
 .dark [class*="rounded-lg"][class*="border"][class*="flex"][class*="items-center"][class*="justify-center"] {
   border-color: rgba(255, 255, 255, 0.08);
