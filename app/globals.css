@@ -699,7 +699,11 @@
   }
   .dark .glass-card-hover:hover {
     background: rgba(18, 18, 18, 0.92);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.65),
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .soft-shadow             { box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12); }
@@ -1795,7 +1799,11 @@
 }
 .dark .kpi-card:hover {
   background: rgba(18, 18, 18, 0.90);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.60);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.60),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .dark .stat-card {
   background: rgba(10, 10, 10, 0.75);
@@ -1804,6 +1812,10 @@
 }
 .dark .stat-card:hover {
   background: rgba(18, 18, 18, 0.90);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 .dark .chart-container {
   background: rgba(10, 10, 10, 0.65);
@@ -1816,6 +1828,10 @@
 }
 .dark .glass-feature-card:hover {
   background: rgba(18, 18, 18, 0.90);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.50),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 .dark .role-card {
   background: rgba(10, 10, 10, 0.75);
@@ -1823,6 +1839,10 @@
 }
 .dark .role-card:hover {
   background: rgba(18, 18, 18, 0.90);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.50),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 .dark .input-glass {
   background: rgba(18, 18, 18, 0.85);
@@ -1849,14 +1869,188 @@
 /* ── Form elements ── */
 .dark input::placeholder,
 .dark textarea::placeholder { color: #71717A !important; }
-.dark .table-row-hover:hover { background: rgba(255, 255, 255, 0.04); }
+.dark .table-row-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+}
 
 /* ── Divide color ── */
 .dark .divide-gray-100 > :not(:last-child) { border-color: rgba(255, 255, 255, 0.06) !important; }
 .dark .divide-gray-200 > :not(:last-child) { border-color: rgba(255, 255, 255, 0.08) !important; }
+.dark .divide-gray-50  > :not(:last-child) { border-color: rgba(255, 255, 255, 0.06) !important; }
 
 /* ── Ring overrides ── */
 .dark .ring-white\/50 { --tw-ring-color: rgba(255, 255, 255, 0.10) !important; }
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE — List / Row Hover: Elevated glow + readable text
+   ══════════════════════════════════════════════════════════ */
+
+/*
+ * Any list row that uses hover:bg-gray-50/60 or hover:bg-gray-100/60
+ * needs a lit-up background + visible border + readable text in dark.
+ * We target common patterns used throughout the dashboard pages.
+ */
+
+/* — Primary dark hover for list rows inside liquid-glass cards — */
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover,
+.dark .liquid-glass .table-row-hover:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 12px rgba(0, 0, 0, 0.30) !important;
+  border-radius: 12px;
+}
+
+/* — Hover rows: ensure all text inside is readable — */
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-gray-800,
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-gray-700,
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-slate-800,
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-slate-700 {
+  color: #F4F4F5 !important;
+}
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-gray-500,
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-gray-400,
+.dark .liquid-glass [class*="hover\:bg-gray"]:hover .text-slate-500 {
+  color: #A1A1AA !important;
+}
+
+/* — Static list items inside cards (notices, activity) — */
+.dark .liquid-glass .bg-gray-50\/60,
+.dark .liquid-glass .bg-gray-100\/60 {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .liquid-glass .bg-gray-50\/60:hover,
+.dark .liquid-glass .bg-gray-100\/60:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.10),
+    0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* — Quick Action items with inline bg — */
+.dark .liquid-glass [style*="background"] .text-sm.font-semibold {
+  filter: brightness(1.3);
+}
+
+/* — liquid-glass card hover: add a subtle border glow in dark — */
+.dark .liquid-glass:hover {
+  background: rgba(18, 18, 18, 0.88);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* — Schedule cards (today's schedule, timetable) — */
+.dark .bg-white.border-gray-100,
+.dark [class*="bg-white"][class*="border-gray-100"] {
+  background: rgba(18, 18, 18, 0.60) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark [class*="bg-white"][class*="border-gray-100"]:hover,
+.dark [class*="hover\:border-blue-200"]:hover {
+  border-color: rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12), 0 4px 16px rgba(0, 0, 0, 0.30) !important;
+}
+
+/* Active schedule cards */
+.dark .bg-blue-50.border-blue-200 {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Past schedule cards */
+.dark .bg-gray-50.border-gray-100 {
+  background: rgba(18, 18, 18, 0.40) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* — Fee/status badges — */
+.dark [class*="border"][class*="rounded-xl"][style*="background"] {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* — Progress bars — */
+.dark .bg-gray-100.rounded-full,
+.dark .h-2.bg-gray-100 {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* — Buttons inside dark cards (e.g. "View Details") — */
+.dark .bg-blue-50.border-blue-100 {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+  color: #60A5FA !important;
+}
+.dark .bg-blue-50.border-blue-100:hover {
+  background: rgba(59, 130, 246, 0.20) !important;
+}
+
+/* — Empty state icons — */
+.dark .text-gray-200 { color: #3F3F46 !important; }
+.dark .text-gray-300 { color: #52525B !important; }
+
+/* — Activity timeline line — */
+.dark .bg-gray-100[class*="w-px"],
+.dark [class*="w-px"].bg-gray-100 {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* — Skeleton dark mode — */
+.dark .animate-pulse.bg-gray-100,
+.dark .animate-pulse.rounded-lg.bg-gray-100,
+.dark .animate-pulse.rounded-xl.bg-gray-100 {
+  background: rgba(39, 39, 42, 0.50) !important;
+}
+
+/* — Target badges (notices) — */
+.dark .bg-gray-100.text-gray-600 {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #A1A1AA !important;
+}
+.dark .bg-blue-50.text-blue-700 {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60A5FA !important;
+}
+.dark .bg-purple-50.text-purple-700 {
+  background: rgba(147, 51, 234, 0.15) !important;
+  color: #A78BFA !important;
+}
+
+/* — Gradient welcome banner in dark — */
+.dark .liquid-glass-banner {
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+/* — Chart/tooltip in dark — */
+.dark .recharts-default-tooltip {
+  background: rgba(10, 10, 10, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #E4E4E7 !important;
+}
+
+/* — KPI icon containers in dark — */
+.dark [class*="rounded-lg"][class*="border"][class*="flex"][class*="items-center"][class*="justify-center"] {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* — Body bg in dark mode (remove light radial gradients) — */
+.dark body {
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(59, 130, 246, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 15%, rgba(147, 51, 234, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 40%),
+    #000000 !important;
+}
 
 /* ══════════════════════════════════════════════════════════
    LANDING PAGE — Always light (dark class removed via JS)
