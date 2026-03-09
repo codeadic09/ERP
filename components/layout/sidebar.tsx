@@ -347,8 +347,8 @@ export function Sidebar({ role, userName = "User", avatarUrl, mobileOpen = false
                       boxShadow: isActive ? "0 2px 8px rgba(37,99,235,0.08)" : "none",
                       position: "relative", marginBottom: 2,
                     }}
-                    onMouseEnter={e => { if (!isActive) { const el = e.currentTarget; el.style.background="var(--shell-hover-bg)"; el.style.border="1px solid var(--shell-hover-border)" } }}
-                    onMouseLeave={e => { if (!isActive) { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent" } }}
+                    onMouseEnter={e => { if (!isActive) { const el = e.currentTarget; el.style.background="var(--shell-hover-bg)"; el.style.border="1px solid var(--shell-hover-border)"; const svg = el.querySelector('svg'); if (svg) (svg as HTMLElement).style.color="var(--shell-hover-icon)"; const sp = el.querySelector('span'); if (sp) (sp as HTMLElement).style.color="var(--shell-hover-text)" } }}
+                    onMouseLeave={e => { if (!isActive) { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent"; const svg = el.querySelector('svg'); if (svg) (svg as HTMLElement).style.color="var(--shell-text-secondary)"; const sp = el.querySelector('span'); if (sp) (sp as HTMLElement).style.color="var(--shell-text-body)" } }}
                   >
                     <div style={{
                       position: "absolute", left: 0, top: "18%", bottom: "18%",
@@ -394,8 +394,8 @@ export function Sidebar({ role, userName = "User", avatarUrl, mobileOpen = false
               borderRadius: 12, textDecoration: "none",
               border: "1px solid transparent", transition: T,
             }}
-            onMouseEnter={e => { const el = e.currentTarget; el.style.background="var(--shell-help-hover-bg)"; el.style.border="1px solid var(--shell-help-hover-border)" }}
-            onMouseLeave={e => { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent" }}
+            onMouseEnter={e => { const el = e.currentTarget; el.style.background="var(--shell-help-hover-bg)"; el.style.border="1px solid var(--shell-help-hover-border)"; const svg = el.querySelector('svg'); if (svg) (svg as HTMLElement).style.color="var(--shell-hover-icon)"; const sp = el.querySelector('span'); if (sp) (sp as HTMLElement).style.color="var(--shell-hover-text)" }}
+            onMouseLeave={e => { const el = e.currentTarget; el.style.background="transparent"; el.style.border="1px solid transparent"; const svg = el.querySelector('svg'); if (svg) (svg as HTMLElement).style.color="var(--shell-text-secondary)"; const sp = el.querySelector('span'); if (sp) (sp as HTMLElement).style.color="var(--shell-text-secondary)" }}
           >
             <div style={{
               width: c ? 36 : 30, height: c ? 36 : 30, borderRadius: c ? 11 : 8,

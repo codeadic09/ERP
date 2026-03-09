@@ -98,6 +98,8 @@
   --shell-icon-bg:        rgba(100,116,139,0.07);
   --shell-hover-bg:       rgba(59,130,246,0.06);
   --shell-hover-border:   rgba(59,130,246,0.14);
+  --shell-hover-icon:     #2563EB;
+  --shell-hover-text:     #1E40AF;
   --shell-hover-btn-bg:   rgba(59,130,246,0.10);
   --shell-hover-btn-border: rgba(59,130,246,0.28);
   --shell-help-hover-bg:  rgba(148,163,184,0.09);
@@ -207,6 +209,8 @@
   --shell-icon-bg:        rgba(255,255,255,0.05);
   --shell-hover-bg:       rgba(59,130,246,0.10);
   --shell-hover-border:   rgba(59,130,246,0.20);
+  --shell-hover-icon:     #60A5FA;
+  --shell-hover-text:     #93C5FD;
   --shell-hover-btn-bg:   rgba(59,130,246,0.15);
   --shell-hover-btn-border: rgba(59,130,246,0.30);
   --shell-help-hover-bg:  rgba(161,161,170,0.10);
@@ -2051,6 +2055,164 @@
     radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 40%),
     #000000 !important;
 }
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE — Dashboard Tables, Cards, Tabs, Icons (Users page etc.)
+   ══════════════════════════════════════════════════════════ */
+
+/* — Card glass backgrounds — */
+.dark .backdrop-blur-xl.bg-white\/70 {
+  background: rgba(10, 10, 10, 0.70) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* — Stat card icon backgrounds — */
+.dark .bg-blue-50 { background: rgba(59, 130, 246, 0.12) !important; }
+.dark .bg-indigo-50 { background: rgba(99, 102, 241, 0.12) !important; }
+.dark .bg-purple-50 { background: rgba(147, 51, 234, 0.12) !important; }
+.dark .bg-emerald-50 { background: rgba(16, 185, 129, 0.12) !important; }
+.dark .border-blue-100 { border-color: rgba(59, 130, 246, 0.20) !important; }
+.dark .border-indigo-100 { border-color: rgba(99, 102, 241, 0.20) !important; }
+.dark .border-purple-100 { border-color: rgba(147, 51, 234, 0.20) !important; }
+.dark .border-emerald-100 { border-color: rgba(16, 185, 129, 0.20) !important; }
+
+/* — Stat card text — */
+.dark .text-blue-600 { color: #60A5FA !important; }
+.dark .text-indigo-600 { color: #818CF8 !important; }
+.dark .text-purple-600 { color: #A78BFA !important; }
+.dark .text-emerald-600 { color: #34D399 !important; }
+
+/* — Table header — */
+.dark .bg-gray-50\/80,
+.dark [class*="bg-gray-50"][class*="hover\:bg-gray-50"] {
+  background: rgba(18, 18, 18, 0.60) !important;
+}
+
+/* — Table row hover — */
+.dark .hover\:bg-gray-50\/60:hover,
+.dark tr.hover\:bg-gray-50\/60:hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* — Table header text — */
+.dark .text-gray-600 { color: #A1A1AA !important; }
+
+/* — Table body text — */
+.dark .text-gray-800 { color: #E4E4E7 !important; }
+.dark .text-gray-700 { color: #D4D4D8 !important; }
+.dark .text-gray-500 { color: #A1A1AA !important; }
+.dark .text-gray-400 { color: #71717A !important; }
+
+/* — Tabs: bg-gray-100 and active bg-white — */
+.dark .bg-gray-100 {
+  background: rgba(39, 39, 42, 0.50) !important;
+}
+.dark .bg-white.text-blue-600,
+.dark .bg-white.shadow-sm {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60A5FA !important;
+}
+
+/* — Table selection highlight — */
+.dark .bg-blue-50\/40 {
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* — Bulk action bar — */
+.dark .bg-blue-50.border-blue-200,
+.dark .bg-blue-50.border.border-blue-200 {
+  background: rgba(59, 130, 246, 0.10) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+.dark .text-blue-700 { color: #60A5FA !important; }
+.dark .text-blue-600 { color: #60A5FA !important; }
+
+/* — Status/role badges — */
+.dark .bg-emerald-50.text-emerald-700 {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34D399 !important;
+}
+
+/* — User avatar gradient — */
+.dark .bg-gradient-to-br.from-blue-100.to-indigo-100 {
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.20), rgba(99, 102, 241, 0.20)) !important;
+}
+
+/* — Pagination border — */
+.dark .border-gray-100,
+.dark .border-t.border-gray-100 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* — Dialog/modal dark — */
+.dark .bg-gray-50.rounded-xl {
+  background: rgba(24, 24, 27, 0.60) !important;
+}
+.dark .bg-gray-50.rounded-xl.border {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* — Credential cards in dialog — */
+.dark .bg-gray-50.rounded-xl.border-gray-200 {
+  background: rgba(24, 24, 27, 0.80) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* — Import CSV dialog upload area — */
+.dark .border-dashed.border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.dark .border-dashed.border-gray-200:hover {
+  border-color: rgba(59, 130, 246, 0.40) !important;
+}
+
+/* — CSV format hint — */
+.dark .bg-gray-50.border-gray-100 {
+  background: rgba(24, 24, 27, 0.60) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* — CSV preview table — */
+.dark .bg-gray-50.border-b {
+  background: rgba(18, 18, 18, 0.80) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .border-b.border-gray-50 {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+.dark .hover\:bg-gray-50\/50:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* — Import results summary — */
+.dark .bg-gray-50.rounded-xl.text-center {
+  background: rgba(24, 24, 27, 0.60) !important;
+}
+.dark .bg-emerald-50.rounded-xl {
+  background: rgba(16, 185, 129, 0.10) !important;
+  border-color: rgba(16, 185, 129, 0.20) !important;
+}
+.dark .bg-red-50.rounded-xl {
+  background: rgba(244, 63, 94, 0.10) !important;
+  border-color: rgba(244, 63, 94, 0.20) !important;
+}
+
+/* — Subject badges in view dialog — */
+.dark .bg-blue-50.text-blue-700.border-blue-100 {
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: #60A5FA !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+/* — Search input — */
+.dark .text-gray-400.absolute { color: #52525B !important; }
+
+/* — Checkbox borders — */
+.dark .border-gray-300 { border-color: rgba(255, 255, 255, 0.20) !important; }
+
+/* — White border cards (general) — */
+.dark .border-white\/50 { border-color: rgba(255, 255, 255, 0.08) !important; }
 
 /* ══════════════════════════════════════════════════════════
    LANDING PAGE — Always light (dark class removed via JS)
