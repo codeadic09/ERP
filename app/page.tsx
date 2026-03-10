@@ -13,6 +13,10 @@ import {
 import Lottie from "lottie-react"
 import type { LottieRefCurrentProps } from "lottie-react"
 import { HeroSection } from "@/components/hero/HeroSection"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+gsap.registerPlugin(ScrollTrigger)
 
 /* ── Mobile detection hook ── */
 function useMobile(breakpoint = 768) {
@@ -218,15 +222,141 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  /* ── GSAP ScrollTrigger reveals ── */
   useEffect(() => {
-    const els = pageRef.current?.querySelectorAll(".reveal, .reveal-left, .reveal-scale")
-    if (!els) return
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("visible"); io.unobserve(e.target) } }),
-      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
-    )
-    els.forEach(el => io.observe(el))
-    return () => io.disconnect()
+    const page = pageRef.current
+    if (!page) return
+
+    const ctx = gsap.context(() => {
+      // ── Reveal animations (fade up) ──
+      page.querySelectorAll(".reveal").forEach((el) => {
+        gsap.fromTo(el,
+          { y: 50, opacity: 0 },
+          {
+            y: 0, opacity: 1,
+            duration: 0.9,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          }
+        )
+      })
+
+      // ── Reveal left (slide from left) ──
+      page.querySelectorAll(".reveal-left").forEach((el) => {
+        gsap.fromTo(el,
+          { x: -60, opacity: 0 },
+          {
+            x: 0, opacity: 1,
+            duration: 0.9,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          }
+        )
+      })
+
+      // ── Reveal scale (pop in) ──
+      page.querySelectorAll(".reveal-scale").forEach((el) => {
+        gsap.fromTo(el,
+          { scale: 0.85, opacity: 0 },
+          {
+            scale: 1, opacity: 1,
+            duration: 1,
+            ease: "back.out(1.4)",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          }
+        )
+      })
+
+      // ── Staggered card entrance for grids ──
+      page.querySelectorAll(".stat-card, .glass-feature-card, .role-card").forEach((card, i) => {
+        gsap.fromTo(card,
+          { y: 40, opacity: 0 },
+          {
+            y: 0, opacity: 1,
+            duration: 0.7,
+            delay: (i % 4) * 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 90%",
+              toggleActions: "play none none none",
+            },
+          }
+        )
+      })
+
+      // ── Magnetic tilt effect on cards ──
+      const cards = page.querySelectorAll(".stat-card, .glass-feature-card, .role-card")
+      cards.forEach((card) => {
+        const el = card as HTMLElement
+        const onMove = (e: MouseEvent) => {
+          const rect = el.getBoundingClientRect()
+          const x = e.clientX - rect.left - rect.width / 2
+          const y = e.clientY - rect.top - rect.height / 2
+          const rotateX = -(y / rect.height) * 8
+          const rotateY = (x / rect.width) * 8
+          gsap.to(el, {
+            rotateX, rotateY,
+            transformPerspective: 800,
+            duration: 0.4,
+            ease: "power2.out",
+          })
+        }
+        const onLeave = () => {
+          gsap.to(el, {
+            rotateX: 0, rotateY: 0,
+            duration: 0.6,
+            ease: "elastic.out(1, 0.4)",
+          })
+        }
+        el.addEventListener("mousemove", onMove)
+        el.addEventListener("mouseleave", onLeave)
+        // Store cleanup refs
+        ;(el as any).__gsapMove = onMove
+        ;(el as any).__gsapLeave = onLeave
+      })
+
+      // ── Smooth hover scale on CTA buttons ──
+      page.querySelectorAll(".cta-btn-white, .cta-btn-ghost, .nav-btn-signup").forEach((btn) => {
+        const el = btn as HTMLElement
+        const onEnter = () => gsap.to(el, { scale: 1.04, duration: 0.3, ease: "power2.out" })
+        const onLeave = () => gsap.to(el, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.5)" })
+        el.addEventListener("mouseenter", onEnter)
+        el.addEventListener("mouseleave", onLeave)
+        ;(el as any).__gsapEnter = onEnter
+        ;(el as any).__gsapBtnLeave = onLeave
+      })
+
+    }, page)
+
+    return () => {
+      ctx.revert()
+      // Clean up magnetic hover listeners
+      const cards = page.querySelectorAll(".stat-card, .glass-feature-card, .role-card")
+      cards.forEach((card) => {
+        const el = card as any
+        if (el.__gsapMove) el.removeEventListener("mousemove", el.__gsapMove)
+        if (el.__gsapLeave) el.removeEventListener("mouseleave", el.__gsapLeave)
+      })
+      const btns = page.querySelectorAll(".cta-btn-white, .cta-btn-ghost, .nav-btn-signup")
+      btns.forEach((btn) => {
+        const el = btn as any
+        if (el.__gsapEnter) el.removeEventListener("mouseenter", el.__gsapEnter)
+        if (el.__gsapBtnLeave) el.removeEventListener("mouseleave", el.__gsapBtnLeave)
+      })
+    }
   }, [])
 
   /* Dynamic spacing helpers */

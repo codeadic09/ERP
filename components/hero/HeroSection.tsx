@@ -1,39 +1,23 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+// ── WebGL imports — commented out for performance ──
+// import dynamic from 'next/dynamic'
+// import { useDeviceCapability } from '@/hooks/useDeviceCapability'
+// import { useMouseParallax } from '@/hooks/useMouseParallax'
+// import { useScrollProgress } from '@/hooks/useScrollProgress'
+// const WebGLCanvas = dynamic(
+//   () => import('./WebGLCanvas').then((m) => m.WebGLCanvas),
+//   { ssr: false, loading: () => null }
+// )
+
 import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   ArrowRight, ChevronRight, Lock, Zap, Star,
   Sparkles, GraduationCap,
+  ClipboardCheck, Award, Calendar, Bell, Wallet, BarChart3,
 } from 'lucide-react'
-import { useDeviceCapability } from '@/hooks/useDeviceCapability'
-import { useMouseParallax } from '@/hooks/useMouseParallax'
-import { useScrollProgress } from '@/hooks/useScrollProgress'
-
-// Dynamic import → no SSR for Three.js
-const WebGLCanvas = dynamic(
-  () => import('./WebGLCanvas').then((m) => m.WebGLCanvas),
-  { ssr: false, loading: () => null }
-)
-
-// CSS-only fallback for low-end devices
-function StaticHeroBg() {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: `
-          radial-gradient(ellipse 80% 60% at 20% 50%, rgba(29,78,216,0.18) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 50% at 80% 40%, rgba(217,70,239,0.10) 0%, transparent 55%),
-          radial-gradient(ellipse 50% 40% at 50% 90%, rgba(81,162,255,0.08) 0%, transparent 50%)
-        `,
-      }}
-    />
-  )
-}
+import gsap from 'gsap'
 
 interface HeroSectionProps {
   isMobile: boolean
@@ -41,29 +25,98 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
-  const heroRef    = useRef<HTMLElement>(null!)
-  const cap        = useDeviceCapability()
-  const mouseRef   = useMouseParallax(isMobile)
-  const scrollRef  = useScrollProgress(heroRef)
+  const heroRef = useRef<HTMLElement>(null!)
 
-  // Track scroll for fixed-canvas opacity fade
-  const [canvasOpacity, setCanvasOpacity] = useState(1)
+  // Track scroll for background opacity fade
+  const [bgOpacity, setBgOpacity] = useState(1)
   useEffect(() => {
     function onScroll() {
       if (!heroRef.current) return
       const rect = heroRef.current.getBoundingClientRect()
       const heroH = rect.height
       const scrolled = -rect.top
-      // Gentle fade: full opacity in hero, dims to 0.45 as you scroll further
       const fadeStart = heroH * 0.7
       const fadeEnd   = heroH * 3.5
       const minOpacity = 0.45
-      if (scrolled <= fadeStart) setCanvasOpacity(1)
-      else if (scrolled >= fadeEnd) setCanvasOpacity(minOpacity)
-      else setCanvasOpacity(1 - (1 - minOpacity) * ((scrolled - fadeStart) / (fadeEnd - fadeStart)))
+      if (scrolled <= fadeStart) setBgOpacity(1)
+      else if (scrolled >= fadeEnd) setBgOpacity(minOpacity)
+      else setBgOpacity(1 - (1 - minOpacity) * ((scrolled - fadeStart) / (fadeEnd - fadeStart)))
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  /* ── GSAP hero entrance timeline ── */
+  useEffect(() => {
+    const hero = heroRef.current
+    if (!hero) return
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ delay: 0.15 })
+
+      // Badge — pop in from above
+      tl.fromTo('.hero-anim-badge',
+        { y: -20, opacity: 0, scale: 0.9 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }
+      )
+
+      // Title — smooth rise
+      .fromTo('.hero-anim-title',
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+        '-=0.3'
+      )
+
+      // Description — gentle rise
+      .fromTo('.hero-anim-desc',
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' },
+        '-=0.4'
+      )
+
+      // CTAs — slide up with slight stagger
+      .fromTo('.hero-anim-cta',
+        { y: 25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
+        '-=0.35'
+      )
+
+      // Trust badges — fade in
+      .fromTo('.hero-anim-trust',
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+        '-=0.25'
+      )
+
+      // Dashboard card — slide from right with rotation
+      .fromTo('.hero-anim-card',
+        { x: 50, opacity: 0, rotateY: 5 },
+        { x: 0, opacity: 1, rotateY: 0, duration: 0.9, ease: 'power3.out' },
+        '-=0.6'
+      )
+
+      // Orbs — fade in gently
+      .fromTo('.hero-orb',
+        { opacity: 0, scale: 0.6 },
+        { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out', stagger: 0.1 },
+        0.2
+      )
+
+      // Floating ERP icons — pop in around the dashboard card
+      .fromTo('.erp-float',
+        { opacity: 0, scale: 0, y: 20 },
+        {
+          opacity: 1, scale: 1, y: 0,
+          duration: 0.5,
+          ease: 'back.out(2)',
+          stagger: 0.08,
+        },
+        '-=0.5'
+      )
+
+    }, hero)
+
+    return () => ctx.revert()
   }, [])
 
   const kpiCards = [
@@ -97,9 +150,10 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
         background: 'linear-gradient(160deg, #020817 0%, #0d1224 55%, #080c18 100%)',
       }}
     >
-      {/* ── WebGL Layer (fixed — stays centered on scroll) ── */}
+      {/* ── CSS Animated Background (replaces WebGL for performance) ── */}
       <div
         aria-hidden="true"
+        className="hero-css-bg"
         style={{
           position: 'fixed',
           top: 0,
@@ -108,41 +162,25 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           height: '100vh',
           zIndex: 0,
           pointerEvents: 'none',
-          opacity: canvasOpacity,
-          transition: 'opacity 0.05s linear',
+          opacity: bgOpacity,
+          transition: 'opacity 0.15s linear',
           willChange: 'opacity',
+          overflow: 'hidden',
         }}
       >
-        {cap === null ? null : cap.tier === 'low' ? (
-          <StaticHeroBg />
-        ) : (
-          <WebGLCanvas
-            capability={cap}
-            mouseRef={mouseRef}
-            scrollRef={scrollRef}
-          />
-        )}
+        {/* Orb 1 — Primary blue, large, top-left drift */}
+        <div className="hero-orb hero-orb-1" />
+        {/* Orb 2 — Indigo/purple, mid-right drift */}
+        <div className="hero-orb hero-orb-2" />
+        {/* Orb 3 — Cyan accent, bottom-center */}
+        <div className="hero-orb hero-orb-3" />
+        {/* Orb 4 — Magenta, subtle, top-right */}
+        <div className="hero-orb hero-orb-4" />
+        {/* Orb 5 — Deep blue, small, bottom-left */}
+        <div className="hero-orb hero-orb-5" />
+        {/* Orb 6 — Teal, mid-center float */}
+        <div className="hero-orb hero-orb-6" />
       </div>
-
-      {/* ── Subtle grid overlay (CSS, zero JS cost) ── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 0,
-          backgroundImage: `
-            linear-gradient(rgba(81,162,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(81,162,255,0.05) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
-          maskImage:
-            'radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%)',
-          WebkitMaskImage:
-            'radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%)',
-          pointerEvents: 'none',
-        }}
-      />
 
       {/* ── Ambient glow orbs for dimensional lighting ── */}
       <div
@@ -330,9 +368,46 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Right: Dashboard glass card (desktop/tablet) */}
+        {/* Right: Dashboard glass card (desktop/tablet) + floating ERP icons */}
         {!isMobile && (
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+
+            {/* ── Floating ERP elements orbiting the dashboard ── */}
+            <div className="erp-float erp-float-1" style={{ position: 'absolute', top: -20, left: -10, zIndex: 3 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(81,162,255,0.12)', border: '1px solid rgba(81,162,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(81,162,255,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                <ClipboardCheck size={18} color="#51A2FF" strokeWidth={2} />
+              </div>
+            </div>
+
+            <div className="erp-float erp-float-2" style={{ position: 'absolute', top: 30, right: -25, zIndex: 3 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(196,180,255,0.12)', border: '1px solid rgba(196,180,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(196,180,255,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                <Award size={16} color="#C4B4FF" strokeWidth={2} />
+              </div>
+            </div>
+
+            <div className="erp-float erp-float-3" style={{ position: 'absolute', top: '40%', right: -35, zIndex: 3 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(134,239,172,0.12)', border: '1px solid rgba(134,239,172,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(134,239,172,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                <Calendar size={17} color="#86efac" strokeWidth={2} />
+              </div>
+            </div>
+
+            <div className="erp-float erp-float-4" style={{ position: 'absolute', bottom: 20, right: -15, zIndex: 3 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(253,199,69,0.12)', border: '1px solid rgba(253,199,69,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(253,199,69,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                <Bell size={15} color="#FDC745" strokeWidth={2} />
+              </div>
+            </div>
+
+            <div className="erp-float erp-float-5" style={{ position: 'absolute', bottom: -10, left: 20, zIndex: 3 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(255,100,103,0.12)', border: '1px solid rgba(255,100,103,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(255,100,103,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                <Wallet size={17} color="#FF6467" strokeWidth={2} />
+              </div>
+            </div>
+
+            <div className="erp-float erp-float-6" style={{ position: 'absolute', top: '50%', left: -30, zIndex: 3 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(14,165,233,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                <BarChart3 size={16} color="#0EA5E9" strokeWidth={2} />
+              </div>
+            </div>
             <div
               className="hero-anim-card hero-float"
               style={{
