@@ -4,10 +4,10 @@ import { useState } from "react"
 import Link from "next/link"
 import {
   HelpCircle, Search, ChevronDown, ChevronUp,
-  BookOpen, MessageSquare, Mail, Phone,
+  MessageSquare, Mail, Phone,
   ExternalLink, CheckCircle2, AlertTriangle,
   GraduationCap, Shield, BookOpenCheck,
-  Loader2, Send, ArrowLeft, Lightbulb,
+  Loader2, Send, ArrowLeft,
   LifeBuoy, FileQuestion
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,11 +24,11 @@ const FAQS = [
     color: "#2563EB",
     items: [
       { q: "How do I reset my password?",
-        a: "Go to your Profile page → click 'Change Password'. Enter your current password and your new password (min. 8 characters)." },
+        a: "Go to the login page and click 'Forgot Password'. Enter your registered email and you'll receive a reset link within 2 minutes. Alternatively, if you're logged in, go to Profile → Change Password." },
       { q: "How do I update my profile photo?",
-        a: "Go to Profile → hover over your avatar → click the camera icon to upload a new photo." },
+        a: "Log in → click your avatar (top-right) → go to Profile → click 'Edit Profile' → upload a new photo. Supported formats: JPG, PNG (max 2 MB)." },
       { q: "Can I change my registered email?",
-        a: "Email changes require admin approval. Please contact your institution's admin or use the support form below." },
+        a: "Email changes require admin approval for security reasons. Contact your department admin or raise a support ticket using the form below." },
     ]
   },
   {
@@ -37,13 +37,13 @@ const FAQS = [
     color: "#16A34A",
     items: [
       { q: "How is my attendance percentage calculated?",
-        a: "Attendance % = (Present sessions / Total sessions) × 100. A minimum of 75% is required per semester." },
+        a: "Attendance % = (Classes attended ÷ Total classes held) × 100. This is updated automatically after every session your faculty marks. You need a minimum of 75% per subject." },
       { q: "Where can I view my results?",
-        a: "Navigate to Dashboard → Results. You can filter by subject or exam type and view your CGPA and grade breakdown." },
+        a: "Log in → Student Dashboard → click 'Results' in the sidebar → select the semester. You can view subject-wise scores, grades, and overall CGPA." },
       { q: "How do I pay my fees?",
-        a: "Go to Fee Payment → click 'Pay Now'. Choose UPI, Net Banking, or Card and follow the steps." },
+        a: "Log in → Dashboard → 'Fees' section → click 'Pay Now' → complete payment via UPI, Net Banking, or Card. You'll receive a confirmation receipt on successful payment." },
       { q: "Why can't I see some assignment details?",
-        a: "Assignments are scoped to your department. If something is missing, contact your faculty." },
+        a: "Assignments are visible only after the faculty publishes them. If you believe an assignment is missing, contact your faculty directly." },
     ]
   },
   {
@@ -52,11 +52,11 @@ const FAQS = [
     color: "#9333EA",
     items: [
       { q: "How do I mark attendance?",
-        a: "Go to Attendance → select the date and class → mark each student as Present, Absent, or Late → click Save." },
+        a: "Log in → Faculty Dashboard → 'Attendance' → select the subject and date → mark each student as Present, Absent, or Late → click Save. You can also bulk-mark all as present and then adjust individually." },
       { q: "How do I post a notice?",
-        a: "Go to Notices → click 'New Notice'. Fill in the title, content, audience, and priority, then click Publish." },
+        a: "Faculty Dashboard → 'Notices' → click 'Create New Notice' → fill in the title, body, target audience, and priority → click Publish. Students will see it immediately on their dashboard." },
       { q: "How can I see my assigned students?",
-        a: "Go to My Students. All students in your department are listed with their attendance and performance data." },
+        a: "Faculty Dashboard → 'My Students' or 'My Subjects' → view all enrolled students per subject along with their attendance and performance data." },
     ]
   },
   {
@@ -65,11 +65,11 @@ const FAQS = [
     color: "#D97706",
     items: [
       { q: "The page is not loading correctly. What should I do?",
-        a: "Try a hard refresh (Ctrl+Shift+R / Cmd+Shift+R). If the issue persists, clear browser cache or try a different browser." },
+        a: "Try a hard refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac). If the issue persists, clear your browser cache and cookies, or try a different browser. Contact support if the problem continues." },
       { q: "I'm getting a 'session expired' error.",
-        a: "Your session has timed out. Please log in again. You can extend the session timeout in Settings → Security." },
+        a: "Your session timed out for security. Simply log in again. If this keeps happening frequently, clear your browser cookies and check that your system clock is accurate." },
       { q: "Data is not updating after I make changes.",
-        a: "Click the Refresh button on the page. If it still doesn't update, log out and log back in." },
+        a: "Wait 30 seconds and refresh the page. If the data is still stale, log out and log back in. If the problem persists, contact support using the form below." },
     ]
   },
 ]
@@ -128,7 +128,7 @@ export default function HelpPage() {
 
   // ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen"
+    <div className="min-h-screen scroll-smooth"
       style={{ background: "linear-gradient(135deg,#EFF6FF 0%,#F5F3FF 50%,#ECFDF5 100%)" }}>
 
       {/* ── Nav bar ─────────────────────────────────────────── */}
@@ -173,29 +173,29 @@ export default function HelpPage() {
           </div>
         </div>
 
-        {/* ── Quick links ───────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {/* ── Quick links (functional) ──────────────────────── */}
+        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
           {[
-            { icon: FileQuestion, label: "FAQs",          sub: `${FAQS.reduce((a,c) => a+c.items.length,0)} articles`, color: "#3B82F6" },
-            { icon: BookOpen,     label: "User Guides",   sub: "Step-by-step",   color: "#8B5CF6" },
-            { icon: Lightbulb,    label: "Tips & Tricks", sub: "Pro tips",        color: "#F59E0B" },
-            { icon: MessageSquare,label: "Contact Us",    sub: "Get in touch",    color: "#16A34A" },
+            { icon: FileQuestion, label: "FAQs",       sub: `${FAQS.reduce((a,c) => a+c.items.length,0)} articles`, color: "#3B82F6", anchor: "#faq-section" },
+            { icon: MessageSquare,label: "Contact Us",  sub: "Get in touch",    color: "#16A34A", anchor: "#contact-section" },
           ].map(q => (
-            <Card key={q.label} className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
-                  style={{ background: `${q.color}14`, border: `1px solid ${q.color}28` }}>
-                  <q.icon className="h-5 w-5" style={{ color: q.color }} />
-                </div>
-                <p className="text-sm font-bold text-gray-800">{q.label}</p>
-                <p className="text-xs text-gray-400">{q.sub}</p>
-              </CardContent>
-            </Card>
+            <a key={q.label} href={q.anchor} className="block">
+              <Card className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full">
+                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
+                    style={{ background: `${q.color}14`, border: `1px solid ${q.color}28` }}>
+                    <q.icon className="h-5 w-5" style={{ color: q.color }} />
+                  </div>
+                  <p className="text-sm font-bold text-gray-800">{q.label}</p>
+                  <p className="text-xs text-gray-400">{q.sub}</p>
+                </CardContent>
+              </Card>
+            </a>
           ))}
         </div>
 
         {/* ── FAQ accordion ────────────────────────────────── */}
-        <div className="space-y-5">
+        <div id="faq-section" className="space-y-5 scroll-mt-20">
           <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
             <HelpCircle className="h-5 w-5 text-blue-600" />
             Frequently Asked Questions
@@ -259,7 +259,7 @@ export default function HelpPage() {
         </div>
 
         {/* ── Contact channels ─────────────────────────────── */}
-        <div className="space-y-4">
+        <div id="contact-section" className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-emerald-600" />
             Contact Support
