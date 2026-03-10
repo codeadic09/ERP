@@ -7,6 +7,7 @@ import {
   TrendingUp, AlertCircle, Calendar, ChevronLeft,
   ChevronRight, AlertTriangle, RefreshCw,
   Activity, BarChart2, Filter, BookOpen, User as UserIcon,
+  X, Eye,
 } from "lucide-react"
 import {
   BarChart, Bar, XAxis, YAxis,
@@ -20,6 +21,10 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog, DialogContent, DialogHeader,
+  DialogTitle, DialogDescription,
+} from "@/components/ui/dialog"
 import {
   getAttendanceByStudent,
   getStudentSubjectsWithFaculty,
@@ -214,6 +219,15 @@ export default function StudentAttendancePage() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }, [attendance, selectedSubject, filterStatus])
 
+  // ── Subject detail popup state ─────────────────────────────
+  const [detailSubject, setDetailSubject] = useState<SubjectStats | null>(null)
+  const detailRecords = useMemo(() => {
+    if (!detailSubject) return []
+    return [...attendance]
+      .filter(a => a.subject === detailSubject.subject.name)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }, [attendance, detailSubject])
+
   // ════════════════════════════════════════════════════════════
   return (
     <DashboardLayout
@@ -269,85 +283,102 @@ export default function StudentAttendancePage() {
           ))}
         </div>
 
-        {/* ═══ SUBJECT-WISE ATTENDANCE CARDS ═══════════════════ */}
+        {/* ═══ SUBJECT GRID ═════════════════════════════════════ */}
         {!loading && subjectStats.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-blue-600" />
               Subject-wise Attendance
+              <span className="text-[10px] font-medium text-gray-400 ml-1">— click a subject for lecture details</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {subjectStats.map(ss => {
                 const isCritical = ss.total > 0 && ss.pct < 75
+                const isSelected = selectedSubject === ss.subject.name
+                const pctColor   = ss.pct >= 75 ? "#16A34A" : ss.pct >= 50 ? "#D97706" : "#DC2626"
+                const pctBg      = ss.pct >= 75 ? "rgba(22,163,74,0.08)" : ss.pct >= 50 ? "rgba(217,119,6,0.08)" : "rgba(220,38,38,0.08)"
+
                 return (
-                  <Card
+                  <div
                     key={ss.subject.id}
-                    className={`backdrop-blur-xl bg-white/70 shadow-sm transition-all hover:shadow-md cursor-pointer ${
-                      selectedSubject === ss.subject.name
+                    className={`group relative rounded-2xl border backdrop-blur-xl bg-white/70 shadow-sm p-4 flex flex-col gap-2.5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                      isSelected
                         ? "ring-2 ring-blue-400 border-blue-200"
-                        : "border-white/50"
+                        : "border-white/50 hover:border-blue-200/60"
                     }`}
-                    onClick={() => setSelectedSubject(
-                      selectedSubject === ss.subject.name ? "all" : ss.subject.name
-                    )}
+                    onClick={() => {
+                      setDetailSubject(ss)
+                      setSelectedSubject(isSelected ? "all" : ss.subject.name)
+                    }}
                   >
-                    <CardContent className="p-4 space-y-3">
-                      {/* Subject header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-800 truncate">{ss.subject.name}</p>
-                          <p className="text-[10px] text-gray-400 font-medium">{ss.subject.code} • Sem {ss.subject.semester}</p>
-                        </div>
-                        <div className={`text-lg font-black leading-none ${
-                          ss.pct >= 75 ? "text-emerald-600" : ss.pct >= 50 ? "text-amber-600" : "text-red-600"
-                        }`}>
+                    {/* Subject code chip */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wide truncate max-w-[80%]">
+                        {ss.subject.code}
+                      </span>
+                      <Eye className="h-3 w-3 text-gray-300 group-hover:text-blue-400 transition-colors shrink-0" />
+                    </div>
+
+                    {/* Subject name */}
+                    <p className="text-sm font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.5em]">
+                      {ss.subject.name}
+                    </p>
+
+                    {/* Semester */}
+                    <p className="text-[10px] text-gray-400 font-medium -mt-1">
+                      Semester {ss.subject.semester ?? "—"}
+                    </p>
+
+                    {/* Percentage ring */}
+                    <div className="flex items-center gap-3 mt-auto">
+                      <div className="relative w-11 h-11 shrink-0">
+                        <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
+                          <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3"
+                            className="text-gray-100" />
+                          <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" strokeLinecap="round"
+                            stroke={pctColor}
+                            strokeDasharray={`${ss.pct * 0.88} 88`}
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black"
+                          style={{ color: pctColor }}>
                           {ss.total > 0 ? `${ss.pct}%` : "—"}
-                        </div>
+                        </span>
                       </div>
-
-                      {/* Progress bar */}
-                      <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${ss.pct}%`,
-                            background: ss.pct >= 75 ? "#16A34A" : ss.pct >= 50 ? "#D97706" : "#DC2626",
-                          }}
-                        />
+                      <div className="flex flex-col gap-0.5 text-[10px]">
+                        <span className="text-emerald-600 font-bold">{ss.present} Present</span>
+                        <span className="text-red-600 font-bold">{ss.absent} Absent</span>
+                        {ss.late > 0 && <span className="text-amber-600 font-bold">{ss.late} Late</span>}
                       </div>
+                    </div>
 
-                      {/* Stats row */}
-                      <div className="flex items-center gap-3 text-[10px]">
-                        <span className="text-emerald-600 font-bold">{ss.present}P</span>
-                        <span className="text-red-600 font-bold">{ss.absent}A</span>
-                        <span className="text-amber-600 font-bold">{ss.late}L</span>
-                        <span className="text-gray-400 ml-auto">{ss.total} classes</span>
+                    {/* Critical warning */}
+                    {isCritical && (
+                      <div className="flex items-center gap-1 mt-1 text-[9px] text-red-600 font-semibold">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
+                        Below 75%
                       </div>
+                    )}
 
-                      {/* Critical warning */}
-                      {isCritical && (
-                        <div className="flex items-center gap-1.5 p-2 rounded-lg bg-red-50 border border-red-100">
-                          <AlertCircle className="h-3 w-3 text-red-500 shrink-0" />
-                          <span className="text-[10px] text-red-600 font-semibold">Below 75% — attend more classes!</span>
+                    {/* Faculty */}
+                    {ss.subject.faculty.length > 0 && (
+                      <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100 mt-auto">
+                        <div className="w-5 h-5 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                          <UserIcon className="h-2.5 w-2.5 text-indigo-600" />
                         </div>
-                      )}
+                        <p className="text-[10px] font-semibold text-gray-500 truncate">
+                          {ss.subject.faculty.map(f => f.name).join(", ")}
+                        </p>
+                      </div>
+                    )}
 
-                      {/* Faculty info */}
-                      {ss.subject.faculty.length > 0 && (
-                        <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-                          <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
-                            <UserIcon className="h-3 w-3 text-indigo-600" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-semibold text-gray-700 truncate">
-                              {ss.subject.faculty.map(f => f.name).join(", ")}
-                            </p>
-                            <p className="text-[9px] text-gray-400">Faculty</p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    {/* Total classes tag */}
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[8px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-full">
+                        {ss.total} classes
+                      </span>
+                    </div>
+                  </div>
                 )
               })}
             </div>
@@ -654,6 +685,145 @@ export default function StudentAttendancePage() {
         </div>
 
       </div>
+
+      {/* ═══ SUBJECT DETAIL POPUP ══════════════════════════════ */}
+      <Dialog open={!!detailSubject} onOpenChange={v => { if (!v) setDetailSubject(null) }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+          {detailSubject && (() => {
+            const ss      = detailSubject
+            const pctColor = ss.pct >= 75 ? "#16A34A" : ss.pct >= 50 ? "#D97706" : "#DC2626"
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-base">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                      <BookOpen className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate">{ss.subject.name}</p>
+                      <p className="text-[10px] font-medium text-gray-400">{ss.subject.code} • Semester {ss.subject.semester ?? "—"}</p>
+                    </div>
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">Lecture-wise attendance details</DialogDescription>
+                </DialogHeader>
+
+                {/* Summary strip */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  {/* Mini ring */}
+                  <div className="relative w-12 h-12 shrink-0">
+                    <svg viewBox="0 0 36 36" className="w-12 h-12 -rotate-90">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3"
+                        className="text-gray-200" />
+                      <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" strokeLinecap="round"
+                        stroke={pctColor}
+                        strokeDasharray={`${ss.pct * 0.88} 88`}
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-black"
+                      style={{ color: pctColor }}>
+                      {ss.total > 0 ? `${ss.pct}%` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex-1 grid grid-cols-4 gap-2 text-center">
+                    {[
+                      { label: "Total",   value: ss.total,   color: "text-gray-700"    },
+                      { label: "Present", value: ss.present, color: "text-emerald-600" },
+                      { label: "Absent",  value: ss.absent,  color: "text-red-600"     },
+                      { label: "Late",    value: ss.late,    color: "text-amber-600"   },
+                    ].map(s => (
+                      <div key={s.label}>
+                        <p className={`text-lg font-black ${s.color} leading-tight`}>{s.value}</p>
+                        <p className="text-[9px] text-gray-400 font-semibold uppercase">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Faculty */}
+                {ss.subject.faculty.length > 0 && (
+                  <div className="flex items-center gap-2 px-1">
+                    <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                      <UserIcon className="h-3 w-3 text-indigo-600" />
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      <span className="font-semibold">{ss.subject.faculty.map(f => f.name).join(", ")}</span>
+                      <span className="text-gray-400 ml-1">— Faculty</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Lecture list */}
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between px-1 pb-2 border-b border-gray-100">
+                    <p className="text-xs font-bold text-gray-700">
+                      <Calendar className="inline h-3.5 w-3.5 mr-1 text-blue-500" />
+                      Lecture-wise Attendance
+                    </p>
+                    <span className="text-[10px] text-gray-400">{detailRecords.length} lectures</span>
+                  </div>
+
+                  {detailRecords.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
+                      <ClipboardCheck className="h-8 w-8 text-gray-200" />
+                      <p className="text-xs">No lectures conducted yet</p>
+                    </div>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto mt-2 space-y-1 pr-1">
+                      {detailRecords.map((rec, i) => {
+                        const sc   = statusConfig[rec.status as AttStatus]
+                        const date = new Date(rec.date)
+                        const Icon = sc.icon
+                        const isMarked = rec.status === "present" || rec.status === "late"
+
+                        return (
+                          <div
+                            key={rec.id ?? i}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50/60 transition-colors group"
+                          >
+                            {/* Date circle */}
+                            <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0"
+                              style={{ background: sc.bg, border: `1px solid ${sc.border}` }}>
+                              <span className="text-xs font-black leading-none" style={{ color: sc.color }}>
+                                {date.getDate()}
+                              </span>
+                              <span className="text-[8px] font-bold uppercase" style={{ color: sc.color }}>
+                                {date.toLocaleDateString("en-IN", { month: "short" })}
+                              </span>
+                            </div>
+
+                            {/* Date details */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-800">
+                                {date.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[10px] font-bold ${isMarked ? "text-emerald-600" : "text-red-500"}`}>
+                                  {isMarked ? "✓ Attendance marked" : "✗ Not present"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Status badge */}
+                            <span
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold shrink-0"
+                              style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}
+                            >
+                              <Icon className="h-3 w-3" />
+                              {sc.label}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </>
+            )
+          })()}
+        </DialogContent>
+      </Dialog>
+
     </DashboardLayout>
   )
 }
