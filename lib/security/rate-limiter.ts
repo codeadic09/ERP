@@ -36,6 +36,12 @@ export const RATE_LIMITS = {
   page: { maxRequests: 120, windowSec: 60 } as RateLimitConfig,
   /** Strict limit for signup (prevent mass account creation) */
   signup: { maxRequests: 10, windowSec: 300 } as RateLimitConfig,
+  /** Forgot password submissions per IP/email */
+  passwordResetRequest: { maxRequests: 3, windowSec: 900 } as RateLimitConfig,
+  /** Token verification page refreshes */
+  passwordResetVerify: { maxRequests: 30, windowSec: 60 } as RateLimitConfig,
+  /** Reset confirmations per IP/token */
+  passwordResetConfirm: { maxRequests: 5, windowSec: 900 } as RateLimitConfig,
 } as const
 
 export interface RateLimitResult {

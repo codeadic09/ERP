@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { requireAdmin, unauthorizedResponse } from "@/lib/security/auth-guard"
+import { hashPassword } from "@/lib/security/passwords"
 import { sanitizeEmail } from "@/lib/security/sanitize"
 import { z } from "zod"
 
@@ -63,9 +64,11 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 4. Store new password in users table ────────────
+    const passwordHash = await hashPassword(password)
+
     const { error: dbError } = await supabaseAdmin
       .from("users")
-      .update({ password })
+      .update({ password: passwordHash })
       .eq("id", userId)
 
     if (dbError) {

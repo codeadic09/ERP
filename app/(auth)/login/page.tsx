@@ -402,6 +402,19 @@ export default function LoginPage() {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Link
+                      href="/forgot-password"
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: currentTab.color,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Submit */}
