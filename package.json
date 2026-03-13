@@ -77,5 +77,8 @@
     "vaul": "^1.1.2",
     "xlsx": "^0.18.5",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.11"
   }
 }
