@@ -86,7 +86,7 @@ export default function HelpPage() {
 
   const [search,   setSearch]   = useState("")
   const [openFAQs, setOpenFAQs] = useState<Set<string>>(new Set())
-  const [form,     setForm]     = useState({ name: "", email: "", subject: "", message: "" })
+  const [form,     setForm]     = useState({ name: "", email: "", subject: "", message: "", website: "" })
   const [sending,  setSending]  = useState(false)
   const [sent,     setSent]     = useState(false)
   const [formErr,  setFormErr]  = useState<string | null>(null)
@@ -113,17 +113,40 @@ export default function HelpPage() {
   // ── Submit form ───────────────────────────────────────────────
   async function handleSubmit() {
     setFormErr(null)
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+    if (!form.name.trim() || !form.email.trim() || !form.subject.trim() || !form.message.trim()) {
       setFormErr("Please fill in all required fields."); return
     }
-    if (!form.email.includes("@")) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setFormErr("Enter a valid email address."); return
     }
     setSending(true)
-    await new Promise(r => setTimeout(r, 1500))
-    setSending(false)
-    setSent(true)
-    setForm({ name: "", email: "", subject: "", message: "" })
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formType: "help",
+          name: form.name,
+          email: form.email,
+          subject: form.subject,
+          message: form.message,
+          website: form.website,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setFormErr(data?.error || "❌ Something went wrong. Please email us directly.")
+        return
+      }
+
+      setSent(true)
+      setForm({ name: "", email: "", subject: "", message: "", website: "" })
+    } catch {
+      setFormErr("❌ Something went wrong. Please email us directly.")
+    } finally {
+      setSending(false)
+    }
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -299,7 +322,7 @@ export default function HelpPage() {
                   </div>
                   <p className="text-base font-black text-gray-900">Message Sent!</p>
                   <p className="text-sm text-gray-500 max-w-xs">
-                    We've received your message and will get back to you within 24 hours.
+                    ✅ Thanks! We&apos;ll get back to you within 24 hours.
                   </p>
                   <Button variant="outline" size="sm" onClick={() => setSent(false)} className="mt-2">
                     Send another message
@@ -328,11 +351,22 @@ export default function HelpPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold">Subject</Label>
+                    <Label className="text-sm font-semibold">Subject <span className="text-red-500">*</span></Label>
                     <Input placeholder="Brief description of your issue"
                       value={form.subject}
                       onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} />
                   </div>
+
+                  <input
+                    type="text"
+                    name="website"
+                    autoComplete="off"
+                    tabIndex={-1}
+                    value={form.website}
+                    onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                    className="hidden"
+                    aria-hidden="true"
+                  />
 
                   <div className="space-y-1.5">
                     <Label className="text-sm font-semibold">Message <span className="text-red-500">*</span></Label>

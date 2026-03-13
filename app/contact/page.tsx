@@ -122,6 +122,7 @@ export default function ContactPage() {
     studentCount: "",
     plan: "",
     message: "",
+    website: "",
   })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -132,17 +133,62 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!form.universityName.trim() || !form.contactPerson.trim() || !form.email.trim() || !form.phone.trim()) {
+    if (!form.universityName.trim() || !form.contactPerson.trim() || !form.designation.trim() || !form.email.trim() || !form.phone.trim() || !form.city.trim() || !form.studentCount.trim() || !form.plan.trim()) {
       setError("Please fill in all required fields."); return
     }
-    if (!form.email.includes("@")) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setError("Enter a valid email address."); return
     }
     setSending(true)
-    // Simulated API call — replace with real endpoint
-    await new Promise(r => setTimeout(r, 2000))
-    setSending(false)
-    setSent(true)
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formType: "contact",
+          name: form.contactPerson,
+          email: form.email,
+          subject: `Demo Request: ${form.universityName}`,
+          designation: form.designation,
+          message: [
+            `Designation: ${form.designation || "N/A"}`,
+            "",
+            "Requirements:",
+            form.message || "No additional requirements provided.",
+          ].join("\n"),
+          university_name: form.universityName,
+          phone: form.phone,
+          city: form.city,
+          student_count: form.studentCount,
+          plan_interest: form.plan,
+          website: form.website,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data?.error || "❌ Something went wrong. Please email us directly.")
+        return
+      }
+
+      setForm({
+        universityName: "",
+        contactPerson: "",
+        designation: "",
+        email: "",
+        phone: "",
+        city: "",
+        studentCount: "",
+        plan: "",
+        message: "",
+        website: "",
+      })
+      setSent(true)
+    } catch {
+      setError("❌ Something went wrong. Please email us directly.")
+    } finally {
+      setSending(false)
+    }
   }
 
   /* ── force light mode on this page ── */
@@ -468,14 +514,13 @@ export default function ContactPage() {
                 <CheckCircle2 size={34} color="#16A34A" />
               </div>
               <h3 style={{ fontSize: 22, fontWeight: 900, color: "#0F172A", marginBottom: 10 }}>
-                Request Submitted!
+                Message Sent!
               </h3>
               <p style={{ fontSize: 14, color: "#64748B", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 28px" }}>
-                Thank you for your interest in InfiCampus. Our team will review your
-                details and reach out within <strong>24 hours</strong> with a personalized demo & quote.
+                ✅ Thanks! We&apos;ll get back to you within 24 hours.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { setSent(false); setForm({ universityName:"",contactPerson:"",designation:"",email:"",phone:"",city:"",studentCount:"",plan:"",message:"" }) }} style={{
+                <button onClick={() => { setSent(false); setForm({ universityName:"",contactPerson:"",designation:"",email:"",phone:"",city:"",studentCount:"",plan:"",message:"",website:"" }) }} style={{
                   padding: "10px 24px", borderRadius: 12, fontSize: 13, fontWeight: 700,
                   background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.22)",
                   color: "#1D4ED8", cursor: "pointer",
@@ -515,6 +560,17 @@ export default function ContactPage() {
               </div>
             )}
 
+            <input
+              type="text"
+              name="website"
+              autoComplete="off"
+              tabIndex={-1}
+              value={form.website}
+              onChange={e => set("website", e.target.value)}
+              style={{ display: "none" }}
+              aria-hidden="true"
+            />
+
             {/* Row 1 */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
               <FieldBox icon={Building2} label="University / College Name *" placeholder="e.g. Rajiv Gandhi Technical University" value={form.universityName} onChange={v => set("universityName", v)} />
@@ -523,7 +579,7 @@ export default function ContactPage() {
 
             {/* Row 2 */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
-              <FieldBox icon={ClipboardCheck} label="Designation" placeholder="e.g. Registrar / Dean IT" value={form.designation} onChange={v => set("designation", v)} />
+              <FieldBox icon={ClipboardCheck} label="Designation *" placeholder="e.g. Registrar / Dean IT" value={form.designation} onChange={v => set("designation", v)} />
               <FieldBox icon={Mail} label="Official Email *" placeholder="admin@university.edu" value={form.email} onChange={v => set("email", v)} type="email" />
             </div>
 

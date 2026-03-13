@@ -42,6 +42,8 @@ export const RATE_LIMITS = {
   passwordResetVerify: { maxRequests: 30, windowSec: 60 } as RateLimitConfig,
   /** Reset confirmations per IP/token */
   passwordResetConfirm: { maxRequests: 5, windowSec: 900 } as RateLimitConfig,
+  /** Public contact/help form submissions */
+  contactSubmission: { maxRequests: 8, windowSec: 600 } as RateLimitConfig,
 } as const
 
 export interface RateLimitResult {

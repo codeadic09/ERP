@@ -35,3 +35,5 @@ services:
         sync: false
       - key: SMTP_SECURE
         sync: false
+      - key: CONTACT_SUBMISSIONS_TO
+        sync: false
