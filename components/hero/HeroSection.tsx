@@ -30,17 +30,26 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
   // Track scroll for background opacity fade
   const [bgOpacity, setBgOpacity] = useState(1)
   useEffect(() => {
+    let ticking = false
     function onScroll() {
-      if (!heroRef.current) return
-      const rect = heroRef.current.getBoundingClientRect()
-      const heroH = rect.height
-      const scrolled = -rect.top
-      const fadeStart = heroH * 0.7
-      const fadeEnd   = heroH * 3.5
-      const minOpacity = 0.45
-      if (scrolled <= fadeStart) setBgOpacity(1)
-      else if (scrolled >= fadeEnd) setBgOpacity(minOpacity)
-      else setBgOpacity(1 - (1 - minOpacity) * ((scrolled - fadeStart) / (fadeEnd - fadeStart)))
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY
+          const heroH = window.innerHeight // Since hero is 100vh
+          const fadeStart = heroH * 0.7
+          const fadeEnd   = heroH * 3.5
+          const minOpacity = 0.45
+          
+          let newOpacity = 1
+          if (scrolled <= fadeStart) newOpacity = 1
+          else if (scrolled >= fadeEnd) newOpacity = minOpacity
+          else newOpacity = 1 - (1 - minOpacity) * ((scrolled - fadeStart) / (fadeEnd - fadeStart))
+          
+          setBgOpacity(newOpacity)
+          ticking = false
+        })
+        ticking = true
+      }
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -211,21 +220,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
             <br />from one place
           </h1>
 
-          <p
-            className="hero-anim-desc"
-            style={{
-              fontSize: isMobile ? 13 : 17,
-              color: 'rgba(241,245,249,0.6)',
-              lineHeight: 1.7,
-              marginBottom: isMobile ? 36 : 44,
-              maxWidth: isMobile ? 340 : 460,
-              margin: isMobile ? '0 auto 36px' : undefined,
-            }}
-          >
-            InfiCampus unifies attendance, results, timetables, fees, and
-            communications into one sleek, role-based platform — built for
-            modern universities.
-          </p>
+
 
           {/* CTAs */}
           <div
