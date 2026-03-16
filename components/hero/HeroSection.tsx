@@ -37,14 +37,14 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           const scrolled = window.scrollY
           const heroH = window.innerHeight // Since hero is 100vh
           const fadeStart = heroH * 0.7
-          const fadeEnd   = heroH * 3.5
+          const fadeEnd = heroH * 3.5
           const minOpacity = 0.45
-          
+
           let newOpacity = 1
           if (scrolled <= fadeStart) newOpacity = 1
           else if (scrolled >= fadeEnd) newOpacity = minOpacity
           else newOpacity = 1 - (1 - minOpacity) * ((scrolled - fadeStart) / (fadeEnd - fadeStart))
-          
+
           setBgOpacity(newOpacity)
           ticking = false
         })
@@ -69,33 +69,33 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
         { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }
       )
 
-      // Title — smooth rise
-      .fromTo('.hero-anim-title',
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-        '-=0.3'
-      )
+        // Title — smooth rise
+        .fromTo('.hero-anim-title',
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+          '-=0.3'
+        )
 
-      // CTAs — slide up with slight stagger
-      .fromTo('.hero-anim-cta',
-        { y: 25, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-        '-=0.35'
-      )
+        // CTAs — slide up with slight stagger
+        .fromTo('.hero-anim-cta',
+          { y: 25, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
+          '-=0.35'
+        )
 
-      // Trust badges — fade in
-      .fromTo('.hero-anim-trust',
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        '-=0.25'
-      )
+        // Trust badges — fade in
+        .fromTo('.hero-anim-trust',
+          { y: 15, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+          '-=0.25'
+        )
 
-      // Dashboard card — slide from right with rotation
-      .fromTo('.hero-anim-card',
-        { x: 50, opacity: 0, rotateY: 5 },
-        { x: 0, opacity: 1, rotateY: 0, duration: 0.9, ease: 'power3.out' },
-        '-=0.6'
-      )
+        // Dashboard card — slide from right with rotation
+        .fromTo('.hero-anim-card',
+          { x: 50, opacity: 0, rotateY: 5 },
+          { x: 0, opacity: 1, rotateY: 0, duration: 0.9, ease: 'power3.out' },
+          '-=0.6'
+        )
 
     }, hero)
 
@@ -103,16 +103,16 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
   }, [])
 
   const kpiCards = [
-    { label: 'Attendance', value: '87%',  color: '#51A2FF', trend: '↑ 2%' },
-    { label: 'CGPA',       value: '8.4',  color: '#C4B4FF', trend: '↑ 0.2' },
-    { label: 'Subjects',   value: '6',    color: '#86efac', trend: 'Active' },
-    { label: 'Rank',       value: '#12',  color: '#FDC745', trend: 'Top 15%' },
+    { label: 'Attendance', value: '87%', color: '#51A2FF', trend: '↑ 2%' },
+    { label: 'CGPA', value: '8.4', color: '#C4B4FF', trend: '↑ 0.2' },
+    { label: 'Subjects', value: '6', color: '#86efac', trend: 'Active' },
+    { label: 'Rank', value: '#12', color: '#FDC745', trend: 'Top 15%' },
   ]
 
   const upcomingItems = [
-    { label: 'DSA Lecture',      time: 'Today 10:00 AM', color: '#51A2FF' },
-    { label: 'Assignment Due',   time: 'Today 11:59 PM', color: '#FF6467' },
-    { label: 'End-Sem Results',  time: 'March 5, 2026',  color: '#86efac' },
+    { label: 'DSA Lecture', time: 'Today 10:00 AM', color: '#51A2FF' },
+    { label: 'Assignment Due', time: 'Today 11:59 PM', color: '#FF6467' },
+    { label: 'End-Sem Results', time: 'March 5, 2026', color: '#86efac' },
   ]
 
   return (
@@ -126,8 +126,8 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
         padding: isMobile
           ? '96px 24px 56px'
           : isTablet
-          ? '88px 40px 72px'
-          : '88px 40px 0 40px',
+            ? '88px 40px 72px'
+            : '88px 40px 0 40px',
         overflow: 'hidden',
         // Dark hero — distinct from the light sections below
         background: '#0f172a',
@@ -277,8 +277,8 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
             style={{ display: 'flex', gap: isMobile ? 14 : 24, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : undefined }}
           >
             {[
-              { icon: Lock,   text: 'Role-Based Access' },
-              { icon: Zap,    text: '99.9% Uptime' },
+              { icon: Lock, text: 'Role-Based Access' },
+              { icon: Zap, text: '99.9% Uptime' },
               { icon: MapPin, text: 'Built for India' },
             ].map((b, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

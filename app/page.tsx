@@ -171,13 +171,13 @@ const Section = React.memo(({ title, subtitle, children, gray = false, id, isMob
     }}>
       <div style={{ maxWidth: 1120, margin: "0 auto" }}>
         <div className="reveal" style={{ textAlign: "center", marginBottom: headMb }}>
-          <h2 style={{ 
-            fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, 
-            fontWeight: 900, 
-            color: "#0F172A", 
-            marginBottom: 16, 
-            letterSpacing: "-0.025em", 
-            lineHeight: 1.15 
+          <h2 style={{
+            fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40,
+            fontWeight: 900,
+            color: "#0F172A",
+            marginBottom: 16,
+            letterSpacing: "-0.025em",
+            lineHeight: 1.15
           }}>
             {title}
           </h2>
@@ -201,12 +201,12 @@ const StatItem = React.memo(({ value, label, color, icon: Icon, isMobile, index,
   hPad: number
 }) => (
   <div className={`stat-card reveal stagger-${index + 1}`}>
-    <div style={{ 
-      width: 48, height: 48, borderRadius: 14, 
-      background: `${color}0C`, border: `1px solid ${color}1A`, 
-      display: "flex", alignItems: "center", justifyContent: "center", 
-      margin: "0 auto 16px", 
-      boxShadow: `0 2px 8px ${color}15, 0 4px 16px ${color}0A, inset 0 1px 0 rgba(255,255,255,0.5)` 
+    <div style={{
+      width: 48, height: 48, borderRadius: 14,
+      background: `${color}0C`, border: `1px solid ${color}1A`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      margin: "0 auto 16px",
+      boxShadow: `0 2px 8px ${color}15, 0 4px 16px ${color}0A, inset 0 1px 0 rgba(255,255,255,0.5)`
     }}>
       <Icon size={20} color={color} strokeWidth={2} />
     </div>
@@ -217,8 +217,8 @@ const StatItem = React.memo(({ value, label, color, icon: Icon, isMobile, index,
   </div>
 ))
 
-const FeatureCard = React.memo(({ icon: Icon, title, sub, color, isMobile, index }: { 
-  icon: any, title: string, sub: string, color: string, isMobile: boolean, index: number 
+const FeatureCard = React.memo(({ icon: Icon, title, sub, color, isMobile, index }: {
+  icon: any, title: string, sub: string, color: string, isMobile: boolean, index: number
 }) => (
   <div className={`glass-feature-card reveal stagger-${index + 1}`}>
     <div className="icon-depth" style={{
@@ -311,7 +311,7 @@ export default function LandingPage() {
   useEffect(() => {
     const page = pageRef.current
     if (!page) return
-    
+
     // Ensure triggers are correctly placed after DOM mount
     const timeout = setTimeout(() => ScrollTrigger.refresh(), 500)
 
@@ -360,7 +360,7 @@ export default function LandingPage() {
 
   return (
     <div ref={pageRef} className="landing-page" style={{ minHeight: "100vh", fontFamily: "var(--font-sans,system-ui,sans-serif)", overflowX: "hidden" }}>
-      
+
       {/* NAVBAR */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
@@ -373,7 +373,7 @@ export default function LandingPage() {
         transition: "background 0.3s ease-out, border-bottom 0.3s ease-out, box-shadow 0.3s ease-out, backdrop-filter 0.3s ease-out",
       }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: `0 ${hPad}px`, height: isMobile ? 60 : 72, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          
+
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 38, height: 38, borderRadius: 12, background: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -456,8 +456,8 @@ export default function LandingPage() {
               {!isMobile && i < steps.length - 1 && (
                 <div style={{ position: "absolute", top: 32, left: "calc(50% + 32px)", right: "-50%", height: 1.5, background: "linear-gradient(to right,rgba(148,163,184,0.2),rgba(148,163,184,0.05))" }} />
               )}
-              <div className={`glass-feature-card reveal stagger-${i+1}`} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
-                <div style={{ width: isMobile ? 48 : 56, height: isMobile?48:56, borderRadius: 16, background: `${s.color}0C`, border: `1.5px solid ${s.color}1A`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+              <div className={`glass-feature-card reveal stagger-${i + 1}`} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+                <div style={{ width: isMobile ? 48 : 56, height: isMobile ? 48 : 56, borderRadius: 16, background: `${s.color}0C`, border: `1.5px solid ${s.color}1A`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
                   <span style={{ fontSize: isMobile ? 17 : 19, fontWeight: 900, color: s.color }}>{s.n}</span>
                 </div>
                 <h3 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>{s.title}</h3>
@@ -473,7 +473,7 @@ export default function LandingPage() {
       <Section id="portals" title="One platform, three portals" subtitle="Tailored experiences for every role in your university" isMobile={isMobile} headMb={headMb}>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(3,1fr)", gap: isMobile ? 20 : 28 }}>
           {roles.map((r, i) => (
-            <div key={i} className={`role-card reveal stagger-${i+1}`}>
+            <div key={i} className={`role-card reveal stagger-${i + 1}`}>
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
                 <div style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, borderRadius: 16, background: r.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <r.icon size={isMobile ? 20 : 22} color="white" />
