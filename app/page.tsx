@@ -86,21 +86,21 @@ export function CountUp({ value, className, style }: { value: string; className?
    ══════════════════════════════════════════ */
 
 const features = [
-  { icon: BarChart3,      color: "#3B82F6", title: "Smart Analytics",       sub: "Real-time dashboards with live academic metrics and trends" },
-  { icon: ClipboardCheck, color: "#D946EF", title: "Attendance Tracking",   sub: "Automated attendance with instant faculty notifications" },
-  { icon: Award,          color: "#84CC16", title: "Result Management",     sub: "One-click result publishing across all semesters and exams" },
-  { icon: Calendar,       color: "#FBBF24", title: "Smart Timetable",       sub: "AI-generated conflict-free scheduling for all departments" },
-  { icon: Bell,           color: "#F43F5E", title: "Instant Notices",       sub: "Push notifications for exams, events, and announcements" },
-  { icon: Wallet,         color: "#3B82F6", title: "Fee Management",        sub: "Online payments, receipts, and overdue tracking in one place" },
-  { icon: Shield,         color: "#D946EF", title: "Role-Based Access",     sub: "Separate secure portals for admin, faculty, and students" },
-  { icon: Sparkles,       color: "#84CC16", title: "AI Insights",           sub: "Predictive analytics to identify at-risk students early" },
+  { icon: BarChart3, color: "#3B82F6", title: "Smart Analytics", sub: "Real-time dashboards with live academic metrics and trends" },
+  { icon: ClipboardCheck, color: "#D946EF", title: "Attendance Tracking", sub: "Automated attendance with instant faculty notifications" },
+  { icon: Award, color: "#84CC16", title: "Result Management", sub: "One-click result publishing across all semesters and exams" },
+  { icon: Calendar, color: "#FBBF24", title: "Smart Timetable", sub: "AI-generated conflict-free scheduling for all departments" },
+  { icon: Bell, color: "#F43F5E", title: "Instant Notices", sub: "Push notifications for exams, events, and announcements" },
+  { icon: Wallet, color: "#3B82F6", title: "Fee Management", sub: "Online payments, receipts, and overdue tracking in one place" },
+  { icon: Shield, color: "#D946EF", title: "Role-Based Access", sub: "Separate secure portals for admin, faculty, and students" },
+  { icon: Sparkles, color: "#84CC16", title: "AI Insights", sub: "Predictive analytics to identify at-risk students early" },
 ]
 
 const stats = [
-  { value: "2,800+", label: "Students Enrolled", icon: Users,    color: "#3B82F6" },
-  { value: "180+",   label: "Faculty Members",   icon: BookOpen, color: "#D946EF" },
-  { value: "6",      label: "Departments",       icon: Globe,    color: "#84CC16" },
-  { value: "99.9%",  label: "Uptime Guaranteed",  icon: Zap,      color: "#FBBF24" },
+  { value: "2,800+", label: "Students Enrolled", icon: Users, color: "#3B82F6" },
+  { value: "180+", label: "Faculty Members", icon: BookOpen, color: "#D946EF" },
+  { value: "6", label: "Departments", icon: Globe, color: "#84CC16" },
+  { value: "99.9%", label: "Uptime Guaranteed", icon: Zap, color: "#FBBF24" },
 ]
 
 const roles = [
@@ -137,10 +137,10 @@ const roles = [
 ]
 
 const steps = [
-  { n: "01", title: "Sign Up",        sub: "Create your account and choose your role",         color: "#3B82F6" },
-  { n: "02", title: "Get Approved",   sub: "Admin verifies and activates your account",        color: "#D946EF" },
-  { n: "03", title: "Access Portal",  sub: "Log in to your personalized role-based dashboard", color: "#84CC16" },
-  { n: "04", title: "Start Learning", sub: "Manage academics, fees, and results seamlessly",   color: "#FBBF24" },
+  { n: "01", title: "Sign Up", sub: "Create your account and choose your role", color: "#3B82F6" },
+  { n: "02", title: "Get Approved", sub: "Admin verifies and activates your account", color: "#D946EF" },
+  { n: "03", title: "Access Portal", sub: "Log in to your personalized role-based dashboard", color: "#84CC16" },
+  { n: "04", title: "Start Learning", sub: "Manage academics, fees, and results seamlessly", color: "#FBBF24" },
 ]
 
 /* ══════════════════════════════════════════
@@ -148,9 +148,9 @@ const steps = [
    ══════════════════════════════════════════ */
 const SP = {
   section: { mobile: 72, tablet: 100, desktop: 136 },
-  gutter:  { mobile: 20, desktop: 40 },
+  gutter: { mobile: 20, desktop: 40 },
   heading: { mobile: 40, desktop: 64 },
-  inner:   { mobile: 16, desktop: 24 },
+  inner: { mobile: 16, desktop: 24 },
 } as const
 
 export default function LandingPage() {
@@ -159,7 +159,6 @@ export default function LandingPage() {
   const isUnder1024 = useMobile(1024)
   const isTablet = isUnder1024 && !isMobile
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [navHidden, setNavHidden] = useState(false)
   const [navScrolled, setNavScrolled] = useState(false)
   const lastScrollY = useRef(0)
   const lottieRef = useRef<LottieRefCurrentProps>(null)
@@ -189,7 +188,7 @@ export default function LandingPage() {
     fetch("/lottie/menu-toggle.json")
       .then(r => r.json())
       .then(setMenuAnimData)
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
@@ -214,8 +213,6 @@ export default function LandingPage() {
     const onScroll = () => {
       const y = window.scrollY
       setNavScrolled(y > 20)
-      if (y > lastScrollY.current && y > 80) setNavHidden(true)
-      else setNavHidden(false)
       lastScrollY.current = y
     }
     window.addEventListener("scroll", onScroll, { passive: true })
@@ -228,7 +225,7 @@ export default function LandingPage() {
     if (!page) return
 
     const ctx = gsap.context(() => {
-      // ── Reveal animations (fade up) ──
+      // ── Sweep general reveals ──
       page.querySelectorAll(".reveal").forEach((el) => {
         gsap.fromTo(el,
           { y: 50, opacity: 0 },
@@ -236,40 +233,6 @@ export default function LandingPage() {
             y: 0, opacity: 1,
             duration: 0.9,
             ease: "power3.out",
-            scrollTrigger: {
-              trigger: el,
-              start: "top 88%",
-              toggleActions: "play none none none",
-            },
-          }
-        )
-      })
-
-      // ── Reveal left (slide from left) ──
-      page.querySelectorAll(".reveal-left").forEach((el) => {
-        gsap.fromTo(el,
-          { x: -60, opacity: 0 },
-          {
-            x: 0, opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: el,
-              start: "top 88%",
-              toggleActions: "play none none none",
-            },
-          }
-        )
-      })
-
-      // ── Reveal scale (pop in) ──
-      page.querySelectorAll(".reveal-scale").forEach((el) => {
-        gsap.fromTo(el,
-          { scale: 0.85, opacity: 0 },
-          {
-            scale: 1, opacity: 1,
-            duration: 1,
-            ease: "back.out(1.4)",
             scrollTrigger: {
               trigger: el,
               start: "top 88%",
@@ -297,72 +260,17 @@ export default function LandingPage() {
         )
       })
 
-      // ── Magnetic tilt effect on cards ──
-      const cards = page.querySelectorAll(".stat-card, .glass-feature-card, .role-card")
-      cards.forEach((card) => {
-        const el = card as HTMLElement
-        const onMove = (e: MouseEvent) => {
-          const rect = el.getBoundingClientRect()
-          const x = e.clientX - rect.left - rect.width / 2
-          const y = e.clientY - rect.top - rect.height / 2
-          const rotateX = -(y / rect.height) * 8
-          const rotateY = (x / rect.width) * 8
-          gsap.to(el, {
-            rotateX, rotateY,
-            transformPerspective: 800,
-            duration: 0.4,
-            ease: "power2.out",
-          })
-        }
-        const onLeave = () => {
-          gsap.to(el, {
-            rotateX: 0, rotateY: 0,
-            duration: 0.6,
-            ease: "elastic.out(1, 0.4)",
-          })
-        }
-        el.addEventListener("mousemove", onMove)
-        el.addEventListener("mouseleave", onLeave)
-        // Store cleanup refs
-        ;(el as any).__gsapMove = onMove
-        ;(el as any).__gsapLeave = onLeave
-      })
-
-      // ── Smooth hover scale on CTA buttons ──
-      page.querySelectorAll(".cta-btn-white, .cta-btn-ghost, .nav-btn-signup").forEach((btn) => {
-        const el = btn as HTMLElement
-        const onEnter = () => gsap.to(el, { scale: 1.04, duration: 0.3, ease: "power2.out" })
-        const onLeave = () => gsap.to(el, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.5)" })
-        el.addEventListener("mouseenter", onEnter)
-        el.addEventListener("mouseleave", onLeave)
-        ;(el as any).__gsapEnter = onEnter
-        ;(el as any).__gsapBtnLeave = onLeave
-      })
-
     }, page)
 
     return () => {
       ctx.revert()
-      // Clean up magnetic hover listeners
-      const cards = page.querySelectorAll(".stat-card, .glass-feature-card, .role-card")
-      cards.forEach((card) => {
-        const el = card as any
-        if (el.__gsapMove) el.removeEventListener("mousemove", el.__gsapMove)
-        if (el.__gsapLeave) el.removeEventListener("mouseleave", el.__gsapLeave)
-      })
-      const btns = page.querySelectorAll(".cta-btn-white, .cta-btn-ghost, .nav-btn-signup")
-      btns.forEach((btn) => {
-        const el = btn as any
-        if (el.__gsapEnter) el.removeEventListener("mouseenter", el.__gsapEnter)
-        if (el.__gsapBtnLeave) el.removeEventListener("mouseleave", el.__gsapBtnLeave)
-      })
     }
   }, [])
 
   /* Dynamic spacing helpers */
   const secPad = isMobile ? SP.section.mobile : isTablet ? SP.section.tablet : SP.section.desktop
-  const hPad   = isMobile ? SP.gutter.mobile  : SP.gutter.desktop
-  const headMb = isMobile ? SP.heading.mobile  : SP.heading.desktop
+  const hPad = isMobile ? SP.gutter.mobile : SP.gutter.desktop
+  const headMb = isMobile ? SP.heading.mobile : SP.heading.desktop
 
   return (
     <div ref={pageRef} className="landing-page" style={{ minHeight: "100vh", fontFamily: "var(--font-sans,system-ui,sans-serif)", overflowX: "hidden" }}>
@@ -372,15 +280,15 @@ export default function LandingPage() {
       ══════════════════════════════ */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        background: navScrolled ? "rgba(255,255,255,0.72)" : "transparent",
-        backdropFilter: navScrolled ? "blur(16px) saturate(1.8)" : "none",
-        WebkitBackdropFilter: navScrolled ? "blur(16px) saturate(1.8)" : "none",
-        borderBottom: navScrolled ? "1px solid rgba(255,255,255,0.55)" : "1px solid transparent",
+        background: navScrolled ? "rgba(255, 255, 255, 0.8)" : "transparent",
+        backdropFilter: navScrolled ? "blur(16px)" : "none",
+        WebkitBackdropFilter: navScrolled ? "blur(16px)" : "none",
+        borderBottom: navScrolled ? "1px solid #e2e8f0" : "1px solid transparent",
         boxShadow: navScrolled
-          ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 20px rgba(15,23,42,0.06), 0 12px 48px rgba(59,130,246,0.06)"
+          ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.02)"
           : "none",
-        transform: navHidden ? "translateY(-100%)" : "translateY(0)",
-        transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1), background 0.3s ease, backdrop-filter 0.3s ease, border-bottom 0.3s ease, box-shadow 0.3s ease",
+        transform: "translateY(0)",
+        transition: "background 0.2s ease-out, border-bottom 0.2s ease-out, box-shadow 0.2s ease-out, backdrop-filter 0.2s ease-out",
       }}>
         <div style={{
           maxWidth: 1120, margin: "0 auto",
@@ -392,17 +300,16 @@ export default function LandingPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{
               width: 38, height: 38, borderRadius: 12,
-              background: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
+              background: "#1D4ED8",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 6px rgba(29,78,216,0.25), 0 8px 20px rgba(59,130,246,0.30), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}>
               <GraduationCap size={18} color="white" />
             </div>
             <div>
-              <p style={{ fontSize: 16, fontWeight: 900, lineHeight: 1, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <p style={{ fontSize: 16, fontWeight: 900, lineHeight: 1, color: navScrolled ? "#0F172A" : "#FFFFFF", transition: "color 0.3s ease-in-out" }}>
                 InfiCampus
               </p>
-              <p style={{ fontSize: 10, color: "#94A3B8", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 1 }}>
+              <p style={{ fontSize: 10, color: navScrolled ? "#94A3B8" : "rgba(255,255,255,0.7)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 1, transition: "color 0.3s ease-in-out" }}>
                 University Management
               </p>
             </div>
@@ -412,9 +319,9 @@ export default function LandingPage() {
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
               {["Features", "How It Works", "Portals"].map(l => (
-                <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} className="nav-link">{l}</a>
+                <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} className="nav-link" style={{ color: navScrolled ? "#475569" : "rgba(255,255,255,0.8)", transition: "color 0.3s ease-in-out" }}>{l}</a>
               ))}
-              <Link href="/contact" className="nav-link">Contact</Link>
+              <Link href="/contact" className="nav-link" style={{ color: navScrolled ? "#475569" : "rgba(255,255,255,0.8)", transition: "color 0.3s ease-in-out" }}>Contact</Link>
             </div>
           )}
 
@@ -475,12 +382,10 @@ export default function LandingPage() {
           <div style={{
             position: "fixed", top: 68, right: 16, zIndex: 45,
             width: 240,
-            background: "rgba(255,255,255,0.97)",
-            backdropFilter: "blur(24px) saturate(1.6)", WebkitBackdropFilter: "blur(24px) saturate(1.6)",
+            background: "#ffffff",
             borderRadius: 18,
-            border: "1px solid rgba(255,255,255,0.7)",
-            borderTop: "1px solid rgba(255,255,255,0.9)",
-            boxShadow: "0 4px 12px rgba(15,23,42,0.06), 0 16px 48px rgba(15,23,42,0.14), 0 32px 72px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 4px 12px rgba(15,23,42,0.06), 0 16px 48px rgba(15,23,42,0.14)",
             padding: "8px",
             animation: "nav-popup-in 0.2s cubic-bezier(0.16,1,0.3,1) both",
             transformOrigin: "top right",
@@ -523,9 +428,8 @@ export default function LandingPage() {
             <Link href="/login" onClick={() => setMobileNavOpen(false)} style={{
               display: "block", textAlign: "center",
               padding: "10px 16px", borderRadius: 12,
-              background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", color: "white",
+              background: "#2563EB", color: "white",
               fontSize: 14, fontWeight: 700, textDecoration: "none",
-              boxShadow: "0 4px 14px rgba(59,130,246,0.3)",
             }}>
               Get Started
             </Link>
@@ -544,18 +448,12 @@ export default function LandingPage() {
       <div className="depth-divider" />
       <section style={{
         padding: `${isMobile ? 56 : 80}px ${hPad}px`,
-        background: "rgba(248,250,252,0.80)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
-        borderTop: "1px solid rgba(255,255,255,0.5)",
-        borderBottom: "1px solid rgba(255,255,255,0.3)",
+        background: "#f8fafc",
+        borderTop: "1px solid #e2e8f0",
+        borderBottom: "1px solid #e2e8f0",
         position: "relative",
         zIndex: 1,
-        boxShadow: "inset 0 2px 12px rgba(59,130,246,0.04), inset 0 -1px 8px rgba(59,130,246,0.02)",
       }}>
-        {/* Ambient glow orb */}
-        <div style={{ position: "absolute", top: "-60px", left: "20%", width: 200, height: 200, borderRadius: "50%", background: "rgba(59,130,246,0.06)", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", bottom: "-40px", right: "15%", width: 160, height: 160, borderRadius: "50%", background: "rgba(217,70,239,0.05)", filter: "blur(50px)", pointerEvents: "none", zIndex: 0 }} />
         <div style={{
           maxWidth: 1120, margin: "0 auto",
           display: "grid",
@@ -582,16 +480,10 @@ export default function LandingPage() {
       <div className="depth-divider" />
       <section id="features" style={{
         padding: `${secPad}px ${hPad}px`,
-        background: "rgba(255,255,255,0.82)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        background: "#ffffff",
         position: "relative",
         zIndex: 2,
-        boxShadow: "0 -1px 0 rgba(255,255,255,0.6), 0 1px 0 rgba(255,255,255,0.6)",
       }}>
-        {/* Ambient glow orbs */}
-        <div style={{ position: "absolute", top: "10%", right: "5%", width: 280, height: 280, borderRadius: "50%", background: "rgba(59,130,246,0.05)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", bottom: "15%", left: "8%", width: 220, height: 220, borderRadius: "50%", background: "rgba(217,70,239,0.04)", filter: "blur(70px)", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
 
           {/* Section header — extra bottom margin for breathing room */}
@@ -602,7 +494,7 @@ export default function LandingPage() {
             </div>
             <h2 style={{ fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, fontWeight: 900, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               Powerful features,{" "}
-              <span style={{ background: "linear-gradient(135deg,#1D4ED8,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <span style={{ color: "#2563EB" }}>
                 built for education
               </span>
             </h2>
@@ -640,22 +532,17 @@ export default function LandingPage() {
       <div className="depth-divider" />
       <section id="how-it-works" style={{
         padding: `${secPad}px ${hPad}px`,
-        background: "rgba(248,250,252,0.80)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
-        borderTop: "1px solid rgba(255,255,255,0.5)",
-        borderBottom: "1px solid rgba(255,255,255,0.3)",
+        background: "#f8fafc",
+        borderTop: "1px solid #e2e8f0",
+        borderBottom: "1px solid #e2e8f0",
         position: "relative",
         zIndex: 1,
-        boxShadow: "inset 0 2px 12px rgba(59,130,246,0.04), inset 0 -1px 8px rgba(59,130,246,0.02)",
       }}>
-        {/* Ambient glow */}
-        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 320, height: 320, borderRadius: "50%", background: "rgba(132,204,22,0.04)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
           <div className="reveal" style={{ textAlign: "center", marginBottom: headMb }}>
             <h2 style={{ fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, fontWeight: 900, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               Up and running in{" "}
-              <span style={{ background: "linear-gradient(135deg,#3B82F6,#84CC16)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <span style={{ color: "#2563EB" }}>
                 minutes
               </span>
             </h2>
@@ -701,22 +588,15 @@ export default function LandingPage() {
       <div className="depth-divider" />
       <section id="portals" style={{
         padding: `${secPad}px ${hPad}px`,
-        background: "rgba(255,255,255,0.85)",
-        backdropFilter: "blur(14px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(14px) saturate(1.4)",
+        background: "#ffffff",
         position: "relative",
         zIndex: 3,
-        boxShadow: "0 -2px 20px rgba(59,130,246,0.04), 0 2px 20px rgba(59,130,246,0.04)",
       }}>
-        {/* Ambient glow orbs */}
-        <div style={{ position: "absolute", top: "5%", left: "10%", width: 240, height: 240, borderRadius: "50%", background: "rgba(29,78,216,0.04)", filter: "blur(70px)", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", bottom: "10%", right: "8%", width: 200, height: 200, borderRadius: "50%", background: "rgba(217,70,239,0.04)", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 300, height: 300, borderRadius: "50%", background: "rgba(132,204,22,0.03)", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
           <div className="reveal" style={{ textAlign: "center", marginBottom: headMb }}>
             <h2 style={{ fontSize: isMobile ? "clamp(26px, 6vw, 34px)" : 40, fontWeight: 900, color: "#0F172A", marginBottom: 16, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
               One platform,{" "}
-              <span style={{ background: "linear-gradient(135deg,#1D4ED8,#D946EF,#84CC16)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <span style={{ color: "#2563EB" }}>
                 three portals
               </span>
             </h2>
@@ -733,12 +613,12 @@ export default function LandingPage() {
             {roles.map((r, i) => (
               <div key={i} className={`role-card reveal stagger-${i + 1}`}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-                  <div style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, borderRadius: 16, background: r.bg, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${r.shadow}, 0 12px 28px ${r.shadow}60, inset 0 1px 0 rgba(255,255,255,0.2)`, flexShrink: 0 }}>
+                  <div style={{ width: isMobile ? 48 : 52, height: isMobile ? 48 : 52, borderRadius: 16, background: r.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <r.icon size={isMobile ? 20 : 22} color="white" strokeWidth={2} />
                   </div>
                   <div>
                     <h3 style={{ fontSize: isMobile ? 17 : 18, fontWeight: 900, color: "#0F172A" }}>{r.role} Portal</h3>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99, background: `${r.color}0C`, color: r.color, border: `1px solid ${r.color}1A`, display: "inline-block", marginTop: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99, background: `${r.color}15`, color: r.color, display: "inline-block", marginTop: 4 }}>
                       Role-based access
                     </span>
                   </div>
@@ -758,9 +638,8 @@ export default function LandingPage() {
                 <Link href={r.href} style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   padding: "13px", borderRadius: 16,
-                  background: r.bg, color: "white",
+                  background: r.color, color: "white",
                   fontSize: 13, fontWeight: 700, textDecoration: "none",
-                  boxShadow: `0 2px 6px ${r.shadow}60, 0 8px 24px ${r.shadow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
                   transition: "all 0.3s cubic-bezier(0.16,1,0.3,1)",
                 }}>
                   Enter {r.role} Portal <ArrowRight size={14} strokeWidth={2.5} />
@@ -777,23 +656,17 @@ export default function LandingPage() {
       <div className="depth-divider" />
       <section style={{
         padding: `${isMobile ? 48 : 80}px ${hPad}px ${isMobile ? 64 : 104}px`,
-        background: "rgba(255,255,255,0.82)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        background: "#ffffff",
         position: "relative",
         zIndex: 4,
       }}>
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <div className="reveal-scale" style={{
+          <div className="reveal" style={{
             borderRadius: isMobile ? 24 : 36,
             padding: isMobile ? "44px 24px" : isTablet ? "56px 40px" : "72px 64px",
-            background: "linear-gradient(135deg,#1D4ED8 0%,#3B82F6 45%,#D946EF 100%)",
+            background: "#2563EB",
             position: "relative", overflow: "hidden", textAlign: "center",
-            boxShadow: "0 4px 12px rgba(29,78,216,0.15), 0 16px 48px rgba(59,130,246,0.25), 0 32px 80px rgba(29,78,216,0.20), inset 0 1px 0 rgba(255,255,255,0.12)",
           }}>
-            <div style={{ position: "absolute", top: -100, right: -100, width: 320, height: 320, borderRadius: "50%", background: "rgba(255,255,255,0.08)", filter: "blur(2px)" }} />
-            <div style={{ position: "absolute", bottom: -80, left: -80, width: 260, height: 260, borderRadius: "50%", background: "rgba(255,255,255,0.06)", filter: "blur(2px)" }} />
-            <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 400, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)", filter: "blur(40px)" }} />
 
             <div style={{ position: "relative", zIndex: 1 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99, background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", marginBottom: 28 }}>
@@ -827,14 +700,11 @@ export default function LandingPage() {
       ══════════════════════════════ */}
       <div className="depth-divider" />
       <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.4)",
-        background: "rgba(248,250,252,0.85)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+        borderTop: "1px solid #e2e8f0",
+        background: "#f8fafc",
         padding: isMobile ? "44px 20px 28px" : "64px 40px 36px",
         position: "relative",
         zIndex: 1,
-        boxShadow: "inset 0 2px 16px rgba(59,130,246,0.03)",
       }}>
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
           <div style={{
@@ -846,10 +716,10 @@ export default function LandingPage() {
             {/* Brand */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(29,78,216,0.25), 0 8px 20px rgba(59,130,246,0.30), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, background: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <GraduationCap size={16} color="white" />
                 </div>
-                <span style={{ fontSize: 15, fontWeight: 900, background: "linear-gradient(135deg,#1D4ED8,#3B82F6,#D946EF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>InfiCampus</span>
+                <span style={{ fontSize: 15, fontWeight: 900, color: "#0F172A" }}>InfiCampus</span>
               </div>
               <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.8, maxWidth: 280 }}>
                 Modernizing university management with a powerful, role-based platform. Built for students, faculty, and admins.

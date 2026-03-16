@@ -95,25 +95,6 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
         '-=0.6'
       )
 
-      // Orbs — fade in gently
-      .fromTo('.hero-orb',
-        { opacity: 0, scale: 0.6 },
-        { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out', stagger: 0.1 },
-        0.2
-      )
-
-      // Floating ERP icons — pop in around the dashboard card
-      .fromTo('.erp-float',
-        { opacity: 0, scale: 0, y: 20 },
-        {
-          opacity: 1, scale: 1, y: 0,
-          duration: 0.5,
-          ease: 'back.out(2)',
-          stagger: 0.08,
-        },
-        '-=0.5'
-      )
-
     }, hero)
 
     return () => ctx.revert()
@@ -147,7 +128,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           : '88px 40px 0 40px',
         overflow: 'hidden',
         // Dark hero — distinct from the light sections below
-        background: 'linear-gradient(160deg, #020817 0%, #0d1224 55%, #080c18 100%)',
+        background: '#0f172a',
       }}
     >
       {/* ── CSS Animated Background (replaces WebGL for performance) ── */}
@@ -168,47 +149,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           overflow: 'hidden',
         }}
       >
-        {/* Orb 1 — Primary blue, large, top-left drift */}
-        <div className="hero-orb hero-orb-1" />
-        {/* Orb 2 — Indigo/purple, mid-right drift */}
-        <div className="hero-orb hero-orb-2" />
-        {/* Orb 3 — Cyan accent, bottom-center */}
-        <div className="hero-orb hero-orb-3" />
-        {/* Orb 4 — Magenta, subtle, top-right */}
-        <div className="hero-orb hero-orb-4" />
-        {/* Orb 5 — Deep blue, small, bottom-left */}
-        <div className="hero-orb hero-orb-5" />
-        {/* Orb 6 — Teal, mid-center float */}
-        <div className="hero-orb hero-orb-6" />
       </div>
-
-      {/* ── Ambient glow orbs for dimensional lighting ── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '15%', left: '10%',
-          width: 300, height: 300,
-          borderRadius: '50%',
-          background: 'rgba(29,78,216,0.08)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          bottom: '20%', right: '15%',
-          width: 250, height: 250,
-          borderRadius: '50%',
-          background: 'rgba(217,70,239,0.06)',
-          filter: 'blur(70px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
 
       {/* ── DOM Content (SEO-safe — stays in HTML) ── */}
       <div
@@ -262,11 +203,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
             Manage your{' '}
             <span
               style={{
-                background: 'linear-gradient(135deg, #0EA5E9 0%, #38BDF8 30%, #FF7F50 65%, #FF6347 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                textShadow: '0 0 40px rgba(14,165,233,0.3)',
+                color: '#3B82F6',
               }}
             >
               entire campus
@@ -311,12 +248,11 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
                 gap: 8,
                 padding: isMobile ? '11px 20px' : '13px 28px',
                 borderRadius: 12,
-                background: 'linear-gradient(135deg, #1D4ED8, #3B82F6)',
+                background: '#2563EB',
                 color: '#fff',
                 fontWeight: 700,
                 fontSize: isMobile ? 13 : 15,
                 textDecoration: 'none',
-                boxShadow: '0 2px 8px rgba(29,78,216,0.30), 0 8px 28px rgba(59,130,246,0.38), 0 16px 48px rgba(29,78,216,0.15), inset 0 1px 0 rgba(255,255,255,0.15)',
                 width: undefined,
                 justifyContent: undefined,
                 transition: 'all 0.3s cubic-bezier(.16,1,.3,1)',
@@ -368,64 +304,21 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Right: Dashboard glass card (desktop/tablet) + floating ERP icons */}
+        {/* Right: Dashboard glass card (desktop/tablet) */}
         {!isMobile && (
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
-
-            {/* ── Floating ERP elements orbiting the dashboard ── */}
-            <div className="erp-float erp-float-1" style={{ position: 'absolute', top: -20, left: -10, zIndex: 3 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(81,162,255,0.12)', border: '1px solid rgba(81,162,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(81,162,255,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <ClipboardCheck size={18} color="#51A2FF" strokeWidth={2} />
-              </div>
-            </div>
-
-            <div className="erp-float erp-float-2" style={{ position: 'absolute', top: 30, right: -25, zIndex: 3 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(196,180,255,0.12)', border: '1px solid rgba(196,180,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(196,180,255,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <Award size={16} color="#C4B4FF" strokeWidth={2} />
-              </div>
-            </div>
-
-            <div className="erp-float erp-float-3" style={{ position: 'absolute', top: '40%', right: -35, zIndex: 3 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(134,239,172,0.12)', border: '1px solid rgba(134,239,172,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(134,239,172,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <Calendar size={17} color="#86efac" strokeWidth={2} />
-              </div>
-            </div>
-
-            <div className="erp-float erp-float-4" style={{ position: 'absolute', bottom: 20, right: -15, zIndex: 3 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(253,199,69,0.12)', border: '1px solid rgba(253,199,69,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(253,199,69,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <Bell size={15} color="#FDC745" strokeWidth={2} />
-              </div>
-            </div>
-
-            <div className="erp-float erp-float-5" style={{ position: 'absolute', bottom: -10, left: 20, zIndex: 3 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(255,100,103,0.12)', border: '1px solid rgba(255,100,103,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(255,100,103,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <Wallet size={17} color="#FF6467" strokeWidth={2} />
-              </div>
-            </div>
-
-            <div className="erp-float erp-float-6" style={{ position: 'absolute', top: '50%', left: -30, zIndex: 3 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', boxShadow: '0 4px 16px rgba(14,165,233,0.20), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <BarChart3 size={16} color="#0EA5E9" strokeWidth={2} />
-              </div>
-            </div>
             <div
-              className="hero-anim-card hero-float"
+              className="hero-anim-card"
               style={{
                 width: '100%',
                 maxWidth: 400,
-                background: 'rgba(15,20,40,0.78)',
-                backdropFilter: 'blur(32px) saturate(1.4)',
-                WebkitBackdropFilter: 'blur(32px) saturate(1.4)',
-                border: '1px solid rgba(81,162,255,0.16)',
-                borderTop: '1px solid rgba(81,162,255,0.25)',
+                background: '#1e293b',
+                border: '1px solid #334155',
+                borderTop: '1px solid #475569',
                 borderRadius: 24,
                 boxShadow: `
                   0 4px 12px rgba(0,0,0,0.20),
-                  0 16px 40px rgba(0,0,0,0.35),
-                  0 40px 90px rgba(0,0,0,0.45),
-                  0 0 0 1px rgba(81,162,255,0.08),
-                  0 0 60px rgba(81,162,255,0.06),
-                  inset 0 1px 0 rgba(81,162,255,0.12)
+                  0 16px 40px rgba(0,0,0,0.35)
                 `,
                 overflow: 'hidden',
               }}
