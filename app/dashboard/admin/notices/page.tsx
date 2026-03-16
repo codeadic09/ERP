@@ -46,13 +46,13 @@ const targetConfig = {
 
 interface FormData {
   title:  string
-  body:   string
+  content: string
   target: "All" | "Students" | "Faculty"
   urgent: boolean
 }
 
 const emptyForm: FormData = {
-  title: "", body: "", target: "All", urgent: false,
+  title: "", content: "", target: "All", urgent: false,
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
@@ -85,8 +85,8 @@ function NoticeForm({ form, setForm }: NoticeFormProps) {
         <Label className="text-xs font-semibold">Body</Label>
         <textarea
           placeholder="Detailed notice content..."
-          value={form.body}
-          onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
+          value={form.content}
+          onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
           rows={4}
           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
         />
@@ -139,7 +139,7 @@ function NoticeForm({ form, setForm }: NoticeFormProps) {
             }
             <div className="min-w-0">
               <p className="font-bold text-gray-800 text-xs">{form.title}</p>
-              {form.body && <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{form.body}</p>}
+              {form.content && <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{form.content}</p>}
               <div className="flex items-center gap-2 mt-1.5">
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                   form.target === "All"      ? "bg-gray-100 text-gray-600"   :
@@ -213,7 +213,7 @@ export default function NoticesPage() {
     return notices.filter(n => {
       const q = search.toLowerCase()
       if (q && !n.title.toLowerCase().includes(q) &&
-               !(n.body ?? "").toLowerCase().includes(q)) return false
+               !(n.content ?? "").toLowerCase().includes(q)) return false
       if (filterTarget !== "all" && n.target !== filterTarget) return false
       if (filterUrgent === "urgent"  &&  !n.urgent) return false
       if (filterUrgent === "normal"  &&   n.urgent) return false
@@ -229,7 +229,7 @@ export default function NoticesPage() {
 
   function openEdit(n: Notice) {
     setSelected(n)
-    setForm({ title: n.title, body: n.body ?? "", target: n.target, urgent: n.urgent })
+    setForm({ title: n.title, content: n.content ?? "", target: n.target, urgent: n.urgent })
     setEditOpen(true)
   }
 
@@ -242,7 +242,7 @@ export default function NoticesPage() {
     try {
       const notice = await addNotice({
         title:      form.title,
-        body:       form.body      || null,
+        content:    form.content   || null,
         target:     form.target,
         urgent:     form.urgent,
         created_by: null,
@@ -259,7 +259,7 @@ export default function NoticesPage() {
     try {
       const updated = await updateNotice(selected.id, {
         title:  form.title,
-        body:   form.body   || null,
+        content: form.content || null,
         target: form.target,
         urgent: form.urgent,
       })
@@ -430,9 +430,9 @@ export default function NoticesPage() {
                                     <p className="text-sm font-semibold text-gray-800 leading-tight truncate">
                                       {notice.title}
                                     </p>
-                                    {notice.body && (
+                                    {notice.content && (
                                       <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">
-                                        {notice.body}
+                                        {notice.content}
                                       </p>
                                     )}
                                   </div>
@@ -628,8 +628,8 @@ export default function NoticesPage() {
                     }
                     <div>
                       <p className="font-black text-gray-800 text-sm leading-snug">{selected.title}</p>
-                      {selected.body && (
-                        <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{selected.body}</p>
+                      {selected.content && (
+                        <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{selected.content}</p>
                       )}
                     </div>
                   </div>

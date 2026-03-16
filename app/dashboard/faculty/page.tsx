@@ -74,7 +74,7 @@ export default function FacultyDashboard() {
   const [me, setMe] = useState<User | null>(null)
 
   // ── Publish notice form ──────────────────────────────────────
-  const [noticeForm, setNoticeForm] = useState({ title: "", body: "", target: "Students" as "All" | "Students" | "Faculty" })
+  const [noticeForm, setNoticeForm] = useState({ title: "", content: "", target: "Students" as "All" | "Students" | "Faculty" })
   const [publishing, setPublishing] = useState(false)
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null)
 
@@ -117,18 +117,18 @@ export default function FacultyDashboard() {
 
   // ── Publish notice handler ───────────────────────────────────
   async function handlePublishNotice() {
-    if (!noticeForm.title.trim() || !noticeForm.body.trim()) return
+    if (!noticeForm.title.trim() || !noticeForm.content.trim()) return
     setPublishing(true)
     try {
       const newNotice = await addNotice({
         title: noticeForm.title.trim(),
-        body: noticeForm.body.trim(),
+        content: noticeForm.content.trim(),
         target: noticeForm.target,
         urgent: false,
         created_by: me?.id ?? "",
       } as any)
       setNotices(prev => [newNotice, ...prev])
-      setNoticeForm({ title: "", body: "", target: "Students" })
+      setNoticeForm({ title: "", content: "", target: "Students" })
       setPublishSuccess("Notice published successfully!")
       setTimeout(() => setPublishSuccess(null), 3000)
     } catch (e: any) {
@@ -640,18 +640,18 @@ export default function FacultyDashboard() {
               <Label className="text-xs font-semibold text-gray-500">Content <span className="text-red-400">*</span></Label>
               <Textarea
                 placeholder="Write your notice content here..."
-                value={noticeForm.body}
-                onChange={e => setNoticeForm(f => ({ ...f, body: e.target.value }))}
+                value={noticeForm.content}
+                onChange={e => setNoticeForm(f => ({ ...f, content: e.target.value }))}
                 rows={3}
                 maxLength={1000}
                 className="resize-none text-sm"
               />
-              <p className="text-[10px] text-gray-400 text-right">{noticeForm.body.length}/1000</p>
+              <p className="text-[10px] text-gray-400 text-right">{noticeForm.content.length}/1000</p>
             </div>
             <Button
               size="sm"
               onClick={handlePublishNotice}
-              disabled={publishing || !noticeForm.title.trim() || !noticeForm.body.trim()}
+              disabled={publishing || !noticeForm.title.trim() || !noticeForm.content.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs font-semibold h-9"
             >
               {publishing

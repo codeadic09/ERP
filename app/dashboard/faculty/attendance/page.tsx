@@ -29,6 +29,7 @@ import {
   getAttendance, upsertAttendance,
   getSubjectsByFacultyId,
   getStudentsEnrolledInSubject,
+  addNotice,
 } from "@/lib/db"
 import type { User, Department, Attendance, Subject } from "@/lib/types"
 
@@ -271,6 +272,26 @@ export default function FacultyAttendancePage() {
         status:     r.status,
       }))
       const saved = await upsertAttendance(records)
+      
+      // ── Format date as DD/MM/YY ──────────────────────────────
+      const dateParts = selectedDate.split('-')
+      const day = dateParts[2]
+      const month = dateParts[1]
+      const year = dateParts[0].slice(-2)
+      const formattedDate = `${day}/${month}/${year}`
+      
+      // ── Create notice for students about attendance ──────────
+      await addNotice({
+        title: "Attendance Marked",
+        content: `Your attendance for (${formattedDate}) ${subjectName} lecture is marked`,
+        target: "Students",
+        urgent: false,
+        created_by: myId ?? null,
+      }).catch(err => {
+        console.error("Failed to create notice:", err)
+        // Continue even if notice creation fails
+      })
+      
       setAttendance(prev => {
         const updated = [...prev]
         saved.forEach((rec: Attendance) => {
