@@ -23,6 +23,7 @@ import {
   getDepartments,
 } from "@/lib/db"
 import type { Fee, Notice, User, Department } from "@/lib/types"
+import { StatSkeleton, SkeletonPremium } from "@/components/dashboard/skeletons"
 
 
 
@@ -44,12 +45,7 @@ const DEPT_COLORS = [
   "#F59E0B","#10B981","#F97316",
 ]
 
-// ─── Skeleton ────────────────────────────────────────────────────
-function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div className={`animate-pulse rounded-xl bg-gray-100 ${className}`} />
-  )
-}
+
 
 // ════════════════════════════════════════════════════════════════
 export default function AdminOverviewPage() {
@@ -203,7 +199,7 @@ export default function AdminOverviewPage() {
       loading={loading}
     >
       <LiquidGlassBackground />
-      <div className="relative z-10 space-y-6 p-4 sm:p-6 md:p-8 w-full min-w-0">
+      <div className={`relative z-10 space-y-6 p-4 sm:p-6 md:p-8 w-full min-w-0 ${!loading ? "dashboard-reveal" : ""}`}>
 
         {/* ── Welcome banner ──────────────────────────────────── */}
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-6 text-white liquid-glass-banner">
@@ -238,7 +234,7 @@ export default function AdminOverviewPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-28" />
+                <StatSkeleton key={i} />
               ))
             : statCards.map(s => (
                 <Link key={s.label} href={s.href} className="no-underline">
@@ -283,7 +279,7 @@ export default function AdminOverviewPage() {
               </CardHeader>
               <CardContent className="p-0">
                 {loading
-                  ? <div className="px-6 py-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+                  ? <div className="px-6 py-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <SkeletonPremium key={i} className="h-12" />)}</div>
                   : fees.length === 0
                     ? <p className="text-center text-sm text-gray-400 py-8">No fee records yet</p>
                     : <div className="divide-y divide-gray-100">
@@ -291,7 +287,7 @@ export default function AdminOverviewPage() {
                           const ss  = statusStyle[fee.status]
                           const usr = (fee as any).users
                           return (
-                            <div key={fee.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/60 transition-colors">
+                            <div key={fee.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/60 transition-colors smooth-list-item">
                               {/* Avatar */}
                               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-xs font-black text-blue-700 shrink-0">
                                 {usr?.name?.split(" ").map((n: string) => n[0]).slice(0, 2).join("") ?? "?"}
@@ -347,7 +343,7 @@ export default function AdminOverviewPage() {
               </CardHeader>
               <CardContent className="px-6 pb-5 space-y-4">
                 {loading
-                  ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-6" />)
+                  ? Array.from({ length: 5 }).map((_, i) => <SkeletonPremium key={i} className="h-8" />)
                   : deptCounts.map((d) => (
                       <div key={d.name} className="space-y-1.5">
                         <div className="flex items-center justify-between">
@@ -427,7 +423,7 @@ export default function AdminOverviewPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4 space-y-2">
                 {loading
-                  ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16" />)
+                  ? Array.from({ length: 3 }).map((_, i) => <SkeletonPremium key={i} className="h-16" />)
                   : notices.length === 0
                     ? <p className="text-center text-sm text-gray-400 py-4">No notices yet</p>
                     : notices.map(n => (
@@ -465,10 +461,10 @@ export default function AdminOverviewPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4">
                 {loading
-                  ? <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+                  ? <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <SkeletonPremium key={i} className="h-10" />)}</div>
                   : <div className="space-y-1">
                       {recentActivity.map((a, i) => (
-                        <div key={a.id} className="flex items-start gap-3 py-2.5 relative">
+                        <div key={a.id} className="flex items-start gap-3 py-2.5 relative smooth-list-item">
                           {i < recentActivity.length - 1 && (
                             <div className="absolute left-[11px] top-8 bottom-0 w-px bg-gray-100" />
                           )}

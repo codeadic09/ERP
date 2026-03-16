@@ -38,6 +38,7 @@ import {
   deleteRegistration, unenrollFromSubject, getDepartments,
 } from "@/lib/db"
 import type { Registration, Department } from "@/lib/types"
+import { StatSkeleton, TableSkeleton, ChartSkeleton, SkeletonPremium } from "@/components/dashboard/skeletons"
 
 // ─── Constants ───────────────────────────────────────────────────
 const PAGE_SIZE = 10
@@ -46,10 +47,6 @@ const statusStyle = {
   pending:  { label: "Pending",  bg: "rgba(217,119,6,0.08)",  color: "#D97706", icon: Clock        },
   approved: { label: "Approved", bg: "rgba(22,163,74,0.08)",  color: "#16A34A", icon: CheckCircle2 },
   rejected: { label: "Rejected", bg: "rgba(220,38,38,0.08)",  color: "#DC2626", icon: XCircle      },
-}
-
-function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-gray-100 ${className}`} />
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -252,7 +249,7 @@ export default function RegistrationsPage() {
       pageSubtitle="Review and manage student subject registrations"
       loading={loading}
     >
-      <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0">
+      <div className={`p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0 ${!loading ? "dashboard-reveal" : ""}`}>
 
         {/* ── Error ─────────────────────────────────────────── */}
         {error && (
@@ -279,10 +276,7 @@ export default function RegistrationsPage() {
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 font-medium mb-1">{s.label}</p>
-                {loading
-                  ? <Skeleton className="h-7 w-24 mb-1" />
-                  : <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                }
+                <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
                 <p className="text-xs text-gray-400">{s.sub}</p>
               </CardContent>
             </Card>
@@ -290,80 +284,87 @@ export default function RegistrationsPage() {
         </div>
 
         {/* ── Charts ────────────────────────────────────────── */}
-        {!loading && registrations.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Pie — Status breakdown */}
-            <Card className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
-                    <ClipboardCheck className="h-3.5 w-3.5 text-purple-600" />
-                  </div>
-                  Status Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%"
-                      innerRadius={45} outerRadius={70}
-                      paddingAngle={3} dataKey="value"
-                    >
-                      {pieData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v: number) => [v, "Registrations"]}
-                      contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #E2E8F0" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2 mt-1">
-                  {pieData.map(d => (
-                    <div key={d.name} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
-                        <span className="text-gray-600 font-medium">{d.name}</span>
-                      </div>
-                      <span className="font-black" style={{ color: d.color }}>
-                        {d.value}
-                      </span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {loading ? (
+            <>
+              <ChartSkeleton />
+              <div className="lg:col-span-2">
+                <ChartSkeleton />
+              </div>
+            </>
+          ) : registrations.length > 0 && (
+            <>
+              {/* Pie — Status breakdown */}
+              <Card className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
+                      <ClipboardCheck className="h-3.5 w-3.5 text-purple-600" />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Bar — Dept-wise */}
-            <Card className="lg:col-span-2 backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
-                    <GraduationCap className="h-3.5 w-3.5 text-amber-600" />
+                    Status Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <ResponsiveContainer width="100%" height={160}>
+                    <PieChart>
+                      <Pie data={pieData} cx="50%" cy="50%"
+                        innerRadius={45} outerRadius={70}
+                        paddingAngle={3} dataKey="value"
+                      >
+                        {pieData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(v: number) => [v, "Registrations"]}
+                        contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #E2E8F0" }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 mt-1">
+                    {pieData.map(d => (
+                      <div key={d.name} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
+                          <span className="text-gray-600 font-medium">{d.name}</span>
+                        </div>
+                        <span className="font-black" style={{ color: d.color }}>
+                          {d.value}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  Department-wise Registrations
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={deptChartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                    <XAxis dataKey="dept" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #E2E8F0" }}
-                    />
-                    <Bar dataKey="pending"  name="Pending"  fill="#D97706" radius={[4, 4, 0, 0]} stackId="a" />
-                    <Bar dataKey="approved" name="Approved" fill="#16A34A" radius={[4, 4, 0, 0]} stackId="a" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-          </div>
-        )}
+              {/* Bar — Dept-wise */}
+              <Card className="lg:col-span-2 backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                      <GraduationCap className="h-3.5 w-3.5 text-amber-600" />
+                    </div>
+                    Department-wise Registrations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={deptChartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                      <XAxis dataKey="dept" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #E2E8F0" }}
+                      />
+                      <Bar dataKey="pending"  name="Pending"  fill="#D97706" radius={[4, 4, 0, 0]} stackId="a" />
+                      <Bar dataKey="approved" name="Approved" fill="#16A34A" radius={[4, 4, 0, 0]} stackId="a" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
 
         {/* ── Main table ────────────────────────────────────── */}
         <Card className="backdrop-blur-xl bg-white/70 border-white/50 shadow-sm">
@@ -453,11 +454,14 @@ export default function RegistrationsPage() {
                   {loading
                     ? Array.from({ length: 6 }).map((_, i) => (
                         <TableRow key={i}>
-                          {Array.from({ length: 8 }).map((_, j) => (
-                            <TableCell key={j} className={j === 0 ? "pl-6" : j === 7 ? "pr-6" : ""}>
-                              <Skeleton className="h-5 w-full" />
-                            </TableCell>
-                          ))}
+                          <TableCell className="pl-6"><SkeletonPremium className="h-4 w-4" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-10 w-32" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-24" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-28" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-12" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-6 w-20 rounded-full" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-24" /></TableCell>
+                          <TableCell className="pr-6 text-right"><SkeletonPremium className="h-8 w-8 ml-auto" /></TableCell>
                         </TableRow>
                       ))
                     : paginated.length === 0
@@ -473,7 +477,7 @@ export default function RegistrationsPage() {
                           const usr = (reg as any).users
                           const sub = (reg as any).subjects
                           return (
-                            <TableRow key={reg.id} className="hover:bg-gray-50/60 transition-colors">
+                            <TableRow key={reg.id} className="hover:bg-gray-50/60 transition-colors smooth-list-item h-16">
 
                               {/* Checkbox */}
                               <TableCell className="pl-6">

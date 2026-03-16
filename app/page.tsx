@@ -30,7 +30,7 @@ function useMobile(breakpoint = 768) {
 }
 
 /* ── Rolling number hook ── */
-function useCountUp(end: number, duration = 1400, trigger = true) {
+function useCountUp(end: number, duration = 600, trigger = true) {
   const [value, setValue] = useState(0)
   const rafRef = useRef<number>(0)
   useEffect(() => {
@@ -69,7 +69,7 @@ export function CountUp({ value, className, style }: { value: string; className?
   const num = parseFloat(numStr.replace(/,/g, ""))
   const decimals = numStr.includes(".") ? (numStr.split(".")[1]?.length ?? 0) : 0
 
-  const current = useCountUp(num, 1400, visible)
+  const current = useCountUp(num, 600, visible)
 
   const formatted = decimals > 0
     ? current.toFixed(decimals)
@@ -311,11 +311,11 @@ export default function LandingPage() {
           { y: 25, opacity: 0 },
           {
             y: 0, opacity: 1,
-            duration: 0.4,
+            duration: 0.2,
             ease: "power2.out",
             scrollTrigger: {
               trigger: el,
-              start: "top 94%",
+              start: "top 98%",
               once: true,
             }
           }
@@ -326,12 +326,12 @@ export default function LandingPage() {
           { y: 20, opacity: 0 },
           {
             y: 0, opacity: 1,
-            duration: 0.35,
-            delay: (i % 4) * 0.04,
+            duration: 0.18,
+            delay: (i % 4) * 0.02,
             ease: "power2.out",
             scrollTrigger: {
               trigger: card,
-              start: "top 94%",
+              start: "top 98%",
               once: true,
             }
           }

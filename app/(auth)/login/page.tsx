@@ -133,8 +133,8 @@ export default function LoginPage() {
 
         /* ── Page entrance ── */
         @keyframes login-page-appear {
-          from { opacity: 0; transform: translateY(30px); filter: blur(12px); }
-          to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
         .login-animate-appear {
@@ -167,7 +167,7 @@ export default function LoginPage() {
             alignItems: "center",
             justifyContent: "center",
             opacity: 0,
-            willChange: "transform, opacity, filter",
+            willChange: "transform, opacity",
           }}
         >
           {/* Blobs */}
@@ -184,11 +184,10 @@ export default function LoginPage() {
             zIndex:         1,
             width:          "100%",
             maxWidth:       960,
-            background:     "rgba(255,255,255,0.85)",
-            backdropFilter: "blur(24px)",
+            background:     "rgba(255,255,255,0.92)",
             borderRadius:   24,
-            border:         "1px solid rgba(255,255,255,0.70)",
-            boxShadow:      "0 24px 64px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06)",
+            border:         "1px solid rgba(255,255,255,0.80)",
+            boxShadow:      "0 24px 64px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)",
             overflow:       "hidden",
           }}
         >

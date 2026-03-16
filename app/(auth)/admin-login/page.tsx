@@ -102,8 +102,8 @@ export default function AdminLoginPage() {
     <>
       <style>{`
         @keyframes admin-page-appear {
-          from { opacity: 0; transform: translateY(30px); filter: blur(12px); }
-          to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         .admin-animate-appear {
           animation: admin-page-appear 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
             alignItems: "center",
             justifyContent: "center",
             opacity: 0,
-            willChange: "transform, opacity, filter",
+            willChange: "transform, opacity",
           }}
         >
           {/* Subtle blobs */}
@@ -146,11 +146,10 @@ export default function AdminLoginPage() {
           zIndex:         1,
           width:          "100%",
           maxWidth:       420,
-          background:     "rgba(30,41,59,0.85)",
-          backdropFilter: "blur(24px)",
+          background:     "rgba(30,41,59,0.95)",
           borderRadius:   24,
-          border:         "1px solid rgba(100,116,139,0.25)",
-          boxShadow:      "0 24px 64px rgba(0,0,0,0.40), 0 4px 16px rgba(0,0,0,0.20)",
+          border:         "1px solid rgba(100,116,139,0.40)",
+          boxShadow:      "0 24px 64px rgba(0,0,0,0.50), 0 4px 16px rgba(0,0,0,0.25)",
           overflow:       "hidden",
         }}
       >

@@ -40,6 +40,7 @@ import {
   setFacultySubjectsForUser,
 } from "@/lib/db"
 import type { User, Department, Subject, FacultySubject } from "@/lib/types"
+import { StatSkeleton, TableSkeleton, SkeletonPremium } from "@/components/dashboard/skeletons"
 
 // ─── Types ───────────────────────────────────────────────────────
 type Tab = "all" | "students" | "faculty"
@@ -73,10 +74,6 @@ function generateCredentials(name: string, role: "student" | "faculty") {
     email:    `${first}@pcu.edu.in`,
     password: `${name.split(" ")[0]}@${digits}`,
   }
-}
-
-function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-gray-100 ${className}`} />
 }
 
 const PAGE_SIZE = 10
@@ -787,7 +784,7 @@ export default function UsersPage() {
       pageSubtitle="Manage students and faculty accounts"
       loading={loading}
     >
-      <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0">
+      <div className={`p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0 ${!loading ? "dashboard-reveal" : ""}`}>
 
         {/* ── Error banner ──────────────────────────────────── */}
         {error && (
@@ -818,10 +815,7 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">{s.label}</p>
-                  {loading
-                    ? <Skeleton className="h-6 w-10 mt-1" />
-                    : <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
-                  }
+                  <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
                 </div>
               </CardContent>
             </Card>
@@ -964,11 +958,14 @@ export default function UsersPage() {
                   {loading
                     ? Array.from({ length: 6 }).map((_, i) => (
                         <TableRow key={i}>
-                          {Array.from({ length: 8 }).map((_, j) => (
-                            <TableCell key={j} className={j === 0 ? "pl-4 w-10" : j === 7 ? "pr-6" : ""}>
-                              <Skeleton className="h-5 w-full" />
-                            </TableCell>
-                          ))}
+                          <TableCell className="pl-4 w-10"><SkeletonPremium className="h-4 w-4" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-10 w-32" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-6 w-16 rounded-full" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-24" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-24" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-5 w-24" /></TableCell>
+                          <TableCell><SkeletonPremium className="h-6 w-16 rounded-full" /></TableCell>
+                          <TableCell className="pr-6 text-right"><SkeletonPremium className="h-8 w-8 ml-auto" /></TableCell>
                         </TableRow>
                       ))
                     : paginated.length === 0
@@ -985,7 +982,7 @@ export default function UsersPage() {
                       : paginated.map(user => (
                           <TableRow
                             key={user.id}
-                            className={`hover:bg-gray-50/60 transition-colors ${selected.has(user.id) ? "bg-blue-50/40" : ""}`}
+                            className={`hover:bg-gray-50/60 transition-colors smooth-list-item h-16 ${selected.has(user.id) ? "bg-blue-50/40" : ""}`}
                           >
                             {/* Checkbox */}
                             <TableCell className="pl-4 w-10">

@@ -61,40 +61,40 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
     if (!hero) return
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.15 })
+      const tl = gsap.timeline({ delay: 0.05 })
 
       // Badge — pop in from above
       tl.fromTo('.hero-anim-badge',
         { y: -20, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }
+        { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' }
       )
 
         // Title — smooth rise
         .fromTo('.hero-anim-title',
           { y: 40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-          '-=0.3'
+          { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' },
+          '-=0.2'
         )
 
         // CTAs — slide up with slight stagger
         .fromTo('.hero-anim-cta',
           { y: 25, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-          '-=0.35'
+          { y: 0, opacity: 1, duration: 0.3, ease: 'power3.out' },
+          '-=0.2'
         )
 
         // Trust badges — fade in
         .fromTo('.hero-anim-trust',
           { y: 15, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-          '-=0.25'
+          { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' },
+          '-=0.15'
         )
 
         // Dashboard card — slide from right with rotation
         .fromTo('.hero-anim-card',
           { x: 50, opacity: 0, rotateY: 5 },
-          { x: 0, opacity: 1, rotateY: 0, duration: 0.9, ease: 'power3.out' },
-          '-=0.6'
+          { x: 0, opacity: 1, rotateY: 0, duration: 0.45, ease: 'power3.out' },
+          '-=0.3'
         )
 
     }, hero)
