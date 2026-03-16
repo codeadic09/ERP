@@ -76,13 +76,6 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
         '-=0.3'
       )
 
-      // Description — gentle rise
-      .fromTo('.hero-anim-desc',
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' },
-        '-=0.4'
-      )
-
       // CTAs — slide up with slight stagger
       .fromTo('.hero-anim-cta',
         { y: 25, opacity: 0 },
@@ -285,7 +278,7 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
             style={{ display: 'flex', gap: isMobile ? 14 : 24, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : undefined }}
           >
             {[
-              { icon: Lock, text: 'SOC 2 Compliant' },
+              { icon: Lock, text: 'Privacy Focused' },
               { icon: Zap,  text: '99.9% Uptime' },
               { icon: Star, text: '4.9/5 Rating' },
             ].map((b, i) => (

@@ -311,40 +311,47 @@ export default function LandingPage() {
   useEffect(() => {
     const page = pageRef.current
     if (!page) return
+    
+    // Ensure triggers are correctly placed after DOM mount
+    const timeout = setTimeout(() => ScrollTrigger.refresh(), 500)
+
     const ctx = gsap.context(() => {
       page.querySelectorAll(".reveal").forEach((el) => {
         gsap.fromTo(el,
-          { y: 50, opacity: 0 },
+          { y: 25, opacity: 0 },
           {
             y: 0, opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
+            duration: 0.4,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: el,
-              start: "top 88%",
-              toggleActions: "play none none none",
-            },
+              start: "top 94%",
+              once: true,
+            }
           }
         )
       })
       page.querySelectorAll(".stat-card, .glass-feature-card, .role-card").forEach((card, i) => {
         gsap.fromTo(card,
-          { y: 40, opacity: 0 },
+          { y: 20, opacity: 0 },
           {
             y: 0, opacity: 1,
-            duration: 0.7,
-            delay: (i % 4) * 0.1,
-            ease: "power3.out",
+            duration: 0.35,
+            delay: (i % 4) * 0.04,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: card,
-              start: "top 90%",
-              toggleActions: "play none none none",
-            },
+              start: "top 94%",
+              once: true,
+            }
           }
         )
       })
     }, page)
-    return () => ctx.revert()
+    return () => {
+      clearTimeout(timeout)
+      ctx.revert()
+    }
   }, [])
 
   const secPad = isMobile ? SP.section.mobile : isTablet ? SP.section.tablet : SP.section.desktop
