@@ -202,15 +202,14 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
               letterSpacing: '-0.03em',
             }}
           >
-            Manage your{' '}
+            The operating system <br />
             <span
               style={{
                 color: '#3B82F6',
               }}
             >
-              entire campus
+              for your college
             </span>
-            <br />from one place
           </h1>
 
 
