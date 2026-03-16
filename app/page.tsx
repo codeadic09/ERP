@@ -104,16 +104,6 @@ const stats = [
 
 const roles = [
   {
-    role: "Admin",
-    icon: Shield,
-    color: "#1D4ED8",
-    bg: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
-    shadow: "rgba(59,130,246,0.35)",
-    desc: "Full control over the university ecosystem — manage users, departments, fees, and system-wide settings.",
-    perks: ["Manage all users & roles", "Approve registrations", "System analytics", "Fee & exam control"],
-    href: "/login",
-  },
-  {
     role: "Faculty",
     icon: BookOpen,
     color: "#A21CAF",
@@ -470,8 +460,8 @@ export default function LandingPage() {
 
       {/* PORTALS SECTION */}
       <div className="depth-divider" />
-      <Section id="portals" title="One platform, three portals" subtitle="Tailored experiences for every role in your university" isMobile={isMobile} headMb={headMb}>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(3,1fr)", gap: isMobile ? 20 : 28 }}>
+      <Section id="portals" title="One platform, two portals" subtitle="Tailored experiences for every role in your university" isMobile={isMobile} headMb={headMb}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(2,1fr)", gap: isMobile ? 20 : 28 }}>
           {roles.map((r, i) => (
             <div key={i} className={`role-card reveal stagger-${i+1}`}>
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
@@ -492,9 +482,18 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <Link href={r.href} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", borderRadius: 16, background: r.color, color: "white", textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
-                Enter {r.role} Portal <ArrowRight size={14} />
-              </Link>
+              <div style={{ display: "flex", justifyContent: "center", marginTop: "auto" }}>
+                <Link href={r.href} style={{ 
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8, 
+                  padding: "12px 24px", borderRadius: 14, background: r.color, 
+                  color: "white", textDecoration: "none", fontSize: 13, fontWeight: 700,
+                  width: isMobile ? "100%" : "fit-content",
+                  minWidth: isMobile ? "none" : 180,
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease"
+                }} className="portal-btn">
+                  Enter {r.role} Portal <ArrowRight size={14} />
+                </Link>
+              </div>
             </div>
           ))}
         </div>
@@ -517,7 +516,7 @@ export default function LandingPage() {
                 Built for your campus
               </h2>
               <p style={{ fontSize: isMobile ? 14 : 16, color: "rgba(255,255,255,0.75)", maxWidth: 460, margin: "0 auto 40px", lineHeight: 1.75 }}>
-                Designed for students, faculty, and admins at Indian universities — get your institution started today.
+                Designed for students and faculty at Indian universities — get your institution started today.
               </p>
               <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", flexDirection: isMobile ? "column" : "row" }}>
                 <Link href="/login" className="cta-btn-white">
