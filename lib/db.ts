@@ -64,7 +64,7 @@ export async function getUsers() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("users")
-    .select(`*, departments(id, name, code, color)`)
+    .select(`*, departments!dept_id(id, name, code, color)`)
     .order("created_at", { ascending: false })
   if (error) throw error
   return data as User[]
@@ -76,7 +76,7 @@ export async function getUsersByRole(
   const supabase = createClient()
   const { data, error } = await supabase
     .from("users")
-    .select(`*, departments(id, name, code, color)`)
+    .select(`*, departments!dept_id(id, name, code, color)`)
     .eq("role", role)
     .order("created_at", { ascending: false })
   if (error) throw error
@@ -87,7 +87,7 @@ export async function getUserById(id: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("users")
-    .select(`*, departments(id, name, code, color)`)
+    .select(`*, departments!dept_id(id, name, code, color)`)
     .eq("id", id)
     .single()
   if (error) throw error
@@ -116,7 +116,7 @@ export async function updateUser(
     .from("users")
     .update(updates)
     .eq("id", id)
-    .select(`*, departments(id, name, code, color)`)
+    .select(`*, departments!dept_id(id, name, code, color)`)
     .single()
   if (error) throw error
   return data as User
@@ -140,7 +140,7 @@ export async function getFees() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("fees")
-    .select(`*, users(id, name, email, dept_id, departments(name, code))`)
+    .select(`*, users(id, name, email, dept_id, departments!dept_id(name, code))`)
     .order("created_at", { ascending: false })
   if (error) throw error
   return data as Fee[]
@@ -164,7 +164,7 @@ export async function addFee(
   const { data, error } = await supabase
     .from("fees")
     .insert([fee])
-    .select(`*, users(id, name, email, departments(name, code))`)
+    .select(`*, users(id, name, email, departments!dept_id(name, code))`)
     .single()
   if (error) throw error
   return data as Fee
@@ -179,7 +179,7 @@ export async function updateFee(
     .from("fees")
     .update(updates)
     .eq("id", id)
-    .select(`*, users(id, name, email, departments(name, code))`)
+    .select(`*, users(id, name, email, departments!dept_id(name, code))`)
     .single()
   if (error) throw error
   return data as Fee
@@ -315,7 +315,7 @@ export async function getStudentsEnrolledInSubject(subjectId: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("registrations")
-    .select(`*, users:student_id(id, name, email, dept_id, semester, avatar_url, status, created_at, departments(name, code))`)
+    .select(`*, users:student_id(id, name, email, dept_id, semester, avatar_url, status, created_at, departments!dept_id(name, code))`)
     .eq("subject_id", subjectId)
     .eq("status", "approved")
   if (error) throw new Error(error.message)
@@ -607,7 +607,7 @@ export async function getSubjectsByFacultyId(facultyId: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("faculty_subjects")
-    .select(`*, subjects:subject_id(id, name, code, dept_id, semester, departments(id, name, code, color))`)
+    .select(`*, subjects:subject_id(id, name, code, dept_id, semester, departments!dept_id(id, name, code, color))`)
     .eq("faculty_id", facultyId)
   if (error) throw error
   return (data ?? []).map((fs: any) => fs.subjects) as Subject[]
@@ -672,8 +672,8 @@ export async function getRegistrations() {
     .from("registrations")
     .select(`
       *,
-      users:student_id(id, name, email, dept_id, semester, departments(name, code)),
-      subjects:subject_id(id, name, code, semester, departments(name, code))
+      users:student_id(id, name, email, dept_id, semester, departments!dept_id(name, code)),
+      subjects:subject_id(id, name, code, semester, departments!dept_id(name, code))
     `)
     .order("created_at", { ascending: false })
   if (error) throw error
@@ -684,7 +684,7 @@ export async function getRegistrationsByStudent(studentId: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("registrations")
-    .select(`*, subjects:subject_id(id, name, code, semester, faculty_id, departments(name, code), users:faculty_id(name))`)
+    .select(`*, subjects:subject_id(id, name, code, semester, faculty_id, departments!dept_id(name, code), users:faculty_id(name))`)
     .eq("student_id", studentId)
     .order("created_at", { ascending: false })
   if (error) throw error
@@ -765,7 +765,7 @@ export async function getUserByEmail(email: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("users")
-    .select("*, departments(id, name, code, color)")
+    .select("*, departments!dept_id(id, name, code, color)")
     .eq("email", email)
     .single()
   if (error) return null
@@ -800,7 +800,7 @@ export async function updateUserProfile(
     .from("users")
     .update(updates)
     .eq("id", id)
-    .select("*, departments(id, name, code, color)")
+    .select("*, departments!dept_id(id, name, code, color)")
     .single()
   if (error) throw error
   return data as User
@@ -814,7 +814,7 @@ export async function getTimetableRequests() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("timetable_requests")
-    .select(`*, users:faculty_id(id, name, email, dept_id), departments(id, name, code, color)`)
+    .select(`*, users:faculty_id(id, name, email, dept_id), departments!dept_id(id, name, code, color)`)
     .order("created_at", { ascending: false })
   if (error) throw error
   return data as TimetableRequest[]
@@ -1028,7 +1028,7 @@ export async function addClassTeacherRequest(req: {
   const { data, error } = await supabase
     .from("class_teachers")
     .insert([req])
-    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments!dept_id(id, name, code, color)`)
     .single()
   if (error) throw error
   return data as ClassTeacher
@@ -1044,7 +1044,7 @@ export async function updateClassTeacher(
     .from("class_teachers")
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", id)
-    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments(id, name, code, color)`)
+    .select(`*, users:faculty_id(id, name, email, phone, avatar_url, dept_id), departments!dept_id(id, name, code, color)`)
     .single()
   if (error) throw error
   return data as ClassTeacher
@@ -1065,7 +1065,7 @@ export async function getStudentsByDivision(deptId: string, section?: string, se
   const supabase = createClient()
   let q = supabase
     .from("users")
-    .select("*, departments(id, name, code, color)")
+    .select("*, departments!dept_id(id, name, code, color)")
     .eq("role", "student")
     .eq("dept_id", deptId)
     .order("name")
@@ -1087,7 +1087,7 @@ export async function updateStudentDivision(
     .update(updates)
     .eq("id", studentId)
     .eq("role", "student")
-    .select("*, departments(id, name, code, color)")
+    .select("*, departments!dept_id(id, name, code, color)")
     .single()
   if (error) throw error
   return data as User
