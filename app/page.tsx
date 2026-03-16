@@ -798,16 +798,16 @@ export default function LandingPage() {
             <div style={{ position: "relative", zIndex: 1 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99, background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", marginBottom: 28 }}>
                 <TrendingUp size={12} color="white" strokeWidth={2.5} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "white" }}>Join 2,800+ students today</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "white" }}>Start today — zero setup fee</span>
               </div>
               <h2 style={{
                 fontSize: isMobile ? "clamp(24px, 6vw, 32px)" : 40,
                 fontWeight: 900, color: "white", marginBottom: 18, letterSpacing: "-0.025em", lineHeight: 1.15,
               }}>
-                Ready to transform your<br />university experience?
+                Built for your campus
               </h2>
               <p style={{ fontSize: isMobile ? 14 : 16, color: "rgba(255,255,255,0.75)", maxWidth: 460, margin: "0 auto 40px", lineHeight: 1.75 }}>
-                Join thousands of students, faculty, and admins already using InfiCampus to manage their academic world.
+                Designed for students, faculty, and admins at Indian universities — get your institution started today.
               </p>
               <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", flexDirection: isMobile ? "column" : "row" }}>
                 <Link href="/login" className="cta-btn-white">

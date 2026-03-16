@@ -100,11 +100,6 @@ const WHY = [
   { icon: Headphones,     color: "#D946EF", title: "Dedicated Support",      desc: "Priority tickets, Slack channel & onboarding specialist." },
 ]
 
-/* ── Trusted by (placeholder) ────────────────── */
-const LOGOS = [
-  "IIT Delhi", "BITS Pilani", "VIT University", "SRM University", "Manipal", "Amity",
-]
-
 /* ════════════════════════════════════════════════ */
 export default function ContactPage() {
   const isMobile = useMobile()
@@ -306,30 +301,26 @@ export default function ContactPage() {
       </section>
 
       {/* ═══════════════════════════════
-          TRUSTED BY
+          BUILT FOR INDIA
       ═══════════════════════════════ */}
       <section style={{
         padding: `0 ${hPad}px 48px`,
         textAlign: "center",
       }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 20 }}>
-          Trusted by leading institutions
-        </p>
-        <div style={{
-          display: "flex", flexWrap: "wrap", justifyContent: "center", gap: isMobile ? 16 : 28,
-        }}>
-          {LOGOS.map(name => (
-            <div key={name} style={{
-              padding: "10px 22px", borderRadius: 12,
-              background: "rgba(255,255,255,0.7)",
-              border: "1px solid rgba(255,255,255,0.6)",
-              backdropFilter: "blur(8px)",
-              fontSize: 13, fontWeight: 700, color: "#94A3B8",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-            }}>
-              {name}
-            </div>
-          ))}
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <p style={{
+            fontSize: isMobile ? 14 : 16,
+            color: "#475569",
+            lineHeight: 1.8,
+            padding: "24px 32px",
+            borderRadius: 16,
+            background: "rgba(255,255,255,0.6)",
+            border: "1px solid rgba(59,130,246,0.12)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
+          }}>
+            InfiCampus is built ground-up for Indian universities — with CGPA tracking, semester-based results, hall ticket generation, and fee management that fits how your college actually works.
+          </p>
         </div>
       </section>
 

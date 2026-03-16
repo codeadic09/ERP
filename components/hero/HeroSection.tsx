@@ -13,7 +13,7 @@
 import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  ArrowRight, ChevronRight, Lock, Zap, Star,
+  ArrowRight, ChevronRight, Lock, Zap, MapPin,
   Sparkles, GraduationCap,
   ClipboardCheck, Award, Calendar, Bell, Wallet, BarChart3,
 } from 'lucide-react'
@@ -354,9 +354,9 @@ export function HeroSection({ isMobile, isTablet }: HeroSectionProps) {
             style={{ display: 'flex', gap: isMobile ? 14 : 24, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : undefined }}
           >
             {[
-              { icon: Lock, text: 'SOC 2 Compliant' },
-              { icon: Zap,  text: '99.9% Uptime' },
-              { icon: Star, text: '4.9/5 Rating' },
+              { icon: Lock,   text: 'Role-Based Access' },
+              { icon: Zap,    text: '99.9% Uptime' },
+              { icon: MapPin, text: 'Built for India' },
             ].map((b, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <b.icon size={12} color="rgba(148,163,184,0.7)" strokeWidth={2.5} />
