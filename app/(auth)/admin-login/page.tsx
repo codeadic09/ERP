@@ -99,25 +99,49 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight:      "100vh",
-        background:     "linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)",
-        display:        "flex",
-        alignItems:     "center",
-        justifyContent: "center",
-        padding:        "16px",
-      }}
-    >
-      {/* Subtle blobs */}
-      <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-10%", right: "-5%",  width: 500, height: 500, borderRadius: "50%", background: "rgba(234,179,8,0.06)",  filter: "blur(80px)" }} />
-        <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: 400, height: 400, borderRadius: "50%", background: "rgba(239,68,68,0.05)", filter: "blur(80px)" }} />
-      </div>
+    <>
+      <style>{`
+        @keyframes admin-page-appear {
+          from { opacity: 0; transform: translateY(30px); filter: blur(12px); }
+          to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        .admin-animate-appear {
+          animation: admin-page-appear 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+      `}</style>
 
-      {/* Card */}
       <div
         style={{
+          minHeight:      "100vh",
+          background:     "linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          padding:        "16px",
+          overflow:       "hidden",
+        }}
+      >
+        <div
+          className="admin-animate-appear"
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: 0,
+            willChange: "transform, opacity, filter",
+          }}
+        >
+          {/* Subtle blobs */}
+          <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+            <div style={{ position: "absolute", top: "-10%", right: "-5%",  width: 500, height: 500, borderRadius: "50%", background: "rgba(234,179,8,0.06)",  filter: "blur(80px)" }} />
+            <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: 400, height: 400, borderRadius: "50%", background: "rgba(239,68,68,0.05)", filter: "blur(80px)" }} />
+          </div>
+
+          {/* Card */}
+          <div
+            style={{
           position:       "relative",
           zIndex:         1,
           width:          "100%",
@@ -272,8 +296,10 @@ export default function AdminLoginPage() {
             This portal is restricted to authorized administrators only.
           </p>
 
-        </div>
-      </div>
+          </div>{/* end form content area div */}
+        </div>{/* end card div */}
+      </div>{/* end .admin-animate-appear */}
     </div>
+  </>
   )
 }

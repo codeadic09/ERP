@@ -132,67 +132,22 @@ export default function LoginPage() {
         }
 
         /* ── Page entrance ── */
-        @keyframes login-bg-in {
-          0%   { opacity: 0; }
-          100% { opacity: 1; }
-        }
-        @keyframes login-card-in {
-          0%   { opacity: 0; transform: translateY(40px) scale(0.96); filter: blur(6px); }
-          60%  { opacity: 1; transform: translateY(-4px) scale(1.005); filter: blur(0); }
-          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        }
-        @keyframes login-video-in {
-          0%   { opacity: 0; clip-path: inset(0 100% 0 0); }
-          100% { opacity: 1; clip-path: inset(0 0% 0 0); }
-        }
-        @keyframes login-form-child-in {
-          0%   { opacity: 0; transform: translateY(18px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes login-gradient-bar {
-          0%   { transform: scaleX(0); transform-origin: left; }
-          100% { transform: scaleX(1); transform-origin: left; }
-        }
-        @keyframes login-blob-drift {
-          0%   { opacity: 0; transform: scale(0.7) translate(0,0); }
-          100% { opacity: 1; transform: scale(1) translate(0,0); }
+        @keyframes login-page-appear {
+          from { opacity: 0; transform: translateY(30px); filter: blur(12px); }
+          to   { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
-        .login-page-bg {
-          animation: login-bg-in 800ms cubic-bezier(0.4,0,0.2,1) both;
+        .login-animate-appear {
+          animation: login-page-appear 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        .login-card-entrance {
-          animation: login-card-in 700ms cubic-bezier(0.34,1.56,0.64,1) 200ms both;
-        }
-        .login-gradient-bar {
-          animation: login-gradient-bar 600ms cubic-bezier(0.4,0,0.2,1) 350ms both;
-        }
-        .login-video-entrance {
-          animation: login-video-in 800ms cubic-bezier(0.4,0,0.2,1) 450ms both;
-        }
-        .login-blob {
-          animation: login-blob-drift 1200ms cubic-bezier(0.4,0,0.2,1) both;
-        }
-        .login-blob-1 { animation-delay: 100ms; }
-        .login-blob-2 { animation-delay: 300ms; }
-        .login-blob-3 { animation-delay: 500ms; }
 
-        /* stagger children inside form panel */
-        .login-form > * {
-          animation: login-form-child-in 500ms cubic-bezier(0.4,0,0.2,1) both;
+        /* ── Hover effects for buttons ── */
+        .portal-tab-btn {
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .login-form > *:nth-child(1) { animation-delay: 400ms; }
-        .login-form > *:nth-child(2) { animation-delay: 480ms; }
-        .login-form > *:nth-child(3) { animation-delay: 540ms; }
-        .login-form > *:nth-child(4) { animation-delay: 600ms; }
-        .login-form > *:nth-child(5) { animation-delay: 660ms; }
-        .login-form > *:nth-child(6) { animation-delay: 720ms; }
-        .login-form > *:nth-child(7) { animation-delay: 780ms; }
-        .login-form > *:nth-child(8) { animation-delay: 840ms; }
       `}</style>
 
       <div
-        className="login-page-bg"
         style={{
           minHeight:  "100vh",
           background: "linear-gradient(135deg, #EFF6FF 0%, #EDE9FE 50%, #FCE7F3 100%)",
@@ -200,19 +155,31 @@ export default function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           padding:    16,
+          overflow:   "hidden",
         }}
       >
-        {/* Blobs */}
-        <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
-          <div className="login-blob login-blob-1" style={{ position: "absolute", top: "-10%",  right: "-5%", width: 500, height: 500, borderRadius: "50%", background: "rgba(59,130,246,0.08)",  filter: "blur(60px)" }} />
-          <div className="login-blob login-blob-2" style={{ position: "absolute", bottom: "-10%", left: "-5%", width: 400, height: 400, borderRadius: "50%", background: "rgba(139,92,246,0.10)", filter: "blur(60px)" }} />
-          <div className="login-blob login-blob-3" style={{ position: "absolute", top: "40%",   left: "30%",  width: 300, height: 300, borderRadius: "50%", background: "rgba(236,72,153,0.06)",  filter: "blur(50px)" }} />
-        </div>
-
-        {/* ── Main card shell ── */}
         <div
-          className="login-card-entrance"
+          className="login-animate-appear"
           style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: 0,
+            willChange: "transform, opacity, filter",
+          }}
+        >
+          {/* Blobs */}
+          <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+            <div style={{ position: "absolute", top: "-10%",  right: "-5%", width: 500, height: 500, borderRadius: "50%", background: "rgba(59,130,246,0.08)",  filter: "blur(60px)" }} />
+            <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: 400, height: 400, borderRadius: "50%", background: "rgba(139,92,246,0.10)", filter: "blur(60px)" }} />
+            <div style={{ position: "absolute", top: "40%",   left: "30%",  width: 300, height: 300, borderRadius: "50%", background: "rgba(236,72,153,0.06)",  filter: "blur(50px)" }} />
+          </div>
+
+          {/* ── Main card shell ── */}
+          <div
+            style={{
             position:       "relative",
             zIndex:         1,
             width:          "100%",
@@ -226,13 +193,13 @@ export default function LoginPage() {
           }}
         >
           {/* Gradient bar */}
-          <div className="login-gradient-bar" style={{ height: 4, background: currentTab.gradient, transition: "background 0.3s" }} />
+          <div style={{ height: 4, background: currentTab.gradient, transition: "background 0.3s" }} />
 
           <div className="login-wrapper">
 
             {/* ══════════════ LEFT — Video / Doodle ══════════════ */}
             <div
-              className="login-video login-video-entrance"
+              className="login-video"
               style={{
                 position:       "relative",
                 background:     "linear-gradient(135deg, #F0F4FF 0%, #EDE9FE 100%)",
@@ -450,7 +417,8 @@ export default function LoginPage() {
             </div>{/* end .login-form */}
           </div>{/* end .login-wrapper */}
         </div>{/* end card */}
-      </div>
-    </>
+      </div>{/* end .login-animate-appear */}
+    </div>
+  </>
   )
 }
