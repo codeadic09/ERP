@@ -357,10 +357,10 @@ export default function LandingPage() {
       {/* NAVBAR */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        background: navScrolled ? "rgba(255, 255, 255, 0.8)" : "transparent",
-        backdropFilter: navScrolled ? "blur(16px)" : "none",
-        WebkitBackdropFilter: navScrolled ? "blur(16px)" : "none",
-        borderBottom: navScrolled ? "1px solid #e2e8f0" : "1px solid transparent",
+        background: navScrolled ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: navScrolled ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.08)",
         boxShadow: navScrolled ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.02)" : "none",
         willChange: "background, backdrop-filter, border-bottom, box-shadow",
         transition: "background 0.3s ease-out, border-bottom 0.3s ease-out, box-shadow 0.3s ease-out, backdrop-filter 0.3s ease-out",
