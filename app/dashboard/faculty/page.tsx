@@ -7,7 +7,7 @@ import {
   TrendingUp, Calendar, Clock, CheckCircle2,
   AlertCircle, ChevronRight, GraduationCap,
   Loader2, RefreshCw, AlertTriangle,
-  BarChart2, Activity, Wallet, Megaphone, Send
+  BarChart2, Activity, Wallet, Megaphone, Send, MessageSquareQuote
 } from "lucide-react"
 import {
   AreaChart, Area, BarChart, Bar,
@@ -303,6 +303,26 @@ export default function FacultyDashboard() {
               ))
           }
         </div>
+
+        {/* ── Feedback spotlight ───────────────────────────── */}
+        <Link href="/dashboard/faculty/feedback" className="block group">
+          <Card className="liquid-glass border border-indigo-100 bg-gradient-to-r from-indigo-50/70 to-cyan-50/60 group-hover:shadow-md transition-all">
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center shrink-0">
+                  <MessageSquareQuote className="h-5 w-5 text-indigo-700" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-indigo-900 truncate">AI Feedback Insights</p>
+                  <p className="text-xs text-indigo-700/80 truncate">See the top student issues and what to improve first.</p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-indigo-700 flex items-center gap-1 shrink-0">
+                Open <ChevronRight className="h-3.5 w-3.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* ── Today's Schedule ───────────────────────────────── */}
         <Card className="liquid-glass">

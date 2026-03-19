@@ -49,7 +49,10 @@ const navConfig: Record<Role, NavSection[]> = {
       { label: "Class Teacher", href: "/dashboard/faculty/class-teacher", icon: UserCheck    },
       { label: "Timetable",   href: "/dashboard/faculty/timetable",   icon: Calendar       },
     ]},
-    { section: "Communication", items: [{ label: "Notices", href: "/dashboard/faculty/notices", icon: Megaphone }] },
+    { section: "Communication", items: [
+      { label: "Notices", href: "/dashboard/faculty/notices", icon: Megaphone },
+      { label: "Feedback Insights", href: "/dashboard/faculty/feedback", icon: MessageSquareQuote },
+    ] },
     { section: "Account", items: [
       { label: "Profile",  href: "/dashboard/faculty/profile",  icon: UserCircle },
       { label: "Settings", href: "/dashboard/faculty/settings", icon: Settings   },

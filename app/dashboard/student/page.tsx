@@ -8,7 +8,7 @@ import {
   AlertCircle, CheckCircle2, Clock,
   Calendar, BookOpen, ChevronRight,
   AlertTriangle, Loader2, Activity,
-  UserCheck, Mail, Phone
+  UserCheck, Mail, Phone, MessageSquareQuote
 } from "lucide-react"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -278,6 +278,26 @@ export default function StudentDashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* ── Feedback spotlight ───────────────────────────── */}
+        <Link href="/dashboard/student/feedback" className="block group">
+          <Card className="liquid-glass border border-blue-100 bg-gradient-to-r from-blue-50/70 to-cyan-50/60 group-hover:shadow-md transition-all">
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
+                  <MessageSquareQuote className="h-5 w-5 text-blue-700" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-blue-900 truncate">Monthly Feedback Form</p>
+                  <p className="text-xs text-blue-700/80 truncate">Share issues and help teachers improve your learning experience.</p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-blue-700 flex items-center gap-1 shrink-0">
+                Fill Now <ChevronRight className="h-3.5 w-3.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* ── Your Class Teacher ───────────────────────────── */}
         {classTeacher && classTeacher.users && (
