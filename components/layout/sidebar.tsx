@@ -10,6 +10,7 @@ import {
   LogOut, Shield, Menu, ChevronLeft, X,
   CreditCard, UserCircle, HelpCircle, MonitorSmartphone,
   Calendar, UserCheck,
+  MessageSquareQuote,
 } from "lucide-react"
 import { logout, logoutAllDevices } from "@/lib/auth"
 
@@ -31,6 +32,7 @@ const navConfig: Record<Role, NavSection[]> = {
     ]},
     { section: "Communication", items: [
       { label: "Notices", href: "/dashboard/admin/notices", icon: Megaphone },
+      { label: "Feedback", href: "/dashboard/admin/feedback", icon: MessageSquareQuote },
     ]},
     { section: "Account", items: [
       { label: "Profile",  href: "/dashboard/admin/profile",  icon: UserCircle },
@@ -63,7 +65,10 @@ const navConfig: Record<Role, NavSection[]> = {
       { label: "Timetable",     href: "/dashboard/student/timetable",    icon: Calendar       },
     ]},
     { section: "Finance",       items: [{ label: "Fee Payment", href: "/dashboard/student/fees",   icon: CreditCard }] },
-    { section: "Communication", items: [{ label: "Notices",     href: "/dashboard/student/notices", icon: Bell       }] },
+    { section: "Communication", items: [
+      { label: "Notices",  href: "/dashboard/student/notices", icon: Bell },
+      { label: "Feedback", href: "/dashboard/student/feedback", icon: MessageSquareQuote },
+    ] },
     { section: "Account", items: [
       { label: "Profile",  href: "/dashboard/student/profile",  icon: UserCircle },
       { label: "Settings", href: "/dashboard/student/settings", icon: Settings   },
