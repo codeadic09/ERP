@@ -49,7 +49,7 @@ export interface Fee {
 export interface Notice {
   id:         string
   title:      string
-  body:       string | null
+  content:    string | null
   target:     NoticeTarget
   urgent:     boolean
   created_by: string | null

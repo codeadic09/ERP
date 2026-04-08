@@ -7,7 +7,7 @@ import {
   TrendingUp, Calendar, Clock, CheckCircle2,
   AlertCircle, ChevronRight, GraduationCap,
   Loader2, RefreshCw, AlertTriangle,
-  BarChart2, Activity, Wallet, Megaphone, Send
+  BarChart2, Activity, Wallet, Megaphone, Send, MessageSquareQuote
 } from "lucide-react"
 import {
   AreaChart, Area, BarChart, Bar,
@@ -74,7 +74,7 @@ export default function FacultyDashboard() {
   const [me, setMe] = useState<User | null>(null)
 
   // ── Publish notice form ──────────────────────────────────────
-  const [noticeForm, setNoticeForm] = useState({ title: "", body: "", target: "Students" as "All" | "Students" | "Faculty" })
+  const [noticeForm, setNoticeForm] = useState({ title: "", content: "", target: "Students" as "All" | "Students" | "Faculty" })
   const [publishing, setPublishing] = useState(false)
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null)
 
@@ -117,18 +117,18 @@ export default function FacultyDashboard() {
 
   // ── Publish notice handler ───────────────────────────────────
   async function handlePublishNotice() {
-    if (!noticeForm.title.trim() || !noticeForm.body.trim()) return
+    if (!noticeForm.title.trim() || !noticeForm.content.trim()) return
     setPublishing(true)
     try {
       const newNotice = await addNotice({
         title: noticeForm.title.trim(),
-        body: noticeForm.body.trim(),
+        content: noticeForm.content.trim(),
         target: noticeForm.target,
         urgent: false,
         created_by: me?.id ?? "",
       } as any)
       setNotices(prev => [newNotice, ...prev])
-      setNoticeForm({ title: "", body: "", target: "Students" })
+      setNoticeForm({ title: "", content: "", target: "Students" })
       setPublishSuccess("Notice published successfully!")
       setTimeout(() => setPublishSuccess(null), 3000)
     } catch (e: any) {
@@ -303,6 +303,26 @@ export default function FacultyDashboard() {
               ))
           }
         </div>
+
+        {/* ── Feedback spotlight ───────────────────────────── */}
+        <Link href="/dashboard/faculty/feedback" className="block group">
+          <Card className="liquid-glass border border-indigo-100 bg-gradient-to-r from-indigo-50/70 to-cyan-50/60 group-hover:shadow-md transition-all">
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center shrink-0">
+                  <MessageSquareQuote className="h-5 w-5 text-indigo-700" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-indigo-900 truncate">AI Feedback Insights</p>
+                  <p className="text-xs text-indigo-700/80 truncate">See the top student issues and what to improve first.</p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-indigo-700 flex items-center gap-1 shrink-0">
+                Open <ChevronRight className="h-3.5 w-3.5" />
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* ── Today's Schedule ───────────────────────────────── */}
         <Card className="liquid-glass">
@@ -640,18 +660,18 @@ export default function FacultyDashboard() {
               <Label className="text-xs font-semibold text-gray-500">Content <span className="text-red-400">*</span></Label>
               <Textarea
                 placeholder="Write your notice content here..."
-                value={noticeForm.body}
-                onChange={e => setNoticeForm(f => ({ ...f, body: e.target.value }))}
+                value={noticeForm.content}
+                onChange={e => setNoticeForm(f => ({ ...f, content: e.target.value }))}
                 rows={3}
                 maxLength={1000}
                 className="resize-none text-sm"
               />
-              <p className="text-[10px] text-gray-400 text-right">{noticeForm.body.length}/1000</p>
+              <p className="text-[10px] text-gray-400 text-right">{noticeForm.content.length}/1000</p>
             </div>
             <Button
               size="sm"
               onClick={handlePublishNotice}
-              disabled={publishing || !noticeForm.title.trim() || !noticeForm.body.trim()}
+              disabled={publishing || !noticeForm.title.trim() || !noticeForm.content.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs font-semibold h-9"
             >
               {publishing

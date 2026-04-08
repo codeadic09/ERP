@@ -90,7 +90,7 @@ export default function FacultyNoticesPage() {
   // ── Form state ────────────────────────────────────────────────
   const blankForm = {
     title:    "",
-    body:     "",
+    content:  "",
     target:   "Students" as Target,
   }
   const [form, setForm] = useState(blankForm)
@@ -131,7 +131,7 @@ export default function FacultyNoticesPage() {
   const filtered = useMemo(() => {
     return notices.filter(n => {
       if (search && !n.title.toLowerCase().includes(search.toLowerCase()) &&
-                    !(n.body ?? "").toLowerCase().includes(search.toLowerCase())) return false
+                    !(n.content ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (filter === "all")                 return true
       if (filter === "All"      )           return n.target === "All"
       if (filter === "Students" )           return n.target === "Students"
@@ -157,12 +157,12 @@ export default function FacultyNoticesPage() {
 
   // ── Compose ───────────────────────────────────────────────────
   async function handleCompose() {
-    if (!form.title.trim() || !form.body.trim()) return
+    if (!form.title.trim() || !form.content.trim()) return
     setSaving(true)
     try {
       const newNotice = await addNotice({
         title:      form.title.trim(),
-        body:       form.body.trim(),
+        content:    form.content.trim(),
         target:     form.target,
         urgent:     false,
         created_by: me?.id ?? "",
@@ -501,13 +501,13 @@ export default function FacultyNoticesPage() {
               <Label className="text-sm font-semibold">Content <span className="text-red-500">*</span></Label>
               <Textarea
                 placeholder="Write your notice here..."
-                value={form.body}
-                onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
+                value={form.content}
+                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
                 rows={4}
                 className="resize-none text-sm"
                 maxLength={1000}
               />
-              <p className="text-xs text-gray-400 text-right">{form.body.length}/1000</p>
+              <p className="text-xs text-gray-400 text-right">{form.content.length}/1000</p>
             </div>
 
             {/* Target */}
@@ -529,7 +529,7 @@ export default function FacultyNoticesPage() {
             <Button variant="outline" onClick={() => setComposeOpen(false)}>Cancel</Button>
             <Button
               onClick={handleCompose}
-              disabled={saving || !form.title.trim() || !form.body.trim()}
+              disabled={saving || !form.title.trim() || !form.content.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
             >
               {saving

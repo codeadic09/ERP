@@ -8,7 +8,7 @@ import {
   TrendingUp, TrendingDown, GraduationCap,
   BookOpen, CreditCard, AlertCircle,
   ArrowUpRight, CheckCircle2, Clock,
-  XCircle, Activity, CalendarDays,
+  XCircle, Activity, CalendarDays, MessageSquareQuote,
   ChevronRight, Loader2
 } from "lucide-react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
@@ -109,6 +109,7 @@ export default function AdminOverviewPage() {
     {
       label:  "Total Faculty",
       value:  stats.totalFaculty.toLocaleString(),
+                  { label: "Manage Feedback",    icon: MessageSquareQuote, href: "/dashboard/admin/feedback", color: "#0EA5E9", bg: "rgba(14,165,233,0.10)" },
       change: "+2 this month",
       up:     true,
       icon:   BookOpen,
